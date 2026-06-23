@@ -51,6 +51,11 @@ app.include_router(
     prefix="/interviews"
 )
 
+app.include_router(
+    resume_router,
+    prefix="/resumes"
+)
+
 @app.get("/")
 def home():
     return {
