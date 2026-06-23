@@ -1,0 +1,349 @@
+/* =========================
+   PRICING HERO
+========================= */
+.pricing-hero {
+  text-align: center;
+  padding: 140px 20px 100px;
+  background: var(--bg-primary);
+}
+
+.pricing-tag {
+  display: inline-block;
+  background: rgba(255, 107, 0, 0.1);
+  color: var(--accent-orange-light);
+  padding: 8px 20px;
+  border-radius: 30px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.pricing-hero h1 {
+  font-size: 64px;
+  color: var(--text-primary);
+  margin-top: 25px;
+  margin-bottom: 20px;
+  font-weight: 800;
+}
+
+.pricing-hero p {
+  font-size: 18px;
+  color: var(--text-secondary);
+  max-width: 700px;
+  margin: auto;
+  line-height: 1.8;
+}
+
+/* =========================
+   PRICING CARDS
+========================= */
+.pricing-cards {
+  max-width: 1200px;
+  margin: 80px auto;
+  padding: 0 20px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+}
+
+.pricing-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-glass);
+  border-radius: 20px;
+  padding: 40px;
+  position: relative;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  transition: 0.3s ease;
+}
+
+.pricing-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 40px rgba(255, 107, 0, 0.15);
+}
+
+.pricing-card h3 {
+  font-size: 24px;
+  color: var(--text-primary);
+  margin-bottom: 15px;
+}
+
+.pricing-card h2 {
+  font-size: 52px;
+  background: linear-gradient(135deg, var(--accent-orange), var(--accent-orange-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 5px;
+}
+
+.pricing-card span {
+  color: var(--text-secondary);
+}
+
+.pricing-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 35px 0;
+}
+
+.pricing-card li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+
+.pricing-card svg {
+  color: #22c55e;
+}
+
+.pricing-card button {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent-orange), var(--accent-orange-light));
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.pricing-card button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 107, 0, 0.4);
+}
+
+/* =========================
+   FEATURED CARD
+========================= */
+.featured {
+  border: 2px solid var(--accent-orange);
+  transform: scale(1.03);
+  box-shadow: 0 20px 40px rgba(255, 107, 0, 0.2);
+}
+
+.featured:hover {
+  transform: scale(1.03) translateY(-8px);
+}
+
+.popular {
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, var(--accent-orange), var(--accent-orange-light));
+  color: white;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* =========================
+   PRICING LINKS
+========================= */
+.pricing-links {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 80px;
+}
+
+.pricing-links button {
+  background: transparent;
+  color: var(--accent-orange);
+  border: 2px solid var(--accent-orange);
+  padding: 14px 28px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.pricing-links button:hover {
+  background: rgba(255, 107, 0, 0.1);
+}
+
+/* =========================
+   COMPARISON TABLE
+========================= */
+.comparison {
+  max-width: 1200px;
+  margin: 100px auto;
+  padding: 0 20px;
+}
+
+.comparison h2 {
+  text-align: center;
+  font-size: 42px;
+  margin-bottom: 40px;
+  color: var(--text-primary);
+}
+
+.comparison table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-glass);
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.comparison th {
+  background: linear-gradient(135deg, var(--accent-orange), var(--accent-orange-light));
+  color: white;
+  padding: 18px;
+  text-align: center;
+}
+
+.comparison td {
+  padding: 18px;
+  text-align: center;
+  border-bottom: 1px solid var(--border-glass);
+  color: var(--text-secondary);
+}
+
+.comparison tr:hover {
+  background: rgba(255, 107, 0, 0.05);
+}
+
+/* =========================
+   FAQ SECTION
+========================= */
+.pricing-faq {
+  padding: 100px 20px;
+  background: var(--bg-secondary);
+}
+
+.pricing-faq h2 {
+  text-align: center;
+  font-size: 42px;
+  margin-bottom: 50px;
+  color: var(--text-primary);
+}
+
+.faq-grid {
+  max-width: 1200px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 25px;
+}
+
+.faq-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-glass);
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  transition: 0.3s;
+}
+
+.faq-card:hover {
+  transform: translateY(-5px);
+}
+
+.faq-card h3 {
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.faq-card p {
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+/* =========================
+   CTA SECTION
+========================= */
+.pricing-cta {
+  text-align: center;
+  padding: 120px 20px;
+  background: linear-gradient(135deg, var(--accent-orange), var(--accent-orange-light));
+  color: white;
+}
+
+.pricing-cta h2 {
+  font-size: 52px;
+  margin-bottom: 20px;
+  color: white;
+}
+
+.pricing-cta p {
+  font-size: 18px;
+  margin-bottom: 35px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.pricing-cta button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: white;
+  color: var(--accent-orange);
+  border: none;
+  padding: 16px 30px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.pricing-cta button:hover {
+  transform: translateY(-3px);
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 992px) {
+  .pricing-cards {
+    grid-template-columns: 1fr;
+  }
+  .featured {
+    transform: none;
+  }
+  .featured:hover {
+    transform: translateY(-8px);
+  }
+  .faq-grid {
+    grid-template-columns: 1fr;
+  }
+  .comparison {
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .pricing-hero h1 {
+    font-size: 38px;
+  }
+  .pricing-hero p {
+    font-size: 16px;
+  }
+  .pricing-links {
+    flex-direction: column;
+    align-items: center;
+  }
+  .pricing-faq h2,
+  .comparison h2 {
+    font-size: 30px;
+  }
+  .pricing-cta h2 {
+    font-size: 34px;
+  }
+  .pricing-cta p {
+    font-size: 16px;
+  }
+}

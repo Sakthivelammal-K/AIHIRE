@@ -1,0 +1,98 @@
+.navbar {
+  height: 80px;
+  padding: 0 60px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  background: white;
+
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+
+.logo h2 {
+  color: #ff6b00;
+  font-size: 30px;
+  margin: 0;
+  font-weight: 700;
+}
+
+.nav-menu {
+  display: flex;
+  align-items: center;
+  list-style: none;
+  gap: 35px;
+}
+
+.nav-menu a {
+  text-decoration: none;
+  color: #1e293b;
+  font-weight: 600;
+  transition: 0.3s;
+}
+
+.nav-menu a:hover {
+  color: #ff6b00;
+}
+
+.nav-buttons {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.login-btn {
+  padding: 10px 22px;
+  border: 2px solid #ff6b00;
+  background: white;
+  color: #ff6b00;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.nav-buttons {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-buttons a {
+  text-decoration: none;
+}
+
+.nav-login-btn,
+.nav-start-btn {
+  height: 42px;
+  min-width: 130px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+
+  transition: 0.3s;
+}
+
+.nav-login-btn {
+  border: 2px solid #ff6b00;
+  background: white;
+  color: #ff6b00;
+}
+
+.nav-login-btn:hover {
+  background: #fff4eb;
+}
+
+.nav-start-btn {
+  background: #ff6b00;
+  color: white;
+}
+
+.nav-start-btn:hover {
+  background: #e65c00;
+}
