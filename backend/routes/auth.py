@@ -5,8 +5,6 @@ from utils.security import hash_password, create_token, verify_password
 
 router = APIRouter()
 
-
-
 @router.post("/register")
 def register(user: dict):
 
@@ -71,4 +69,27 @@ def login(user: dict):
 
         "email": existing_user["email"]
 
+    }
+
+@router.post("/forgot-password")
+def forgot_password(data: dict):
+
+    email = data.get("email")
+
+
+    user = users.find_one({
+        "email": email
+    })
+
+
+    if not user:
+        return {
+            "message":"Email not found"
+        }
+
+
+    # later connect email service here
+
+    return {
+        "message":"Password reset link sent to your email"
     }
