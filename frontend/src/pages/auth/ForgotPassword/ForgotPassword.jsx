@@ -31,16 +31,6 @@ setMessage(response.data.message);
 
 setResetLink(response.data.reset_link);
 
-{
- resetLink && (
-   <a 
-     href={resetLink}
-     className="reset-link"
-   >
-     Open Reset Password
-   </a>
- )
-}
 
     } catch (error) {
 
@@ -108,6 +98,17 @@ setResetLink(response.data.reset_link);
             {message}
           </p>
         )}
+
+        {
+ resetLink && (
+   <a 
+     href={resetLink}
+     className="reset-link"
+   >
+     Open Reset Password
+   </a>
+ )
+}
 
 
       </div>
