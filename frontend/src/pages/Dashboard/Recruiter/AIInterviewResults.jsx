@@ -1,165 +1,192 @@
 import DashboardLayout from "../../../components/dashboard/DashboardLayout";
-import {useEffect,useState} from "react";
+import { useEffect, useState } from "react";
 import API from "../../../api/api";
 
 
-function AIInterviewResults(){
+function AIInterviewResults() {
 
 
-const [results,setResults]=useState([]);
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(true);
 
 
 
-useEffect(()=>{
+  useEffect(() => {
 
-loadResults();
+    loadResults();
 
-},[]);
+  }, []);
 
 
 
-const loadResults=async()=>{
+  const loadResults = async () => {
 
+    try {
 
-try{
+      const response =
+        await API.get("/interviews/results");
 
-const response =
-await API.get("/interviews/results");
 
+      setResults(response.data || []);
 
-setResults(response.data);
 
+    } catch (error) {
 
-}
+      console.log(error);
 
-catch(error){
+      setResults([]);
 
-console.log(error);
+    } finally {
 
-}
+      setLoading(false);
 
+    }
 
-};
+  };
 
 
 
-return(
+  return (
 
-<DashboardLayout>
+    <DashboardLayout>
 
 
-<h1>
-AI Interview Results
-</h1>
+      <h1>
+        AI Interview Results
+      </h1>
 
 
 
-<div className="activity-card">
+      <div className="activity-card">
 
 
-<table>
+        {loading ? (
 
+          <p>
+            Loading results...
+          </p>
 
-<thead>
+        ) : (
 
-<tr>
 
-<th>
-Candidate
-</th>
+          <table>
 
-<th>
-Interview Score
-</th>
 
-<th>
-Recommendation
-</th>
+            <thead>
 
+              <tr>
 
-</tr>
+                <th>
+                  Candidate
+                </th>
 
-</thead>
 
+                <th>
+                  Interview Score
+                </th>
 
 
-<tbody>
+                <th>
+                  Recommendation
+                </th>
 
 
-{
+              </tr>
 
-results.length>0 ?
+            </thead>
 
 
-results.map((item)=>(
 
+            <tbody>
 
-<tr key={item._id}>
 
+              {results.length > 0 ? (
 
-<td>
-{item.candidateName}
-</td>
 
+                results.map((item, index) => (
 
 
-<td>
-{item.score}%
-</td>
+                  <tr 
+                    key={item._id || index}
+                  >
 
 
+                    <td>
 
-<td>
+                      {item.candidateName || "Unknown"}
 
-{
-item.score>=80
-?
-"Recommended"
-:
-"Not Recommended"
-}
+                    </td>
 
 
-</td>
 
+                    <td>
 
+                      {item.score ?? 0}%
 
-</tr>
+                    </td>
 
 
-))
 
+                    <td>
 
-:
 
-<tr>
+                      {(item.score ?? 0) >= 80
 
-<td colSpan="3">
+                        ? "Recommended"
 
-No Results
+                        : "Not Recommended"
 
-</td>
+                      }
 
-</tr>
 
+                    </td>
 
-}
 
 
-</tbody>
+                  </tr>
 
 
-</table>
+                ))
 
 
-</div>
 
+              ) : (
 
 
-</DashboardLayout>
+                <tr>
 
 
-);
+                  <td colSpan="3">
+
+                    No Results
+
+                  </td>
+
+
+                </tr>
+
+
+              )}
+
+
+
+            </tbody>
+
+
+          </table>
+
+
+        )}
+
+
+
+      </div>
+
+
+
+    </DashboardLayout>
+
+  );
 
 }
 

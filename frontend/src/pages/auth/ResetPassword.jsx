@@ -1,87 +1,138 @@
-import {useState} from "react";
-import {useParams} from "react-router-dom";
+import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import API from "../../api/api";
 
 
-function ResetPassword(){
+function ResetPassword() {
 
+  const { token } = useParams();
 
-const {token}=useParams();
+  const navigate = useNavigate();
 
-const [password,setPassword]=useState("");
-const [message,setMessage]=useState("");
-
-
-
-const reset=async(e)=>{
-
-e.preventDefault();
-
-
-try{
-
-
-const res=await API.post(
-"/auth/reset-password",
-{
-token,
-password
-}
-);
-
-
-setMessage(res.data.message);
-
-
-}catch{
-
-setMessage("Error resetting password");
-
-}
-
-}
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
 
 
-return (
+  const reset = async (e) => {
 
-<div>
-
-
-<h1>Reset Password</h1>
+    e.preventDefault();
 
 
-<form onSubmit={reset}>
+    if(!password){
+      setMessage("Enter new password");
+      return;
+    }
 
 
-<input
+    try {
 
-type="password"
-
-placeholder="New password"
-
-onChange={
-(e)=>setPassword(e.target.value)
-}
-
-/>
+      setLoading(true);
 
 
-<button>
-Change Password
-</button>
+      const res = await API.post(
+        "/auth/reset-password",
+        {
+          token,
+          password
+        }
+      );
 
 
-</form>
+      setMessage(res.data.message);
 
 
-<p>{message}</p>
+      // after success go login page
+      if(
+        res.data.message === 
+        "Password changed successfully"
+      ){
+
+        setTimeout(()=>{
+
+          navigate("/login");
+
+        },2000);
+
+      }
 
 
-</div>
+    } catch(error){
 
-)
+      setMessage(
+        error.response?.data?.message ||
+        "Something went wrong"
+      );
 
+    } finally {
+
+      setLoading(false);
+
+    }
+
+  };
+
+
+
+  return (
+
+    <div className="reset-container">
+
+
+      <div className="reset-card">
+
+
+        <h1>AIHIRE</h1>
+
+
+        <h2>Reset Password</h2>
+
+
+        <form onSubmit={reset}>
+
+
+          <input
+
+            type="password"
+
+            placeholder="Enter new password"
+
+            value={password}
+
+            onChange={
+              (e)=>setPassword(e.target.value)
+            }
+
+          />
+
+
+          <button disabled={loading}>
+
+            {
+              loading 
+              ? "Changing..."
+              : "Change Password"
+            }
+
+          </button>
+
+
+        </form>
+
+
+        {
+          message &&
+          <p>{message}</p>
+        }
+
+
+      </div>
+
+
+    </div>
+
+  );
 
 }
 

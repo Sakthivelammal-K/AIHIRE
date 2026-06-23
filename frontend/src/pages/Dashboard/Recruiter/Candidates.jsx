@@ -76,7 +76,7 @@ function Candidates() {
 
 
       await API.post(
-        "/interviews",
+        "/interviews/create",
         {
 
           candidateName:

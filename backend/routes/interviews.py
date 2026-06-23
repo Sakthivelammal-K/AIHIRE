@@ -22,3 +22,16 @@ def get_interviews():
         item["_id"]=str(item["_id"])
         result.append(item)
     return result
+
+@router.get("/results")
+def get_interview_results():
+
+    results = list(
+        interviews.find(
+            {},
+            {"_id":0}
+        )
+    )
+
+
+    return results
