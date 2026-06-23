@@ -1,6 +1,6 @@
 import { useState } from "react";
 import "../../styles/forgotPassword.css";
-import API from "../../api/api";
+import API from "../../../api/api";
 
 function ForgotPassword() {
 

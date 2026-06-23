@@ -8,6 +8,7 @@ import Contact from "../pages/Contact/Contact";
 import Login from "../pages/Login/Login";
 import Register from "../pages/Register/Register";
 import ForgotPassword from "../pages/ForgotPassword/ForgotPassword";
+import ResetPassword from "../pages/auth/ResetPassword";
 import AdminDashboard from "../pages/Dashboard/Admin/AdminDashboard";
 import RecruiterDashboard from "../pages/Dashboard/Recruiter/RecruiterDashboard";
 import CandidateDashboard from "../pages/Dashboard/Candidate/CandidateDashboard";
@@ -43,6 +44,7 @@ function AppRoutes() {
   <Route path="/login" element={<Login />} />
   <Route path="/register" element={<Register />} />
   <Route path="/forgot-password" element={<ForgotPassword />} />
+  <Route path="/reset-password/:token" element={<ResetPassword />} />
 
   {/* Admin */}
   <Route
