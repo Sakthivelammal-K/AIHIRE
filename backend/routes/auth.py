@@ -128,7 +128,8 @@ def forgot_password(data: dict):
 
     return {
         "message":
-        "Reset link generated successfully"
+        "Reset link generated successfully",
+        "reset_link": reset_link
     }
 
 

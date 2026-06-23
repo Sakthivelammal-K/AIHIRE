@@ -7,7 +7,7 @@ import Pricing from "../pages/Pricing/Pricing";
 import Contact from "../pages/Contact/Contact";
 import Login from "../pages/Login/Login";
 import Register from "../pages/Register/Register";
-import ForgotPassword from "../pages/ForgotPassword/ForgotPassword";
+import ForgotPassword from "../pages/auth/ForgotPassword/ForgotPassword";
 import ResetPassword from "../pages/auth/ResetPassword";
 import AdminDashboard from "../pages/Dashboard/Admin/AdminDashboard";
 import RecruiterDashboard from "../pages/Dashboard/Recruiter/RecruiterDashboard";

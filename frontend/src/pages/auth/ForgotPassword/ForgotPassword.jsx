@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "../../styles/forgotPassword.css";
+import "../../../styles/forgotpassword.css";
 import API from "../../../api/api";
 
 function ForgotPassword() {
@@ -7,7 +7,7 @@ function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-
+  const [resetLink, setResetLink] = useState("");
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
@@ -22,12 +22,25 @@ function ForgotPassword() {
 
       setLoading(true);
 
-      const response = await API.post("/auth/forgot-password", {
-        email: email
-      });
+const response = await API.post("/auth/forgot-password", {
+    email: email
+});
 
 
-      setMessage(response.data.message);
+setMessage(response.data.message);
+
+setResetLink(response.data.reset_link);
+
+{
+ resetLink && (
+   <a 
+     href={resetLink}
+     className="reset-link"
+   >
+     Open Reset Password
+   </a>
+ )
+}
 
     } catch (error) {
 
