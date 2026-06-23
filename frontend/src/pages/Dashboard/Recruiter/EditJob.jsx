@@ -79,11 +79,11 @@ try{
 
 await API.put(
 `/jobs/${id}`,
-job
+updatedjob
 );
 
 
-alert("Job Updated");
+alert("Job Updated successfully");
 
 
 navigate("/jobs");

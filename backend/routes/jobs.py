@@ -36,21 +36,25 @@ def get_jobs():
 
 
 @router.put("/{job_id}")
-def update_job(job_id:str,data:dict):
+def update_job(job_id: str, data: dict):
 
-    jobs.update_one(
+    result = jobs_collection.update_one(
         {
-            "_id":ObjectId(job_id)
+            "_id": ObjectId(job_id)
         },
         {
-            "$set":data
+            "$set": data
         }
     )
 
-    return {
-        "message":"Job updated"
-    }
+    if result.modified_count == 0:
+        return {
+            "message": "No changes made"
+        }
 
+    return {
+        "message": "Job updated successfully"
+    }
 
 @router.delete("/{job_id}")
 async def delete_job(job_id:str):
