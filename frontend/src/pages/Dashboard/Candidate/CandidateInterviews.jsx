@@ -94,7 +94,7 @@ myInterviews.length > 0 ?
 myInterviews.map((item)=>(
 
 
-<tr key={item.id}>
+<tr key={item._id}>
 
 
 <td>

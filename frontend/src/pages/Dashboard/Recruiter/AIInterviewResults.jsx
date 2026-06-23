@@ -1,83 +1,167 @@
 import DashboardLayout from "../../../components/dashboard/DashboardLayout";
+import {useEffect,useState} from "react";
+import API from "../../../api/api";
+
 
 function AIInterviewResults(){
 
-    const results =
-    JSON.parse(localStorage.getItem("interviewResults")) || [];
 
-    const rankedResults = results.map((result) => {
-        const resumeData = JSON.parse(localStorage.getItem("resumeAnalysis")) || {};
+const [results,setResults]=useState([]);
 
-        const resumeScore = resumeData.score || 0;
 
-        const interviewScore = result.overall || 0;
 
-        const finalScore = Math.round((resumeScore + interviewScore) / 2);
+useEffect(()=>{
 
-        return {
-            ...result,
-            resumeScore,
-            interviewScore,
-            finalScore,
-            recommendation:
-            finalScore >= 80
-            ? "Recommended"
-            :
-            "Not Recommended",
-        };
-    })
-    .sort((a, b) => b.finalScore - a.finalScore);
+loadResults();
 
-    return(
-        <DashboardLayout>
-            <h1>AI Interview Results</h1>
-            <div className="activity-card">
+},[]);
 
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Rank</th>
-                            <th>Candidate</th>
-                            <th>Resume Score</th>
-                            <th>Interview Score</th>
-                            <th>Final AI Score</th>
-                            <th>Recommendation</th>
-                        </tr>
-                    </thead>
 
-                    <tbody>
-                        {rankedResults.length > 0 ? (
-                            rankedResults.map((result, index) => (
-                                <tr key={result.id}>
-                                    <td>#{index + 1}</td>
-                                    <td>{result.candidateName}</td>
-                                    <td>{result.resumeScore}%</td>
-                                    <td>{result.interviewScore}%</td>
-                                    <td>{result.finalScore}%</td>
-                                    <td 
-                                    style={{
-                                        color:
-                                        result.recommendation === "Recommended"
-                                        ? "green"
-                                        : "red",
-                                        fontWeight: "bold",
-                                    }}>
-                                        {result.recommendation}
-                                    </td>
-                                </tr>
-                            ))
-                        ) : (
-                            <tr>
-                                <td colSpan="6">
-                                    No Interview Results Available
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
-        </DashboardLayout>
-    );
+
+const loadResults=async()=>{
+
+
+try{
+
+const response =
+await API.get("/interviews/results");
+
+
+setResults(response.data);
+
+
 }
+
+catch(error){
+
+console.log(error);
+
+}
+
+
+};
+
+
+
+return(
+
+<DashboardLayout>
+
+
+<h1>
+AI Interview Results
+</h1>
+
+
+
+<div className="activity-card">
+
+
+<table>
+
+
+<thead>
+
+<tr>
+
+<th>
+Candidate
+</th>
+
+<th>
+Interview Score
+</th>
+
+<th>
+Recommendation
+</th>
+
+
+</tr>
+
+</thead>
+
+
+
+<tbody>
+
+
+{
+
+results.length>0 ?
+
+
+results.map((item)=>(
+
+
+<tr key={item._id}>
+
+
+<td>
+{item.candidateName}
+</td>
+
+
+
+<td>
+{item.score}%
+</td>
+
+
+
+<td>
+
+{
+item.score>=80
+?
+"Recommended"
+:
+"Not Recommended"
+}
+
+
+</td>
+
+
+
+</tr>
+
+
+))
+
+
+:
+
+<tr>
+
+<td colSpan="3">
+
+No Results
+
+</td>
+
+</tr>
+
+
+}
+
+
+</tbody>
+
+
+</table>
+
+
+</div>
+
+
+
+</DashboardLayout>
+
+
+);
+
+}
+
 
 export default AIInterviewResults;
