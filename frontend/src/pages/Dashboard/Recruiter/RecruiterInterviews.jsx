@@ -1,133 +1,207 @@
 import DashboardLayout from "../../../components/dashboard/DashboardLayout";
-import { useEffect, useState } from "react";
+import {useEffect,useState} from "react";
 import API from "../../../api/api";
 
-function RecruiterInterviews() {
+import {
+FaVideo,
+FaCalendar
+} from "react-icons/fa";
 
-  const [interviews, setInterviews] = useState([]);
 
 
-  useEffect(() => {
+function RecruiterInterviews(){
 
-    loadInterviews();
 
-  }, []);
+const [interviews,setInterviews]=useState([]);
 
 
 
-  const loadInterviews = async () => {
+useEffect(()=>{
 
-    try {
+load();
 
-      const response =
-        await API.get("/interviews");
+},[]);
 
 
-      setInterviews(response.data);
 
+const load=async()=>{
 
-    } catch (error) {
+const res =
+await API.get("/interviews");
 
-      console.log(error);
+setInterviews(res.data);
 
-    }
+};
 
-  };
 
 
 
-  return (
-    <DashboardLayout>
 
-      <h1>Interview Management</h1>
+return (
 
+<DashboardLayout>
 
-      <div className="activity-card">
 
 
-        <table>
 
-          <thead>
+<div className="candidate-banner">
 
-            <tr>
 
-              <th>Candidate</th>
-              <th>Role</th>
-              <th>Date</th>
-              <th>Type</th>
-              <th>Status</th>
+<div>
 
-            </tr>
+<h1>
+Interview Management
+</h1>
 
-          </thead>
+<p>
+AI interview scheduling
+</p>
 
 
+</div>
 
-          <tbody>
 
+<div className="banner-icon">
 
-            {interviews.length > 0 ? (
+<FaVideo/>
 
-              interviews.map((item) => (
+</div>
 
-                <tr key={item._id || item.id}>
 
+</div>
 
-                  <td>
-                    {item.candidateName || "Unknown"}
-                  </td>
 
 
-                  <td>
-                    {item.jobTitle || "N/A"}
-                  </td>
+<br /><br />
 
 
-                  <td>
-                    {item.date || "N/A"}
-                  </td>
 
+<div className="candidate-panel hover-card">
 
-                  <td>
-                    {item.type || "AI Video"}
-                  </td>
 
+<table className="recruiter-table animated-table">
 
-                  <td>
-                    {item.status || "Scheduled"}
-                  </td>
 
+<thead>
 
-                </tr>
+<tr>
 
-              ))
+<th>
+Candidate
+</th>
 
-            ) : (
+<th>
+Role
+</th>
 
+<th>
+Date
+</th>
 
-              <tr>
+<th>
+Type
+</th>
 
-                <td colSpan="5">
-                  No Interviews Scheduled
-                </td>
+<th>
+Status
+</th>
 
-              </tr>
 
+</tr>
 
-            )}
+</thead>
 
 
-          </tbody>
 
+<tbody>
 
-        </table>
 
+{
+interviews.length ?
 
-      </div>
+interviews.map(i=>(
 
 
-    </DashboardLayout>
-  );
+<tr key={i._id}>
+
+
+<td>
+{i.candidateName}
+</td>
+
+
+<td>
+{i.jobTitle}
+</td>
+
+
+<td>
+
+<FaCalendar/>
+
+ {i.date}
+
+</td>
+
+
+<td>
+
+<span className="blue-badge">
+
+{i.type}
+
+</span>
+
+</td>
+
+
+<td>
+
+<span className="green-badge">
+
+{i.status}
+
+</span>
+
+</td>
+
+
+</tr>
+
+
+))
+
+:
+
+<tr>
+
+<td colSpan="5">
+No Interviews
+</td>
+
+</tr>
+
+
+}
+
+
+
+</tbody>
+
+
+</table>
+
+
+</div>
+
+
+
+
+</DashboardLayout>
+
+);
+
+
 }
 
 

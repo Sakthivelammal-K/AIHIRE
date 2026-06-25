@@ -1,20 +1,39 @@
 import DashboardLayout from "../../../components/dashboard/DashboardLayout";
-import { useState,useEffect } from "react";
+import {useEffect,useState} from "react";
 import API from "../../../api/api";
 
+import {
 
-function Resume() {
+FaFilePdf,
+FaRobot,
+FaUpload,
+FaStar,
+FaCheckCircle,
+FaBrain,
+FaChartLine,
+FaTrash
+
+} from "react-icons/fa";
+
+
+
+
+function Resume(){
+
 
 
 const email =
 localStorage.getItem("email");
 
 
-const [resumeName,setResumeName] =
-useState("");
 
-const [analysis,setAnalysis] =
-useState(null);
+const [resumeName,setResumeName]=useState("");
+
+const [analysis,setAnalysis]=useState(null);
+
+const [uploading,setUploading]=useState(false);
+
+
 
 
 
@@ -26,10 +45,13 @@ loadResume();
 
 
 
-const loadResume = async()=>{
+
+
+const loadResume=async()=>{
 
 
 try{
+
 
 const response =
 await API.get(
@@ -37,7 +59,10 @@ await API.get(
 );
 
 
+
+
 if(response.data.resumeName){
+
 
 setResumeName(
 response.data.resumeName
@@ -48,10 +73,12 @@ setAnalysis(
 response.data.analysis
 );
 
+
 }
 
 
 }
+
 catch(error){
 
 console.log(error);
@@ -64,11 +91,15 @@ console.log(error);
 
 
 
-const handleUpload = async(e)=>{
+
+
+
+const handleUpload=async(e)=>{
 
 
 const file =
 e.target.files[0];
+
 
 
 if(!file)
@@ -76,39 +107,48 @@ return;
 
 
 
-const aiAnalysis = {
+setUploading(true);
+
+
+
+
+
+const aiAnalysis={
 
 
 skills:[
+
 "React",
 "JavaScript",
 "HTML",
-"CSS"
+"CSS",
+"FastAPI"
+
 ],
 
 
-experience:
-"2 Years",
+experience:"2 Years",
 
 
-education:
-"B.Sc Computer Science",
+education:"B.Sc Computer Science",
 
 
 score:92
+
 
 };
 
 
 
 
-const resumeData = {
+
+
+const resumeData={
 
 
 email,
 
 resumeName:file.name,
-
 
 analysis:aiAnalysis
 
@@ -117,13 +157,20 @@ analysis:aiAnalysis
 
 
 
+
+
+
 try{
 
 
 await API.post(
+
 "/resumes/upload",
+
 resumeData
+
 );
+
 
 
 
@@ -139,6 +186,7 @@ aiAnalysis
 
 
 
+
 alert(
 "Resume Uploaded Successfully"
 );
@@ -146,13 +194,24 @@ alert(
 
 
 }
+
 catch(error){
 
 console.log(error);
 
+
 alert(
-"Resume upload failed"
+"Upload Failed"
 );
+
+
+}
+
+finally{
+
+
+setUploading(false);
+
 
 }
 
@@ -163,18 +222,316 @@ alert(
 
 
 
+
+
+
+const handleDeleteResume = async()=>{
+
+
+const confirmDelete =
+window.confirm(
+"Are you sure you want to delete this resume?"
+);
+
+
+
+if(!confirmDelete)
+return;
+
+
+
+
+
+
+try{
+
+
+await API.delete(
+
+`/resumes/${email}`
+
+);
+
+
+
+
+
+setResumeName("");
+
+setAnalysis(null);
+
+
+
+
+alert(
+"Resume Deleted Successfully"
+);
+
+
+
+}
+
+catch(error){
+
+
+console.log(error);
+
+
+
+alert(
+"Resume Delete Failed"
+);
+
+
+}
+
+
+};
+
+
+
+
+
+
+
 return (
+
 
 <DashboardLayout>
 
 
+
+
+
+
+<div className="candidate-banner">
+
+
+
+<div>
+
+
+
 <h1>
-AI Resume Analyzer
+AI Resume Studio
 </h1>
 
 
 
-<div className="activity-card">
+<p>
+Upload, analyze and optimize your resume with AI
+</p>
+
+
+
+</div>
+
+
+
+
+
+<div className="banner-icon">
+
+
+<FaRobot/>
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div className="candidate-stats">
+
+
+
+
+
+<div className="candidate-stat">
+
+
+
+<div className="stat-icon blue">
+
+
+<FaBrain/>
+
+
+</div>
+
+
+
+
+
+<div>
+
+
+<h3>
+AI Analysis
+</h3>
+
+
+
+<h2>
+Active
+</h2>
+
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<div className="candidate-stat">
+
+
+
+<div className="stat-icon green">
+
+
+<FaCheckCircle/>
+
+
+</div>
+
+
+
+
+
+<div>
+
+
+
+<h3>
+Resume Status
+</h3>
+
+
+
+
+<h2>
+
+
+{
+resumeName
+?
+"Ready"
+:
+"Upload"
+
+}
+
+
+
+</h2>
+
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+<div className="candidate-stat">
+
+
+
+<div className="stat-icon purple">
+
+
+<FaChartLine/>
+
+
+</div>
+
+
+
+
+
+<div>
+
+
+
+<h3>
+ATS Score
+</h3>
+
+
+
+<h2>
+
+
+{
+analysis?.score || 0
+}%
+
+
+
+</h2>
+
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div className="candidate-panel">
+
+
+
 
 
 <h2>
@@ -183,133 +540,605 @@ Upload Resume
 
 
 
-<input
 
-type="file"
 
-accept=".pdf,.doc,.docx"
 
-onChange={handleUpload}
+
+
+<label
+
+
+style={{
+
+
+height:"220px",
+
+
+border:"2px dashed #60A5FA",
+
+
+borderRadius:"25px",
+
+
+display:"flex",
+
+
+flexDirection:"column",
+
+
+alignItems:"center",
+
+
+justifyContent:"center",
+
+
+cursor:"pointer",
+
+
+background:
+"rgba(96,165,250,.08)"
+
+
+}}
+
+
+
+>
+
+
+
+
+
+
+
+<FaUpload
+
+
+style={{
+
+fontSize:"55px",
+
+color:"#60A5FA"
+
+}}
+
 
 />
 
 
 
-<br/>
-<br/>
 
-
-
-{
-resumeName &&
-
-<div>
-
-<strong>
-Uploaded Resume:
-</strong>
-
-<p>
-{resumeName}
-</p>
-
-
-</div>
-
-}
-
-
-
-</div>
-
-
-
-
-
-{
-analysis &&
-
-<div className="activity-card">
-
-
-<h2>
-AI Resume Analysis
-</h2>
-
-
-
-<p>
-
-<strong>
-Resume Score:
-</strong>
-
-{analysis.score}%
-
-</p>
-
-
-
-<p>
-
-<strong>
-Experience:
-</strong>
-
-{analysis.experience}
-
-</p>
-
-
-
-<p>
-
-<strong>
-Education:
-</strong>
-
-{analysis.education}
-
-</p>
 
 
 
 
 <h3>
-Skills Detected
+
+
+{
+
+
+uploading
+
+?
+
+"AI is scanning..."
+
+:
+
+"Drop your resume here"
+
+
+
+}
+
+
+
 </h3>
 
 
 
-<ul>
+
+
+
+
+<p>
+
+PDF, DOC, DOCX supported
+
+</p>
+
+
+
+
+
+
+<input
+
+
+type="file"
+
+
+hidden
+
+
+accept=".pdf,.doc,.docx"
+
+
+onChange={handleUpload}
+
+
+/>
+
+
+
+
+
+
+</label>
+
+
+
+
+
+
+
+
+
+
+
+
 
 {
-analysis.skills.map(
-(skill,index)=>(
 
-<li key={index}>
-{skill}
-</li>
 
-))
+resumeName &&
 
-}
 
-</ul>
+
+
+
+<div className="application-item">
+
+
+
+
+
+
+<FaFilePdf
+
+
+style={{
+
+
+fontSize:"35px",
+
+color:"#ef4444"
+
+
+}}
+
+
+
+/>
+
+
+
+
+
+
+
+<div style={{
+flex:1
+}}>
+
+
+
+
+<h3>
+
+{resumeName}
+
+</h3>
+
+
+
+
+<p>
+
+Resume uploaded successfully
+
+</p>
+
 
 
 
 </div>
 
+
+
+
+
+
+
+
+
+<button
+
+
+
+onClick={handleDeleteResume}
+
+
+
+style={{
+
+
+background:"#ef4444",
+
+
+border:"none",
+
+
+padding:"12px 18px",
+
+
+borderRadius:"12px",
+
+
+color:"white",
+
+
+display:"flex",
+
+
+alignItems:"center",
+
+
+gap:"8px"
+
+
+}}
+
+
+
+>
+
+
+
+
+<FaTrash/>
+
+
+Delete
+
+
+
+</button>
+
+
+
+
+
+
+
+
+</div>
+
+
+
+
+
 }
 
 
+
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+{
+
+
+
+analysis &&
+
+
+
+
+<div className="candidate-panel">
+
+
+
+
+
+<h2>
+
+AI Resume Insights
+
+</h2>
+
+
+
+
+
+
+
+
+
+<div className="candidate-stats">
+
+
+
+
+
+
+
+<div className="candidate-stat">
+
+
+
+<div className="stat-icon green">
+
+
+<FaStar/>
+
+
+</div>
+
+
+
+
+
+<div>
+
+
+
+<h3>
+
+ATS Score
+
+</h3>
+
+
+
+
+<h2>
+
+
+{analysis.score}%
+
+
+</h2>
+
+
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+<div className="candidate-stat">
+
+
+
+<div className="stat-icon blue">
+
+
+<FaBrain/>
+
+
+</div>
+
+
+
+
+
+<div>
+
+
+
+<h3>
+
+Experience
+
+</h3>
+
+
+
+
+
+<h2
+
+style={{
+fontSize:"18px"
+}}
+
+>
+
+
+{analysis.experience}
+
+
+
+</h2>
+
+
+
+
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<h3>
+
+Detected Skills
+
+</h3>
+
+
+
+
+
+
+
+
+<div
+
+style={{
+
+
+display:"flex",
+
+gap:"10px",
+
+flexWrap:"wrap"
+
+
+}}
+
+
+
+>
+
+
+
+
+
+
+
+{
+
+
+analysis.skills.map(
+
+(skill,index)=>(
+
+
+
+
+<span
+
+
+key={index}
+
+
+className="blue-badge"
+
+
+
+>
+
+
+{skill}
+
+
+
+</span>
+
+
+
+
+
+)
+
+
+
+)
+
+
+
+}
+
+
+
+
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+</div>
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
 </DashboardLayout>
+
 
 );
 
 
 }
+
+
 
 
 export default Resume;

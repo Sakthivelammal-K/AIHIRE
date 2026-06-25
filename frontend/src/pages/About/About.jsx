@@ -2,127 +2,489 @@ import Navbar from "../../components/common/Navbar";
 import Footer from "../../components/common/Footer";
 import "../../styles/about.css";
 
-function About() {
-  return (
-    <>
-      <Navbar />
+import {
+  FaRobot,
+  FaUsers,
+  FaChartLine,
+  FaBullseye,
+  FaLightbulb,
+  FaShieldAlt,
+  FaDatabase,
+  FaSearch,
+  FaClock,
+  FaCheckCircle
+} from "react-icons/fa";
 
-      {/* HERO */}
-      <section className="about-hero">
-        <div className="about-container">
-          <span className="hero-tag">ABOUT AIHIRE</span>
-          <h1 className="gradient-text">Building The Future Of Hiring</h1>
-          <p>
-            We believe hiring should be faster, fairer, and powered by intelligence.
-            AIHIRE helps organizations discover exceptional talent through modern
-            recruitment technology.
-          </p>
-        </div>
-      </section>
+import { useNavigate } from "react-router-dom";
 
-      {/* WHO WE ARE */}
-      <section className="about-section glass-card">
-        <div className="about-content">
-          <h2>Who We Are</h2>
-          <p>
-            AIHIRE is an AI-powered recruitment platform designed to simplify and
-            modernize the hiring process.
-          </p>
-          <p>
-            Our platform combines intelligent screening, candidate matching,
-            interview automation and hiring analytics to help organizations
-            recruit the right people faster.
-          </p>
-        </div>
-      </section>
 
-      {/* MISSION */}
-      <section className="mission-section glass-card">
-        <div className="about-container">
-          <h2 className="gradient-text">Our Mission</h2>
-          <p>
-            To eliminate inefficiencies in hiring and create a world where
-            recruiters spend less time sorting resumes and more time connecting
-            with great talent.
-          </p>
-        </div>
-      </section>
+function About(){
 
-      {/* VALUES */}
-      <section className="values-section">
-        <div className="about-container">
-          <h2>Our Values</h2>
-          <div className="values-grid">
-            <div className="value-card glass-card">
-              <h3>People First</h3>
-              <p>Technology should empower people, not replace them.</p>
-            </div>
-            <div className="value-card glass-card">
-              <h3>Transparency</h3>
-              <p>Every hiring decision should be explainable and fair.</p>
-            </div>
-            <div className="value-card glass-card">
-              <h3>Innovation</h3>
-              <p>We constantly explore better ways to connect talent and opportunity.</p>
-            </div>
-          </div>
-        </div>
-      </section>
+const navigate = useNavigate();
 
-      {/* PHILOSOPHY */}
-      <section className="philosophy-section glass-card">
-        <div className="about-container">
-          <h2 className="gradient-text">Our View On Modern Hiring</h2>
-          <p>
-            Hiring should not depend on manual resume reviews, endless
-            spreadsheets, or repetitive workflows.
-          </p>
-          <p>
-            AI can assist recruiters in making faster and better decisions while
-            preserving the human side of hiring.
-          </p>
-        </div>
-      </section>
 
-      {/* TEAM */}
-      <section className="team-section">
-        <div className="about-container">
-          <h2>Leadership Team</h2>
-          <div className="team-grid">
-            <div className="team-card glass-card">
-              <div className="avatar">S</div>
-              <h3>Sam</h3>
-              <span>Founder & CEO</span>
-            </div>
-            <div className="team-card glass-card">
-              <div className="avatar">A</div>
-              <h3>AI Lead</h3>
-              <span>Artificial Intelligence</span>
-            </div>
-            <div className="team-card glass-card">
-              <div className="avatar">P</div>
-              <h3>Product Lead</h3>
-              <span>Platform Engineering</span>
-            </div>
-          </div>
-        </div>
-      </section>
+return(
+<>
 
-      {/* JOIN */}
-      <section className="join-section glass-card">
-        <div className="about-container">
-          <h2 className="gradient-text">Join Our Journey</h2>
-          <p>
-            We're building technology that helps organizations hire better and
-            helps candidates find meaningful careers.
-          </p>
-          <button className="join-btn">Explore AIHIRE</button>
-        </div>
-      </section>
+<Navbar/>
 
-      <Footer />
-    </>
-  );
+
+{/* HERO */}
+
+<section className="about-hero">
+
+<div className="about-glow"></div>
+
+
+<div className="about-container">
+
+
+<span className="about-tag">
+ABOUT AIHIRE
+</span>
+
+
+<h1>
+Building The Future Of
+<span> Intelligent Hiring</span>
+</h1>
+
+
+<p>
+
+AIHIRE is a next generation AI recruitment
+platform helping companies discover,
+evaluate and hire exceptional talent faster.
+
+</p>
+
+
+<button
+onClick={()=>navigate("/register")}
+>
+Start Hiring
+</button>
+
+
+</div>
+
+</section>
+
+
+
+
+{/* STORY */}
+
+
+<section className="about-story">
+
+
+<div className="story-card">
+
+
+<h2>
+The Problem We Solve
+</h2>
+
+
+<p>
+
+Recruitment teams spend countless hours
+reviewing resumes, scheduling interviews,
+tracking candidates and making hiring decisions.
+
+AIHIRE removes repetitive work by combining
+artificial intelligence, automation and analytics
+into one powerful hiring workspace.
+
+</p>
+
+
+</div>
+
+
+</section>
+
+
+
+
+
+
+{/* PLATFORM */}
+
+<section className="platform-section">
+
+
+<div>
+
+<h2>
+One Platform For Complete Hiring
+</h2>
+
+
+<p>
+
+From the first application to final selection,
+AIHIRE helps recruiters manage every stage
+of the recruitment journey.
+
+</p>
+
+
+<ul>
+
+<li>
+<FaCheckCircle/> AI Resume Screening
+</li>
+
+<li>
+<FaCheckCircle/> Automated Candidate Ranking
+</li>
+
+<li>
+<FaCheckCircle/> AI Powered Interviews
+</li>
+
+<li>
+<FaCheckCircle/> Hiring Analytics Dashboard
+</li>
+
+</ul>
+
+
+</div>
+
+
+
+<div className="platform-card">
+
+
+<h3>
+Candidate Pipeline
+</h3>
+
+
+<div>
+Applied Candidates
+<span>1200+</span>
+</div>
+
+
+<div>
+AI Shortlisted
+<span>350</span>
+</div>
+
+
+<div>
+Interview Ready
+<span>85</span>
+</div>
+
+
+</div>
+
+
+</section>
+
+
+
+
+
+
+
+{/* VALUES */}
+
+
+<section className="values-section">
+
+
+<h2>
+What Makes AIHIRE Different
+</h2>
+
+
+<div className="values-grid">
+
+
+
+<div className="value-card">
+
+<FaRobot/>
+
+<h3>
+AI Powered
+</h3>
+
+<p>
+Smart algorithms analyze candidates
+and identify the best matches.
+</p>
+
+</div>
+
+
+
+
+<div className="value-card">
+
+<FaUsers/>
+
+<h3>
+Human Focused
+</h3>
+
+<p>
+Technology helps recruiters make better decisions.
+</p>
+
+</div>
+
+
+
+
+<div className="value-card">
+
+<FaChartLine/>
+
+<h3>
+Analytics Driven
+</h3>
+
+<p>
+Understand hiring performance with insights.
+</p>
+
+</div>
+
+
+
+
+<div className="value-card">
+
+<FaShieldAlt/>
+
+<h3>
+Secure Platform
+</h3>
+
+<p>
+Recruitment data stays protected.
+</p>
+
+</div>
+
+
+
+
+<div className="value-card">
+
+<FaClock/>
+
+<h3>
+Save Time
+</h3>
+
+<p>
+Reduce manual recruitment tasks.
+</p>
+
+</div>
+
+
+
+
+<div className="value-card">
+
+<FaSearch/>
+
+<h3>
+Better Matching
+</h3>
+
+<p>
+Find candidates who fit your needs.
+</p>
+
+</div>
+
+
+
+</div>
+
+</section>
+
+
+
+
+
+
+
+{/* MISSION */}
+
+
+<section className="mission-section">
+
+
+<div>
+
+
+<h2>
+Our Mission
+</h2>
+
+
+<p>
+
+Our mission is to transform hiring into a faster,
+smarter and more transparent process.
+
+We believe AI should support recruiters,
+not replace them.
+
+</p>
+
+
+</div>
+
+
+
+<div className="mission-dashboard">
+
+
+<h3>
+AIHIRE Performance
+</h3>
+
+
+<div className="metric">
+85% Faster Screening
+</div>
+
+
+<div className="metric">
+4x Better Productivity
+</div>
+
+
+<div className="metric">
+60% Less Manual Work
+</div>
+
+
+</div>
+
+
+</section>
+
+
+
+
+
+
+
+{/* STATS */}
+
+
+<section className="about-stats">
+
+
+<div>
+<h2>10K+</h2>
+<p>Candidates Processed</p>
+</div>
+
+
+<div>
+<h2>500+</h2>
+<p>Companies</p>
+</div>
+
+
+<div>
+<h2>95%</h2>
+<p>Hiring Accuracy</p>
+</div>
+
+
+<div>
+<h2>24/7</h2>
+<p>AI Assistance</p>
+</div>
+
+
+</section>
+
+
+
+
+
+
+
+{/* VISION */}
+
+
+<section className="vision-section">
+
+
+<h2>
+The Future Of Recruitment
+</h2>
+
+
+<p>
+
+AIHIRE is continuously evolving to make
+recruitment more intelligent, inclusive and efficient.
+
+We are building tools that allow companies
+to focus on people while AI handles the process.
+
+</p>
+
+
+</section>
+
+
+
+
+
+
+{/* CTA */}
+
+
+<section className="about-cta">
+
+
+<h2>
+Ready To Transform Hiring?
+</h2>
+
+
+<p>
+Join companies using AIHIRE to build stronger teams.
+</p>
+
+
+<button
+onClick={()=>navigate("/contact")}
+>
+Contact Us
+</button>
+
+
+</section>
+
+
+
+<Footer/>
+
+
+</>
+
+)
+
 }
+
 
 export default About;

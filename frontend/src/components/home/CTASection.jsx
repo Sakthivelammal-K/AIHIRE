@@ -7,28 +7,31 @@ function CTASection() {
 
       <div className="cta-content">
 
-        <span>Ready to Transform Hiring?</span>
+        <span className="cta-badge">
+          AI Recruitment Platform
+        </span>
 
         <h2>
-          Hire Top Talent Faster with AIHIRE
+          Ready To Build A Better Hiring Process?
         </h2>
 
         <p>
-          Automate resume screening, conduct AI interviews,
-          rank candidates and make smarter hiring decisions.
+          Join companies using AIHIRE to automate recruiting,
+          improve candidate quality, reduce hiring time and
+          make smarter hiring decisions with AI.
         </p>
 
         <div className="cta-buttons">
 
           <Link to="/register">
             <button className="cta-primary">
-              Start Hiring
+              Start Free Trial
             </button>
           </Link>
 
           <Link to="/contact">
             <button className="cta-secondary">
-              Book Demo
+              Schedule Demo
             </button>
           </Link>
 

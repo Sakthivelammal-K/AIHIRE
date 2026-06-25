@@ -1,84 +1,84 @@
 import "../../styles/featuresSection.css";
-import {
-  IconFileText,
-  IconRobot,
-  IconMicrophone,
-  IconSchool,
-} from "@tabler/icons-react";
 
 const features = [
   {
-    icon: <IconFileText size={20} />,
-    title: "AI Resume Intelligence",
-    description: "Automatically analyze resumes, extract skills, and rank candidates based on job fit — in seconds.",
-    tag: "Resume screening",
-    iconBg: "#E6F1FB",
-    iconColor: "#185FA5",
-    tagBg: "#E6F1FB",
-    tagColor: "#0C447C",
+    title: "AI Resume Screening",
+    description:
+      "Automatically analyze resumes and rank candidates based on skills, experience, and job relevance.",
   },
   {
-    icon: <IconRobot size={20} />,
-    title: "AI Hiring Copilot",
-    description: "Find and recommend the best candidates using AI-powered matching tailored to your job requirements.",
-    tag: "Smart matching",
-    iconBg: "#EEEDFE",
-    iconColor: "#534AB7",
-    tagBg: "#EEEDFE",
-    tagColor: "#3C3489",
+    title: "Smart Candidate Matching",
+    description:
+      "AI calculates match scores and recommends the most suitable candidates instantly.",
   },
   {
-    icon: <IconMicrophone size={20} />,
-    title: "AI Interview Agent",
-    description: "Conduct intelligent interviews and auto-generate structured evaluation reports for every candidate.",
-    tag: "Automated interviews",
-    iconBg: "#E1F5EE",
-    iconColor: "#0F6E56",
-    tagBg: "#E1F5EE",
-    tagColor: "#085041",
+    title: "AI Video Interviews",
+    description:
+      "Conduct intelligent interviews with automated scoring and evaluation reports.",
   },
   {
-    icon: <IconSchool size={20} />,
-    title: "AI Career Coach",
-    description: "Help candidates improve their skills and prepare for future opportunities with personalized guidance.",
-    tag: "Career growth",
-    iconBg: "#FAEEDA",
-    iconColor: "#854F0B",
-    tagBg: "#FAEEDA",
-    tagColor: "#633806",
+    title: "Hiring Analytics",
+    description:
+      "Track recruitment performance, pipeline efficiency, and hiring metrics in real time.",
+  },
+  {
+    title: "Automated Workflows",
+    description:
+      "Reduce manual hiring tasks through automation and intelligent recommendations.",
+  },
+  {
+    title: "Candidate Experience",
+    description:
+      "Provide a seamless application and interview process with AI-powered guidance.",
   },
 ];
 
 function FeaturesSection() {
   return (
-    <section className="features-section">
-      <div className="features-header">
-        <h2>Powerful AI features</h2>
-        <p>Everything you need to hire smarter and faster.</p>
+    <section className="features">
+
+      <div className="features-top">
+
+        <span className="section-badge">
+          Product Features
+        </span>
+
+        <h2>
+          Everything recruiters need
+          to hire smarter
+        </h2>
+
+        <p>
+          AI-powered tools designed to help
+          hiring teams identify, evaluate and
+          recruit top talent faster.
+        </p>
+
       </div>
 
       <div className="features-grid">
+
         {features.map((feature, index) => (
-          <div key={index} className="feature-card">
-            <div
-              className="feature-icon"
-              style={{ background: feature.iconBg, color: feature.iconColor }}
-            >
-              {feature.icon}
+          <div
+            key={index}
+            className="feature-box"
+          >
+            <div className="feature-number">
+              0{index + 1}
             </div>
-            <div>
-              <h3>{feature.title}</h3>
-              <p>{feature.description}</p>
-            </div>
-            <span
-              className="feature-tag"
-              style={{ background: feature.tagBg, color: feature.tagColor }}
-            >
-              {feature.tag}
-            </span>
+
+            <h3>
+              {feature.title}
+            </h3>
+
+            <p>
+              {feature.description}
+            </p>
           </div>
         ))}
+
       </div>
+
     </section>
   );
 }

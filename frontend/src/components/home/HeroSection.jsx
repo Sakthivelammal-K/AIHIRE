@@ -1,81 +1,132 @@
 import { Link } from "react-router-dom";
-import heroIllustration from "../../assets/hero-illustration.jpg";
 import "../../styles/hero.css";
 
 function HeroSection() {
   return (
     <section className="hero">
 
-      <div className="hero-content">
-
-        {/* Left Side */}
+      <div className="hero-grid">
 
         <div className="hero-left">
 
-          <span className="badge">
-            🚀 AI Powered Hiring Platform
-          </span>
+          <div className="hero-badge">
+            AI Recruitment Platform
+          </div>
 
           <h1>
-            Find Top Talent &
-            <span className="highlight"> Get Hired Faster</span>
+            Hire Better Talent
+            <br />
+            <span>Faster With AI</span>
           </h1>
 
           <p>
-            AIHIRE helps recruiters identify the best candidates
-            through AI Resume Screening, Smart Match Scores,
-            AI Interviews, and Hiring Predictions.
+            Source candidates, screen resumes, conduct AI interviews,
+            and make hiring decisions with confidence from one unified platform.
           </p>
 
-          <div className="hero-buttons">
+          <div className="hero-actions">
 
-            <Link to="/register">
-              <button className="primary-btn">
-                Get Started
-              </button>
+            <Link
+              to="/register"
+              className="hero-primary"
+            >
+              Start Free Trial
             </Link>
 
-            <Link to="/contact">
-              <button className="secondary-btn">
-                Book Demo
-              </button>
+            <Link
+              to="/contact"
+              className="hero-secondary"
+            >
+              Book Demo
             </Link>
 
           </div>
 
-          <div className="hero-stats">
+          <div className="hero-metrics">
 
             <div>
-              <h3>10K+</h3>
-              <p>Candidates</p>
+              <h3>50K+</h3>
+              <span>Candidates</span>
             </div>
 
             <div>
-              <h3>500+</h3>
-              <p>Companies</p>
+              <h3>1200+</h3>
+              <span>Recruiters</span>
             </div>
 
             <div>
-              <h3>95%</h3>
-              <p>Match Accuracy</p>
+              <h3>92%</h3>
+              <span>Accuracy</span>
             </div>
 
           </div>
 
         </div>
 
-        {/* Right Side */}
-
-        <div className="hero-right">
 <div className="hero-right">
-  <img
-    src={heroIllustration}
-    alt="AI Hiring Platform"
-    className="hero-image"
-  />
-</div>
 
+  <div className="dashboard-preview">
+
+    <div className="dashboard-top">
+
+      <div className="metric-card">
+        <span>Applications</span>
+        <h3>1,284</h3>
+      </div>
+
+      <div className="metric-card">
+        <span>AI Match Score</span>
+        <h3>94%</h3>
+      </div>
+
+    </div>
+
+    <div className="candidate-list">
+
+      <div className="candidate-card">
+
+        <div className="candidate-avatar"></div>
+
+        <div>
+          <h4>Sarah Johnson</h4>
+          <p>Senior Frontend Engineer</p>
         </div>
+
+        <span className="score">98%</span>
+
+      </div>
+
+      <div className="candidate-card">
+
+        <div className="candidate-avatar"></div>
+
+        <div>
+          <h4>David Lee</h4>
+          <p>Product Designer</p>
+        </div>
+
+        <span className="score">91%</span>
+
+      </div>
+
+      <div className="candidate-card">
+
+        <div className="candidate-avatar"></div>
+
+        <div>
+          <h4>Michael Chen</h4>
+          <p>Backend Developer</p>
+        </div>
+
+        <span className="score">95%</span>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
 
       </div>
 

@@ -3,10 +3,20 @@ import {useEffect,useState} from "react";
 import API from "../../../api/api";
 
 
+import {
+FaVideo,
+FaCalendarCheck,
+FaRobot
+} from "react-icons/fa";
+
+
+
 function CandidateInterviews(){
 
 
-const [interviews,setInterviews] = useState([]);
+
+const [interviews,setInterviews]=useState([]);
+
 
 
 
@@ -18,7 +28,10 @@ loadInterviews();
 
 
 
-const loadInterviews = async()=>{
+
+
+const loadInterviews=async()=>{
+
 
 try{
 
@@ -38,7 +51,10 @@ console.log(error);
 
 }
 
+
 };
+
+
 
 
 
@@ -47,77 +63,255 @@ localStorage.getItem("username");
 
 
 
+
 const myInterviews =
 interviews.filter(
-(item)=>
-item.candidateName === username
+
+item=>
+
+item.candidateName===username
+
 );
+
+
+
+
 
 
 
 return (
 
+
 <DashboardLayout>
 
 
-<h1>My Interviews</h1>
 
 
-<div className="activity-card">
+
+<div className="candidate-banner">
 
 
-<table>
+<div>
+
+
+<h1>
+My Interviews
+</h1>
+
+
+<p>
+AI interview schedule and status
+</p>
+
+
+</div>
+
+
+
+<div className="banner-icon">
+
+<FaRobot/>
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+<div className="candidate-stats">
+
+
+
+<div className="candidate-stat">
+
+
+<div className="stat-icon purple">
+
+<FaVideo/>
+
+</div>
+
+
+
+<div>
+
+<h3>
+Scheduled
+</h3>
+
+
+<h2>
+{myInterviews.length}
+</h2>
+
+
+</div>
+
+
+</div>
+
+
+
+
+<div className="candidate-stat">
+
+
+<div className="stat-icon green">
+
+<FaCalendarCheck/>
+
+</div>
+
+
+<div>
+
+
+<h3>
+Type
+</h3>
+
+
+<h2>
+AI
+</h2>
+
+
+</div>
+
+
+</div>
+
+
+
+
+</div>
+
+
+
+
+
+
+
+
+<div className="candidate-panel">
+
+
+
+<h2>
+Interview Timeline
+</h2>
+
+
+
+
+<table className="recruiter-table">
+
 
 
 <thead>
 
+
 <tr>
 
-<th>Job</th>
-<th>Date</th>
-<th>Type</th>
-<th>Status</th>
+<th>
+Job
+</th>
+
+
+<th>
+Date
+</th>
+
+
+<th>
+Type
+</th>
+
+
+<th>
+Status
+</th>
+
 
 </tr>
 
+
 </thead>
+
+
+
 
 
 
 <tbody>
 
 
+
 {
-myInterviews.length > 0 ?
+
+myInterviews.length ?
 
 
-myInterviews.map((item)=>(
+myInterviews.map(item=>(
+
 
 
 <tr key={item._id}>
 
 
 <td>
+
 {item.jobTitle}
+
 </td>
 
 
+
 <td>
+
 {item.date}
+
 </td>
 
 
+
 <td>
+
+
+<span className="blue-badge">
+
 {item.type}
+
+</span>
+
+
 </td>
+
+
+
 
 
 <td>
+
+
+<span className="green-badge">
+
 {item.status}
+
+</span>
+
+
 </td>
+
 
 
 </tr>
+
 
 
 ))
@@ -125,32 +319,49 @@ myInterviews.map((item)=>(
 
 :
 
+
 <tr>
 
 <td colSpan="4">
-No Interviews Scheduled
+
+No interviews scheduled
+
 </td>
+
 
 </tr>
 
+
 }
+
 
 
 </tbody>
 
 
+
+
 </table>
+
+
+
 
 
 </div>
 
 
+
+
+
+
 </DashboardLayout>
+
 
 );
 
 
 }
+
 
 
 export default CandidateInterviews;

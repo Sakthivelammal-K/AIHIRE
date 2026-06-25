@@ -1,96 +1,115 @@
-import { useEffect, useState } from "react";
+import {
+useEffect,
+useState
+} from "react";
+
+
 import Sidebar from "./Sidebar";
 import Header from "./Header";
+
 import "../../styles/dashboard.css";
+
 import API from "../../api/api";
 
 
-function DashboardLayout({ children }) {
+
+function DashboardLayout({children}){
 
 
-  const [user, setUser] = useState(null);
-
-
-
-  useEffect(()=>{
-
-    getUser();
-
-  },[]);
+const [user,setUser]=useState(null);
 
 
 
-  const getUser = async()=>{
-
-    try{
-
-      const email =
-      localStorage.getItem("email");
+useEffect(()=>{
 
 
-      const response =
-      await API.get(
-        `/users/profile?email=${email}`
-      );
+loadUser();
 
 
-      setUser(response.data);
-
-
-    }
-    catch(error){
-
-      console.log(error);
-
-    }
-
-  };
+},[]);
 
 
 
-  const userName =
-  user?.name || "User";
+
+const loadUser=async()=>{
 
 
-  const role =
-  user?.role || "candidate";
+try{
 
 
-
-  return (
-
-    <div className="dashboard-container">
+const email =
+localStorage.getItem("email");
 
 
-      <Sidebar role={role} />
+const res =
+await API.get(
+`/users/profile?email=${email}`
+);
 
 
-      <div className="dashboard-main">
-
-
-        <Header
-
-          userName={userName}
-
-          role={role}
-
-        />
+setUser(res.data);
 
 
 
-        <div className="dashboard-content">
+}
+catch(err){
 
-          {children}
+console.log(err);
 
-        </div>
-
-
-      </div>
+}
 
 
-    </div>
+};
 
-  );
+
+
+
+return (
+
+<div className="dashboard-container">
+
+
+
+<Sidebar />
+
+
+
+<div className="dashboard-main">
+
+
+
+<Header
+
+userName={
+user?.name || "User"
+}
+
+role={
+user?.role || "candidate"
+}
+
+/>
+
+
+
+<main className="dashboard-content">
+
+{children}
+
+</main>
+
+
+
+</div>
+
+
+
+</div>
+
+
+);
+
+
 }
 
 

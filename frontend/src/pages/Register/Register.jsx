@@ -3,22 +3,31 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import API from "../../api/api";
 
+import {
+  FaUserPlus,
+  FaRocket,
+  FaShieldAlt,
+  FaBrain,
+  FaEye,
+  FaEyeSlash
+} from "react-icons/fa";
 
-function Register() {
+
+function Register(){
 
   const navigate = useNavigate();
 
 
-  const [name,setName] = useState("");
-  const [email,setEmail] = useState("");
-  const [password,setPassword] = useState("");
-  const [role,setRole] = useState("candidate");
+  const [name,setName]=useState("");
+  const [email,setEmail]=useState("");
+  const [password,setPassword]=useState("");
+  const [showPassword,setShowPassword] = useState(false);
+  const [role,setRole]=useState("candidate");
 
 
   const handleRegister = async(e)=>{
 
     e.preventDefault();
-
 
     try{
 
@@ -34,12 +43,10 @@ function Register() {
 
       alert(response.data.message);
 
-
       navigate("/login");
 
 
-    }
-    catch(error){
+    }catch(error){
 
       console.log(error);
 
@@ -50,110 +57,287 @@ function Register() {
   };
 
 
-
   return (
 
-    <div className="register-container">
-
-      <div className="register-card">
+    <div className="register-page">
 
 
-        <h1>AIHIRE</h1>
-
-        <h2>Create Account</h2>
+      <div className="register-wrapper">
 
 
-        <form onSubmit={handleRegister}>
+        {/* LEFT BRAND SECTION */}
+
+        <div className="register-info">
 
 
-          <div className="form-group">
-
-            <label>Full Name</label>
-
-            <input
-              type="text"
-              placeholder="Enter full name"
-              value={name}
-              onChange={(e)=>setName(e.target.value)}
-              required
-            />
-
-          </div>
+          <h1>
+            AI<span>HIRE</span>
+          </h1>
 
 
+          <h2>
+            Build Your Future
+            With Smart Hiring
+          </h2>
 
-          <div className="form-group">
 
-            <label>Email</label>
-
-            <input
-              type="email"
-              placeholder="Enter email"
-              value={email}
-              onChange={(e)=>setEmail(e.target.value)}
-              required
-            />
-
-          </div>
+          <p>
+            Join AIHIRE and experience
+            AI powered recruitment,
+            interviews and candidate management.
+          </p>
 
 
 
+          <div className="info-box">
 
-          <div className="form-group">
+            <FaBrain/>
 
-            <label>Password</label>
+            <div>
+              <h4>
+                AI Powered
+              </h4>
 
-            <input
-              type="password"
-              placeholder="Enter password"
-              value={password}
-              onChange={(e)=>setPassword(e.target.value)}
-              required
-            />
+              <p>
+                Smart resume screening
+              </p>
+            </div>
 
           </div>
 
 
 
-          <div className="form-group">
+          <div className="info-box">
 
-            <label>Role</label>
+            <FaRocket/>
+
+            <div>
+              <h4>
+                Faster Hiring
+              </h4>
+
+              <p>
+                Reduce hiring time
+              </p>
+            </div>
+
+          </div>
 
 
-            <select
-              value={role}
-              onChange={(e)=>setRole(e.target.value)}
+
+          <div className="info-box">
+
+            <FaShieldAlt/>
+
+            <div>
+              <h4>
+                Secure Platform
+              </h4>
+
+              <p>
+                Enterprise ready system
+              </p>
+            </div>
+
+          </div>
+
+
+        </div>
+
+
+
+
+
+        {/* REGISTER CARD */}
+
+
+        <div className="register-card">
+
+
+          <div className="register-title">
+
+
+            <FaUserPlus/>
+
+            <h2>
+              Create Account
+            </h2>
+
+
+            <p>
+              Start your AIHIRE journey
+            </p>
+
+
+          </div>
+
+
+
+
+
+          <form onSubmit={handleRegister}>
+
+
+            <div className="input-group">
+
+              <label>
+                Full Name
+              </label>
+
+
+              <input
+
+                type="text"
+
+                placeholder="Enter your name"
+
+                value={name}
+
+                onChange={(e)=>setName(e.target.value)}
+
+                required
+
+              />
+
+            </div>
+
+
+
+
+
+            <div className="input-group">
+
+
+              <label>
+                Email
+              </label>
+
+
+              <input
+
+                type="email"
+
+                placeholder="Enter email"
+
+                value={email}
+
+                onChange={(e)=>setEmail(e.target.value)}
+
+                required
+
+              />
+
+
+            </div>
+
+
+
+
+
+
+<div className="input-group">
+
+<label>
+Password
+</label>
+
+<div className="password-wrapper">
+
+  <input
+    type={showPassword ? "text" : "password"}
+    placeholder="Enter password"
+    value={password}
+    onChange={(e)=>setPassword(e.target.value)}
+    required
+  />
+
+  <button
+    type="button"
+    className="password-toggle"
+    onClick={() => setShowPassword(!showPassword)}
+  >
+    {showPassword ? <FaEyeSlash /> : <FaEye />}
+  </button>
+
+</div>
+
+</div>
+
+
+
+
+
+            <div className="input-group">
+
+
+              <label>
+                Account Type
+              </label>
+
+
+              <select
+
+                value={role}
+
+                onChange={(e)=>setRole(e.target.value)}
+
+              >
+
+
+                <option value="candidate">
+                  Candidate
+                </option>
+
+
+                <option value="recruiter">
+                  Recruiter
+                </option>
+
+
+              </select>
+
+
+            </div>
+
+
+
+
+
+            <button className="register-btn">
+
+              Create Account
+
+            </button>
+
+
+
+
+
+          </form>
+
+
+          <div className="login-link">
+
+            Already have account?
+
+            <span
+              onClick={()=>navigate("/login")}
             >
-
-              <option value="candidate">
-                Candidate
-              </option>
-
-              <option value="recruiter">
-                Recruiter
-              </option>
-
-
-            </select>
+              Login
+            </span>
 
 
           </div>
 
 
 
-          <button
-            type="submit"
-            className="register-btn"
-          >
-            Create Account
+        </div>
 
-          </button>
-
-
-        </form>
 
 
       </div>
+
+
 
     </div>
 

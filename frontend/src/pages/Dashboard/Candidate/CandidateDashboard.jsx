@@ -1,14 +1,23 @@
 import DashboardLayout from "../../../components/dashboard/DashboardLayout";
-import {useEffect,useState} from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import API from "../../../api/api";
 
+import {
+FaBriefcase,
+FaCheckCircle,
+FaCalendarAlt,
+FaFileAlt,
+FaArrowRight,
+FaChartLine
+} from "react-icons/fa";
 
-function CandidateDashboard(){
+function CandidateDashboard() {
 
-const [applications,setApplications]=useState([]);
-const [interviews,setInterviews]=useState([]);
+const navigate = useNavigate();
 
-
+const [applications,setApplications] = useState([]);
+const [interviews,setInterviews] = useState([]);
 
 useEffect(()=>{
 
@@ -16,9 +25,7 @@ loadData();
 
 },[]);
 
-
-
-const loadData=async()=>{
+const loadData = async()=>{
 
 try{
 
@@ -27,16 +34,12 @@ await API.get("/applications/");
 
 setApplications(app.data);
 
-
-
 const interview =
 await API.get("/interviews/");
 
 setInterviews(interview.data);
 
-
 }
-
 catch(error){
 
 console.log(error);
@@ -45,133 +48,311 @@ console.log(error);
 
 };
 
-
-
 const username =
 localStorage.getItem("username");
-
-
 
 const myApplications =
 applications.filter(
 (item)=>
-item.candidateName === username
-);
-
-
-
-const shortlisted =
-myApplications.filter(
-(item)=>
-item.status==="Shortlisted"
-);
-
-
-
-const myInterviews =
-interviews.filter(
-(item)=>
 item.candidateName===username
 );
 
+const shortlisted =
+myApplications.filter(
+item=>item.status==="Shortlisted"
+);
 
+const myInterviews =
+interviews.filter(
+item=>item.candidateName===username
+);
 
 return (
 
 <DashboardLayout>
 
+<div className="candidate-dashboard">
+
+{/* Banner */}
+
+<div className="candidate-banner">
+
+<div>
 
 <h1>
-Candidate Dashboard
+Welcome back, {username}
 </h1>
 
-
 <p>
-Track your applications and interviews
+Track applications, interviews and your hiring journey.
 </p>
 
+</div>
 
+<div className="banner-icon">
+<FaChartLine />
+</div>
 
-<div className="cards">
+</div>
 
+{/* Stats */}
 
-<div className="card">
+<div className="candidate-stats">
+
+<div
+className="candidate-stat"
+onClick={()=>navigate("/applications")}
+style={{cursor:"pointer"}}
+>
+
+<div className="stat-icon blue">
+<FaBriefcase/>
+</div>
+
+<div>
 <h3>Applications</h3>
-<p>{myApplications.length}</p>
+<h2>{myApplications.length}</h2>
 </div>
 
+</div>
 
+<div
+className="candidate-stat"
+onClick={()=>navigate("/applications")}
+style={{cursor:"pointer"}}
+>
 
-<div className="card">
+<div className="stat-icon green">
+<FaCheckCircle/>
+</div>
+
+<div>
 <h3>Shortlisted</h3>
-<p>{shortlisted.length}</p>
+<h2>{shortlisted.length}</h2>
 </div>
 
+</div>
 
+<div
+className="candidate-stat"
+onClick={()=>navigate("/candidate-interviews")}
+style={{cursor:"pointer"}}
+>
 
-<div className="card">
+<div className="stat-icon orange">
+<FaCalendarAlt/>
+</div>
+
+<div>
 <h3>Interviews</h3>
-<p>{myInterviews.length}</p>
+<h2>{myInterviews.length}</h2>
 </div>
 
+</div>
 
+<div
+className="candidate-stat"
+onClick={()=>navigate("/resume")}
+style={{cursor:"pointer"}}
+>
 
-<div className="card">
+<div className="stat-icon purple">
+<FaFileAlt/>
+</div>
 
+<div>
 <h3>Resume</h3>
-
-<p>
-✓
-</p>
+<h2>Ready</h2>
+</div>
 
 </div>
 
-
 </div>
 
+{/* Applications */}
 
+<div className="candidate-panel">
 
-
-
-<div className="activity-card">
+<div className="panel-header">
 
 <h2>
-Recent Activity
+Recent Applications
 </h2>
 
+<button
+onClick={()=>navigate("/applications")}
+>
 
-<ul>
+View All
 
+<FaArrowRight
+style={{
+marginLeft:"8px"
+}}
+/>
+
+</button>
+
+</div>
+
+<div className="application-list">
 
 {
-myApplications.slice(-3).map(app=>(
+myApplications.length===0 ?
 
+(
 
-<li key={app._id}>
+<p>
+No applications yet.
+</p>
 
-Applied for {app.jobTitle}
+)
 
-</li>
+:
 
+(
+
+myApplications
+.slice(-5)
+.reverse()
+.map(app=>(
+
+<div
+className="application-item"
+key={app._id}
+>
+
+<div>
+
+<h3>
+{app.jobTitle}
+</h3>
+
+<p>
+Applied on {app.appliedDate}
+</p>
+
+</div>
+
+<span
+className={
+app.status==="Shortlisted"
+?
+"green-badge"
+:
+"blue-badge"
+}
+>
+
+{app.status || "Applied"}
+
+</span>
+
+</div>
 
 ))
 
+)
+
 }
-
-
-</ul>
-
 
 </div>
 
+</div>
 
-</DashboardLayout>
+{/* Interviews */}
 
+<div className="candidate-panel">
 
-);
+<div className="panel-header">
 
+<h2>
+Upcoming Interviews
+</h2>
+
+<button
+onClick={()=>navigate("/interviews")}
+>
+
+View All
+
+<FaArrowRight
+style={{
+marginLeft:"8px"
+}}
+/>
+
+</button>
+
+</div>
+
+{
+
+myInterviews.length===0 ?
+
+(
+
+<div className="empty-state">
+
+<FaCalendarAlt
+style={{
+fontSize:"40px",
+marginBottom:"10px"
+}}
+/>
+
+<p>
+No interviews scheduled yet
+</p>
+
+</div>
+
+)
+
+:
+
+(
+
+myInterviews.map(item=>(
+
+<div
+className="interview-card"
+key={item._id}
+onClick={()=>navigate("/interviews")}
+style={{
+cursor:"pointer",
+marginTop:"15px"
+}}
+>
+
+<h3>
+{item.jobTitle}
+</h3>
+
+<p>
+{item.date}
+</p>
+
+<span className="green-badge">
+{item.status || "Scheduled"}
+</span>
+
+</div>
+
+))
+
+)
 
 }
 
+</div>
+
+</div>
+
+</DashboardLayout>
+
+);
+
+}
 
 export default CandidateDashboard;

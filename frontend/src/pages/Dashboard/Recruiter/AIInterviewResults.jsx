@@ -1,192 +1,311 @@
 import DashboardLayout from "../../../components/dashboard/DashboardLayout";
-import { useEffect, useState } from "react";
+import {useEffect,useState} from "react";
 import API from "../../../api/api";
 
+import {
+FaRobot,
+FaCheckCircle,
+FaTimesCircle
+} from "react-icons/fa";
 
-function AIInterviewResults() {
 
+function AIInterviewResults(){
 
-  const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(true);
 
+const [results,setResults]=useState([]);
+const [loading,setLoading]=useState(true);
 
 
-  useEffect(() => {
 
-    loadResults();
+useEffect(()=>{
 
-  }, []);
+loadResults();
 
+},[]);
 
 
-  const loadResults = async () => {
 
-    try {
+const loadResults=async()=>{
 
-      const response =
-        await API.get("/interviews/results");
+try{
 
+const res =
+await API.get("/interviews/results");
 
-      setResults(response.data || []);
+setResults(res.data || []);
 
+}
 
-    } catch (error) {
+catch(err){
 
-      console.log(error);
+console.log(err);
 
-      setResults([]);
+}
 
-    } finally {
+finally{
 
-      setLoading(false);
+setLoading(false);
 
-    }
+}
 
-  };
+};
 
 
 
-  return (
+const recommended =
+results.filter(
+r=>(r.score||0)>=80
+).length;
 
-    <DashboardLayout>
 
 
-      <h1>
-        AI Interview Results
-      </h1>
+return (
 
+<DashboardLayout>
 
 
-      <div className="activity-card">
 
+<div className="candidate-banner">
 
-        {loading ? (
 
-          <p>
-            Loading results...
-          </p>
+<div>
 
-        ) : (
+<h1>
+AI Interview Analytics
+</h1>
 
+<p>
+AI generated candidate evaluation reports
+</p>
 
-          <table>
 
+</div>
 
-            <thead>
 
-              <tr>
+<div className="banner-icon">
 
-                <th>
-                  Candidate
-                </th>
+<FaRobot/>
 
+</div>
 
-                <th>
-                  Interview Score
-                </th>
 
+</div>
 
-                <th>
-                  Recommendation
-                </th>
 
 
-              </tr>
 
-            </thead>
 
+<div className="candidate-stats">
 
 
-            <tbody>
+<div className="candidate-stat">
 
+<div className="stat-icon blue">
 
-              {results.length > 0 ? (
+<FaRobot/>
 
+</div>
 
-                results.map((item, index) => (
+<div>
 
+<h3>Total Interviews</h3>
 
-                  <tr 
-                    key={item._id || index}
-                  >
+<h2>
+{results.length}
+</h2>
 
+</div>
 
-                    <td>
+</div>
 
-                      {item.candidateName || "Unknown"}
 
-                    </td>
 
 
+<div className="candidate-stat">
 
-                    <td>
+<div className="stat-icon green">
 
-                      {item.score ?? 0}%
+<FaCheckCircle/>
 
-                    </td>
+</div>
 
+<div>
 
+<h3>Recommended</h3>
 
-                    <td>
+<h2>
+{recommended}
+</h2>
 
+</div>
 
-                      {(item.score ?? 0) >= 80
+</div>
 
-                        ? "Recommended"
 
-                        : "Not Recommended"
 
-                      }
+<div className="candidate-stat">
 
+<div className="stat-icon orange">
 
-                    </td>
+<FaTimesCircle/>
 
+</div>
 
+<div>
 
-                  </tr>
+<h3>Rejected</h3>
 
+<h2>
+{results.length-recommended}
+</h2>
 
-                ))
+</div>
 
+</div>
 
 
-              ) : (
+</div>
 
 
-                <tr>
 
 
-                  <td colSpan="3">
 
-                    No Results
 
-                  </td>
+<div className="candidate-panel hover-card">
 
 
-                </tr>
+<h2>
+Interview Results
+</h2>
 
 
-              )}
+<table className="recruiter-table animated-table">
 
 
+<thead>
 
-            </tbody>
+<tr>
 
+<th>
+Candidate
+</th>
 
-          </table>
+<th>
+Score
+</th>
 
+<th>
+Decision
+</th>
 
-        )}
+</tr>
 
+</thead>
 
 
-      </div>
 
+<tbody>
 
 
-    </DashboardLayout>
+{
+loading ?
 
-  );
+
+<tr>
+<td colSpan="3">
+Loading...
+</td>
+</tr>
+
+
+:
+
+results.length ?
+
+
+results.map(item=>(
+
+
+<tr key={item._id}>
+
+
+<td>
+{item.candidateName || "Unknown"}
+</td>
+
+
+
+<td>
+
+<span className="blue-badge">
+
+{item.score || 0}%
+
+</span>
+
+</td>
+
+
+
+<td>
+
+
+{
+(item.score||0)>=80 ?
+
+<span className="green-badge">
+Recommended
+</span>
+
+:
+
+<span className="red-badge">
+Not Recommended
+</span>
+
+}
+
+
+
+</td>
+
+
+
+</tr>
+
+
+))
+
+
+:
+
+<tr>
+
+<td colSpan="3">
+No Results
+</td>
+
+</tr>
+
+
+}
+
+
+
+</tbody>
+
+
+</table>
+
+
+</div>
+
+
+
+
+</DashboardLayout>
+
+);
 
 }
 

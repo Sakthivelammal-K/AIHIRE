@@ -1,190 +1,232 @@
 import DashboardLayout from "../../../components/dashboard/DashboardLayout";
-import { useNavigate } from "react-router-dom";
+import {useNavigate} from "react-router-dom";
 import API from "../../../api/api";
+
+import {
+FaPlus,
+FaBriefcase
+} from "react-icons/fa";
 
 
 function CreateJob(){
 
-    const navigate = useNavigate();
+
+const navigate=useNavigate();
 
 
-const handleSubmit = async (e) => {
 
-    e.preventDefault();
+const handleSubmit=async(e)=>{
 
-
-    const job = {
-
-        title: document.getElementById("jobTitle").value,
-
-        department: document.getElementById("department").value,
-
-        location: document.getElementById("location").value,
-
-        description: document.getElementById("description").value,
-
-        requiredSkills: document.getElementById("requiredSkills").value,
-
-        status: "Open",
-
-        applicants: 0
-    };
+e.preventDefault();
 
 
-    try {
+const job={
 
-        await API.post("/jobs/create", job);
+title:e.target.title.value,
 
+department:e.target.department.value,
 
-        alert("Job Created Successfully");
+location:e.target.location.value,
 
+description:e.target.description.value,
 
-        navigate("/jobs");
+requiredSkills:e.target.skills.value,
 
+status:"Open",
 
-    }
-    catch(error){
-
-        console.log(error);
-
-        alert("Job creation failed");
-
-    }
+applicants:0
 
 };
 
 
 
-    return(
+try{
 
-        <DashboardLayout>
 
+await API.post(
+"/jobs/create",
+job
+);
 
-            <h1>Create New Job</h1>
 
+alert("Job Created");
 
-            <div className="activity-card">
 
+navigate("/jobs");
 
-                <form onSubmit={handleSubmit}>
 
+}
 
-                    <div className="form-group">
+catch(error){
 
-                        <label>
-                            Job Title
-                        </label>
+console.log(error);
 
-                        <input
-                            id="jobTitle"
-                            type="text"
-                            required
-                        />
+alert("Failed");
 
-                    </div>
+}
 
 
+};
 
-                    <div className="form-group">
 
-                        <label>
-                            Department
-                        </label>
 
-                        <input
-                            id="department"
-                            type="text"
-                            required
-                        />
+return (
 
-                    </div>
+<DashboardLayout>
 
 
 
+<div className="candidate-banner">
 
-                    <div className="form-group">
 
-                        <label>
-                            Location
-                        </label>
+<div>
 
-                        <input
-                            id="location"
-                            type="text"
-                            required
-                        />
+<h1>
+Create Job
+</h1>
 
-                    </div>
+<p>
+Add a new hiring position
+</p>
 
 
+</div>
 
 
-                    <div className="form-group">
+<div className="banner-icon">
 
+<FaBriefcase/>
 
-                        <label>
-                            Required Skills
-                        </label>
+</div>
 
 
-                        <input
+</div>
 
-                            id="requiredSkills"
 
-                            type="text"
 
-                            placeholder="React, JavaScript, CSS, TypeScript"
 
-                            required
 
-                        />
+<div className="candidate-panel hover-card">
 
 
-                    </div>
+<form onSubmit={handleSubmit}>
 
 
+<div className="form-group">
 
+<label>
+Job Title
+</label>
 
-                    <div className="form-group">
+<input
+name="title"
+required
+/>
 
+</div>
 
-                        <label>
-                            Description
-                        </label>
 
 
-                        <textarea
 
-                            id="description"
+<div className="form-group">
 
-                            rows="5"
+<label>
+Department
+</label>
 
-                        ></textarea>
+<input
+name="department"
+required
+/>
 
+</div>
 
-                    </div>
 
 
 
 
-                    <button type="submit">
+<div className="form-group">
 
-                        Create Job
+<label>
+Location
+</label>
 
-                    </button>
+<input
+name="location"
+required
+/>
 
+</div>
 
 
-                </form>
 
 
-            </div>
 
+<div className="form-group">
 
-        </DashboardLayout>
+<label>
+Required Skills
+</label>
 
 
-    );
+<input
+
+name="skills"
+
+placeholder="React, Python, AI"
+
+required
+
+/>
+
+</div>
+
+
+
+
+
+<div className="form-group">
+
+<label>
+Description
+</label>
+
+
+<textarea
+
+name="description"
+
+rows="5"
+
+/>
+
+
+</div>
+
+
+
+
+<button type="submit">
+
+<FaPlus/>
+
+ Create Job
+
+</button>
+
+
+
+</form>
+
+
+</div>
+
+
+
+</DashboardLayout>
+
+);
+
 
 }
 

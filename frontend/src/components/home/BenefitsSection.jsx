@@ -1,70 +1,66 @@
 import "../../styles/benefits.css";
 
 function BenefitsSection() {
-
   const benefits = [
     {
-      number: "70%",
-      title: "Faster Hiring",
+      value: "70%",
+      title: "Faster Time To Hire",
       description:
-        "Reduce hiring time with AI-powered screening and evaluation."
+        "Reduce manual screening and accelerate hiring decisions.",
     },
     {
-      number: "90%",
-      title: "Resume Automation",
+      value: "95%",
+      title: "Candidate Matching Accuracy",
       description:
-        "Automatically analyze resumes and shortlist top candidates."
+        "AI identifies the strongest candidates automatically.",
     },
     {
-      number: "3X",
-      title: "Better Matching",
+      value: "3x",
+      title: "Recruiter Productivity",
       description:
-        "AI identifies candidates that best fit job requirements."
+        "Handle more candidates with less manual effort.",
     },
     {
-      number: "50%",
-      title: "Cost Reduction",
+      value: "50%",
+      title: "Lower Hiring Costs",
       description:
-        "Reduce manual recruitment effort and operational costs."
-    }
+        "Reduce operational expenses through automation.",
+    },
   ];
 
   return (
     <section className="benefits">
+      <div className="benefits-left">
 
-      <div className="benefits-header">
-
-        <span>Why AIHIRE</span>
+        <span className="section-tag">
+          WHY AIHIRE
+        </span>
 
         <h2>
-          Built for Modern Recruitment Teams
+          Hiring Teams Move Faster
+          With AI Assistance
         </h2>
 
         <p>
-          Accelerate hiring, improve candidate quality
-          and make better decisions with AI.
+          Everything recruiters need to source,
+          evaluate and hire top talent at scale.
         </p>
 
       </div>
 
       <div className="benefits-grid">
-
         {benefits.map((item, index) => (
-
           <div className="benefit-card" key={index}>
 
-            <h3>{item.number}</h3>
+            <h3>{item.value}</h3>
 
             <h4>{item.title}</h4>
 
             <p>{item.description}</p>
 
           </div>
-
         ))}
-
       </div>
-
     </section>
   );
 }

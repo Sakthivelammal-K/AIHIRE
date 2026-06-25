@@ -1,131 +1,415 @@
 import DashboardLayout from "../../../components/dashboard/DashboardLayout";
-import { useEffect, useState } from "react";
+import {useEffect,useState} from "react";
 import API from "../../../api/api";
 
-
-function AvailableJobs() {
-
-
-  const [jobs,setJobs] = useState([]);
-  const [resumeAnalysis,setResumeAnalysis] = useState({});
-
-
-  useEffect(()=>{
-
-    loadJobs();
-
-  },[]);
+import {
+FaBriefcase,
+FaMapMarkerAlt,
+FaCode,
+FaPaperPlane,
+FaBuilding,
+FaCheckCircle
+} from "react-icons/fa";
 
 
 
-
-  const loadJobs = async()=>{
-
-
-    try{
+function AvailableJobs(){
 
 
-      const response =
-      await API.get("/jobs/");
+const [jobs,setJobs]=useState([]);
+
+const [appliedJobs,setAppliedJobs]=useState([]);
 
 
-      setJobs(response.data);
 
 
-    }
-    catch(error){
 
-      console.log(error);
+useEffect(()=>{
 
-    }
+loadJobs();
+
+},[]);
 
 
-  };
 
-const handleApply = async (job) => {
 
-  const candidateName =
-    localStorage.getItem("username");
 
-  console.log(
-    "Candidate Name:",
-    candidateName
-  );
 
-  const application = {
+const loadJobs=async()=>{
 
-    candidateName,
 
-    jobTitle: job.title,
+try{
 
-    department: job.department,
 
-    location: job.location,
+const res =
+await API.get("/jobs/");
 
-    company: "AIHIRE",
 
-    status: "Applied",
+setJobs(res.data);
 
-    appliedDate:
-      new Date().toLocaleDateString()
 
-  };
 
-  try {
+}
 
-    // Create application
-    await API.post(
-      "/applications/create",
-      application
-    );
+catch(err){
 
-    // Increase applicant count
-    await API.put(
-      `/jobs/${job._id}/applicant`
-    );
+console.log(err);
 
-    alert(
-      "Application Submitted Successfully"
-    );
+}
 
-    loadJobs();
-
-  }
-  catch (error) {
-
-    console.log(error);
-
-    alert("Application failed");
-
-  }
 
 };
 
 
+
+
+
+
+
+const handleApply=async(job)=>{
+
+
+
+if(appliedJobs.includes(job._id))
+return;
+
+
+
+
+
+const candidateName =
+localStorage.getItem("username");
+
+
+
+
+const application={
+
+
+candidateName,
+
+jobTitle:job.title,
+
+department:job.department,
+
+location:job.location,
+
+company:"AIHIRE",
+
+status:"Applied",
+
+appliedDate:
+new Date().toLocaleDateString()
+
+
+
+};
+
+
+
+
+
+
+try{
+
+
+
+await API.post(
+
+"/applications/create",
+
+application
+
+);
+
+
+
+
+
+await API.put(
+
+`/jobs/${job._id}/applicant`
+
+);
+
+
+
+
+
+
+setAppliedJobs(
+
+prev => [
+
+...prev,
+
+job._id
+
+]
+
+);
+
+
+
+
+
+
+alert(
+"Application Submitted Successfully"
+);
+
+
+
+
+}
+
+catch(error){
+
+console.log(error);
+
+
+alert(
+"Application failed"
+);
+
+
+}
+
+
+
+};
+
+
+
+
+
+
+
 return (
+
 
 <DashboardLayout>
 
 
+
+
+
+
+<div className="candidate-banner">
+
+
+
+<div>
+
+
+
 <h1>
-Available Jobs
+Find Your Next Role
 </h1>
 
 
 
-<div className="activity-card">
+<p>
+AI powered job matching platform
+</p>
 
 
 
-<table>
+</div>
+
+
+
+
+
+
+<div className="banner-icon">
+
+
+<FaBriefcase/>
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+<div className="candidate-stats">
+
+
+
+
+
+
+<div className="candidate-stat">
+
+
+<div className="stat-icon blue">
+
+
+<FaBriefcase/>
+
+
+</div>
+
+
+
+
+<div>
+
+
+<h3>
+Available Jobs
+</h3>
+
+
+
+<h2>
+{jobs.length}
+</h2>
+
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+<div className="candidate-stat">
+
+
+<div className="stat-icon green">
+
+
+<FaCode/>
+
+
+</div>
+
+
+
+
+<div>
+
+
+<h3>
+AI Matching
+</h3>
+
+
+<h2>
+95%
+</h2>
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+<div className="candidate-stat">
+
+
+<div className="stat-icon purple">
+
+
+<FaBuilding/>
+
+
+</div>
+
+
+
+<div>
+
+
+<h3>
+Company
+</h3>
+
+
+
+<h2>
+AIHIRE
+</h2>
+
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<div className="candidate-panel">
+
+
+
+
+
+<h2>
+Recommended Jobs
+</h2>
+
+
+
+
+
+
+<table className="recruiter-table">
+
+
+
+
 
 
 <thead>
 
+
 <tr>
 
+
 <th>
-Job Title
+Role
 </th>
 
 
@@ -149,9 +433,15 @@ Action
 </th>
 
 
+
 </tr>
 
+
+
 </thead>
+
+
+
 
 
 
@@ -160,11 +450,17 @@ Action
 
 
 
+
+
 {
-jobs.length>0 ?
+
+jobs.length ?
 
 
-jobs.map((job)=>(
+
+jobs.map(job=>(
+
+
 
 
 <tr key={job._id}>
@@ -172,9 +468,18 @@ jobs.map((job)=>(
 
 <td>
 
+
+<h3>
+
 {job.title}
 
+</h3>
+
+
 </td>
+
+
+
 
 
 
@@ -186,81 +491,282 @@ jobs.map((job)=>(
 
 
 
+
+
+
+
 <td>
+
+
+<FaMapMarkerAlt/>
+
+&nbsp;
 
 {job.location}
 
+
 </td>
 
 
 
+
+
+
+
 <td>
+
+
+<span className="blue-badge">
+
 
 {job.requiredSkills}
 
+
+</span>
+
+
+
 </td>
 
 
 
+
+
+
+
 <td>
+
+
+
+
 
 
 <button
 
-onClick={()=>
-handleApply(job)
+
+
+
+onClick={()=>handleApply(job)}
+
+disabled={
+appliedJobs.includes(job._id)
 }
+
+
+
+
+style={{
+
+
+
+background:
+
+appliedJobs.includes(job._id)
+
+
+?
+
+"linear-gradient(135deg,#10b981,#059669)"
+
+
+:
+
+"linear-gradient(135deg,#2563eb,#7c3aed)",
+
+
+
+
+
+
+border:"none",
+
+
+padding:"12px 20px",
+
+
+borderRadius:"14px",
+
+
+color:"white",
+
+
+fontWeight:"700",
+
+
+display:"flex",
+
+
+alignItems:"center",
+
+
+gap:"10px",
+
+
+cursor:
+
+appliedJobs.includes(job._id)
+
+?
+
+"default"
+
+:
+
+"pointer",
+
+
+
+
+
+boxShadow:
+"0 15px 30px rgba(37,99,235,.25)",
+
+
+
+transition:"0.3s"
+
+
+
+}}
+
+
+
 
 >
 
-Apply
+
+
+{
+
+
+appliedJobs.includes(job._id)
+
+
+
+?
+
+<>
+
+<FaCheckCircle/>
+
+Applied
+
+</>
+
+
+
+:
+
+
+<>
+
+
+<FaPaperPlane/>
+
+Apply Now
+
+
+</>
+
+
+}
+
+
 
 </button>
+
+
+
+
 
 
 </td>
 
 
 
+
+
+
+
 </tr>
+
+
+
 
 
 ))
 
 
+
+
+
+
 :
+
+
+
+
 
 <tr>
 
+
 <td colSpan="5">
+
 
 No jobs available
 
+
 </td>
+
+
 
 </tr>
 
 
+
+
+
 }
+
+
+
 
 
 
 </tbody>
 
 
+
+
+
+
 </table>
+
+
+
+
+
 
 
 
 </div>
 
 
+
+
+
+
+
 </DashboardLayout>
+
 
 );
 
 
+
 }
+
+
 
 
 export default AvailableJobs;

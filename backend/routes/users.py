@@ -35,3 +35,27 @@ def get_profile(email: str):
         "email": user.get("email"),
         "role": user.get("role")
     }
+
+@router.put("/profile")
+def update_profile(data: dict):
+
+    email = data.get("email")
+
+    users.update_one(
+        {"email": email},
+        {
+            "$set": {
+                "name": data.get("name"),
+                "skills": data.get("skills"),
+                "experience": data.get("experience"),
+                "location": data.get("location"),
+                "github": data.get("github"),
+                "portfolio": data.get("portfolio"),
+                "about": data.get("about")
+            }
+        }
+    )
+
+    return {
+        "message": "Profile updated successfully"
+    }

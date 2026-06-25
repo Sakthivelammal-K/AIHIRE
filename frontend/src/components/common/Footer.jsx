@@ -17,7 +17,7 @@ function Footer() {
         {/* Brand */}
           <div className="footer-brand">
 
-            <h2>AIHIRE</h2>
+            <h2>AI<span style={{ color: "#60A5FA" }}>HIRE</span></h2>
 
             <p>
             AI-powered hiring platform helping
@@ -25,42 +25,25 @@ function Footer() {
             top talent faster.
             </p>
 
-            <div className="social-links">
+<div className="social-links">
 
-  <a
-    href="/"
-    target="_blank"
-    rel="noreferrer"
-  >
+  <a href="#" aria-label="LinkedIn">
     <FaLinkedin />
   </a>
 
-  <a
-    href="/"
-    target="_blank"
-    rel="noreferrer"
-  >
+  <a href="#" aria-label="Instagram">
     <FaInstagram />
   </a>
 
-  <a
-    href="/"
-    target="_blank"
-    rel="noreferrer"
-  >
+  <a href="#" aria-label="Facebook">
     <FaFacebook />
   </a>
 
-  <a
-    href="/"
-    target="_blank"
-    rel="noreferrer"
-  >
+  <a href="#" aria-label="Twitter">
     <FaXTwitter />
   </a>
 
 </div>
-
         </div>
 
         {/* Product */}

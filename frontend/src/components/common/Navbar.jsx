@@ -5,7 +5,7 @@ function Navbar() {
   return (
     <nav className="navbar">
       <div className="logo">
-        <h2>AIHIRE</h2>
+        <h2>AI<span style={{ color: "#ec721b" }}>HIRE</span></h2>
       </div>
 
       <ul className="nav-menu">

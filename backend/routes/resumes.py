@@ -41,3 +41,25 @@ def get_resume(email:str):
 
 
     return {}
+
+@router.delete("/{email}")
+def delete_resume(email:str):
+
+
+    result = resumes.delete_one(
+        {
+            "email": email
+        }
+    )
+
+
+    if result.deleted_count == 1:
+
+        return {
+            "message":"Resume deleted successfully"
+        }
+
+
+    return {
+        "message":"Resume not found"
+    }

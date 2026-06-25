@@ -2,197 +2,498 @@ import DashboardLayout from "../../../components/dashboard/DashboardLayout";
 import API from "../../../api/api";
 import { useEffect, useState } from "react";
 
+import {
+FaUsers,
+FaUserCheck,
+FaCalendarAlt,
+FaChartLine,
+FaRobot
+} from "react-icons/fa";
+
+
 function RecruiterDashboard() {
 
-const [applications, setApplications] = useState([]);
-const [interviews, setInterviews] = useState([]);
 
-useEffect(() => {
-  loadData();
-}, []);
+const [applications,setApplications]=useState([]);
+const [interviews,setInterviews]=useState([]);
 
-const loadData = async () => {
-  try {
-    const appResponse = await API.get("/applications/");
-    setApplications(appResponse.data);
 
-    const interviewResponse = await API.get("/interviews/");
-    setInterviews(interviewResponse.data);
-  } catch (error) {
-    console.log(error);
-  }
+useEffect(()=>{
+
+loadData();
+
+},[]);
+
+
+
+const loadData=async()=>{
+
+try{
+
+const appResponse=await API.get("/applications/");
+setApplications(appResponse.data);
+
+
+const interviewResponse=await API.get("/interviews/");
+setInterviews(interviewResponse.data);
+
+
+}catch(error){
+
+console.log(error);
+
+}
+
 };
 
-  const strongHire = 
-  applications.filter((app) => app.status === "Shortlisted").length;
 
-  const rejected = 
-  applications.filter((app) => app.status === "Rejected").length;
 
-  const totalCandidates =
-  applications.length;
+const shortlisted =
+applications.filter(
+a=>a.status==="Shortlisted"
+).length;
 
-  const averageMatchScore =
-  applications.length > 0 ? 85 : 0;
 
-  const recentApplications =
-  [...applications].sort((a, b) => b.id - a.id).slice(0, 5);
 
-  const upcomingInterviews =
-  interviews.slice(0, 5);
-  
-  return (
-    <DashboardLayout>
+const rejected =
+applications.filter(
+a=>a.status==="Rejected"
+).length;
 
-      <h1>Recruiter Dashboard</h1>
-      <p>Manage hiring activities and track recruitment progress.</p>
 
-      <div className="dashboard-stats">
 
-        <div className="stat-card">
-          <h2>{totalCandidates}</h2>
-          <p>Total Candidates</p>
-        </div>
+const recentApplications =
+[...applications]
+.slice(0,5);
 
-        <div className="stat-card">
-          <h2>{strongHire}</h2>
-          <p>Shortlisted</p>
-        </div>
 
-        <div className="stat-card">
-          <h2>{rejected}</h2>
-          <p>Rejected</p>
-        </div>
 
-        <div className="stat-card">
-          <h2>{interviews.length}</h2>
-          <p>Interviews Scheduled</p>
-        </div>
+const upcomingInterviews =
+interviews.slice(0,5);
 
-        <div className="stat-card">
-          <h2>{averageMatchScore}%</h2>
-          <p>Average Match Score</p>
-        </div>
 
-      </div>
 
-      <div className="activity-card">
-        <h2>AI Hiring Insights</h2>
-        <p>
-          ⭐ Top Recommendation:
-          Review shortlisted candidates first.
-        </p>
 
-        <p>
-          📈 Hiring Pipeline:
-          {totalCandidates} candidates in process.
-        </p>
+return (
 
-        <p>
-          🤖 AI Suggestion:
-          Focus on candidates with match score above 80%.
-        </p>
+<DashboardLayout>
 
-      </div>
 
-      <div className="activity-card">
-  <h2>Recruitment Overview</h2>
+<div className="recruiter-dashboard">
 
-  <div className="dashboard-stats">
 
-    <div className="stat-card">
-      <h2>{totalCandidates}</h2>
-      <p>Total Candidates</p>
-    </div>
+{/* HEADER */}
 
-    <div className="stat-card">
-      <h2>{strongHire}</h2>
-      <p>Shortlisted</p>
-    </div>
+<div className="recruiter-header">
 
-    <div className="stat-card">
-      <h2>{rejected}</h2>
-      <p>Rejected</p>
-    </div>
+<div>
 
-  </div>
+<h1>
+Recruiter Overview
+</h1>
+
+<p>
+Track candidates, interviews and hiring performance
+</p>
 
 </div>
 
-      <div className="activity-card">
-        <h2>Recent Applications</h2>
-        {recentApplications.length > 0 ? (
-          <table>
-            <thead>
-              <tr>
-                <th>Candidate</th>
-                <th>Job Title</th>
-                <th>Location</th>
-                <th>Status</th>
-              </tr>
-            </thead>
 
-            <tbody>
-              {recentApplications.map((app) => (
-                <tr key={app.id}>
-                  <td>{app.candidateName}</td>
-                  <td>{app.jobTitle}</td>
-                  <td>{app.location}</td>
-                  <td>
-  <span
-    className={
-      app.status === "Shortlisted"
-        ? "status-shortlisted"
-        : app.status === "Rejected"
-        ? "status-rejected"
-        : "status-applied"
-    }
-  >
-    {app.status}
-  </span>
+<button>
+Create Job
+</button>
+
+
+</div>
+
+
+
+
+{/* STATS */}
+
+
+<div className="recruiter-stats">
+
+
+<div className="recruiter-stat">
+
+<FaUsers/>
+
+<div>
+
+<h2>
+{applications.length}
+</h2>
+
+<p>
+Total Candidates
+</p>
+
+</div>
+
+</div>
+
+
+
+
+<div className="recruiter-stat">
+
+<FaUserCheck/>
+
+<div>
+
+<h2>
+{shortlisted}
+</h2>
+
+<p>
+Shortlisted
+</p>
+
+</div>
+
+</div>
+
+
+
+
+<div className="recruiter-stat">
+
+<FaCalendarAlt/>
+
+<div>
+
+<h2>
+{interviews.length}
+</h2>
+
+<p>
+Interviews
+</p>
+
+</div>
+
+</div>
+
+
+
+
+<div className="recruiter-stat">
+
+<FaChartLine/>
+
+<div>
+
+<h2>
+85%
+</h2>
+
+<p>
+Match Score
+</p>
+
+</div>
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+{/* AI INSIGHT */}
+
+
+<div className="recruiter-ai">
+
+
+<div className="ai-icon">
+
+<FaRobot/>
+
+</div>
+
+
+<div>
+
+<h2>
+AI Hiring Assistant
+</h2>
+
+
+<p>
+
+Review shortlisted candidates first.
+AI recommends focusing on candidates
+with strong skill matches.
+
+</p>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+{/* TABLE */}
+
+
+<div className="recruiter-panel">
+
+
+<h2>
+Recent Applications
+</h2>
+
+
+
+<table className="recruiter-table">
+
+
+<thead>
+
+<tr>
+
+<th>
+Candidate
+</th>
+
+<th>
+Role
+</th>
+
+<th>
+Location
+</th>
+
+<th>
+Status
+</th>
+
+</tr>
+
+</thead>
+
+
+
+<tbody>
+
+
+{
+recentApplications.length>0 ?
+
+recentApplications.map((app)=>(
+
+
+<tr key={app.id}>
+
+
+<td>
+{app.candidateName}
 </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p>No Applications Available</p>
-        )}
-      </div>
 
-      <div className="activity-card">
-        <h2>Upcoming Interviews</h2>
-        {upcomingInterviews.length > 0 ?(
-          <table>
-            <thead>
-              <tr>
-                <th>Candidate</th>
-                <th>Job Title</th>
-                <th>Date</th>
-                <th>Type</th>
-                <th>Status</th>
-              </tr>
-            </thead>
 
-            <tbody>
-              {upcomingInterviews.map((interview) => (
-                <tr key={interview.id}>
-                  <td>{interview.candidateName}</td>
-                  <td>{interview.jobTitle}</td>
-                  <td>{interview.date}</td>
-                  <td>{interview.type}</td>
-                  <td>{interview.status}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p>No Interviews Scheduled.</p>
-        )}
-      </div>
+<td>
+{app.jobTitle}
+</td>
 
-    </DashboardLayout>
-  );
+
+<td>
+{app.location}
+</td>
+
+
+
+<td>
+
+<span className={
+app.status==="Shortlisted"
+?
+"green-badge"
+:
+app.status==="Rejected"
+?
+"red-badge"
+:
+"blue-badge"
+}>
+
+
+{app.status}
+
+
+</span>
+
+
+</td>
+
+
+
+</tr>
+
+
+
+))
+
+
+:
+
+<tr>
+
+<td colSpan="4">
+
+No Applications Found
+
+</td>
+
+</tr>
+
+
 }
+
+
+
+</tbody>
+
+
+
+</table>
+
+
+</div>
+
+
+
+
+
+
+
+<div className="recruiter-panel">
+
+
+<h2>
+Upcoming Interviews
+</h2>
+
+
+
+<table className="recruiter-table">
+
+
+<thead>
+
+<tr>
+
+<th>
+Candidate
+</th>
+
+<th>
+Role
+</th>
+
+<th>
+Date
+</th>
+
+<th>
+Type
+</th>
+
+
+</tr>
+
+
+</thead>
+
+
+<tbody>
+
+
+{
+
+upcomingInterviews.length>0 ?
+
+upcomingInterviews.map(
+(interview)=>(
+
+
+<tr key={interview.id}>
+
+
+<td>
+{interview.candidateName}
+</td>
+
+
+<td>
+{interview.jobTitle}
+</td>
+
+
+<td>
+{interview.date}
+</td>
+
+
+<td>
+{interview.type}
+</td>
+
+
+</tr>
+
+
+)
+
+)
+
+:
+
+<tr>
+
+<td colSpan="4">
+
+No Interviews Scheduled
+
+</td>
+
+</tr>
+
+
+}
+
+
+
+</tbody>
+
+
+</table>
+
+
+</div>
+
+
+
+</div>
+
+
+</DashboardLayout>
+
+
+);
+
+
+}
+
 
 export default RecruiterDashboard;

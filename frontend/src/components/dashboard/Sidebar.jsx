@@ -1,71 +1,295 @@
 import { Link, useLocation } from "react-router-dom";
+import "../../styles/dashboard.css";
 
-function Sidebar() {
+import {
+  MdDashboard,
+  MdBusiness,
+  MdPeople,
+  MdSecurity,
+  MdAnalytics,
+  MdSettings,
+  MdWork,
+  MdRecordVoiceOver,
+  MdSmartToy,
+  MdDescription,
+  MdPerson,
+  MdAssessment,
+  MdFolder,
+  MdLogout
+} from "react-icons/md";
+
+
+function Sidebar(){
+
   const role = localStorage.getItem("role");
   const location = useLocation();
 
+
   const menus = {
-    admin: [
-      { name: "🏠 Dashboard", path: "/admin-dashboard" },
-      { name: "🏢 Organizations", path: "/organizations" },
-      { name: "👥 Users", path: "/users" },
-      { name: "🔐 Roles & Permissions", path: "/roles" },
-      { name: "📊 Analytics", path: "/analytics" },
-      { name: "⚙️ Settings", path: "/settings" },
+
+    admin:[
+
+      {
+        name:"Dashboard",
+        icon:<MdDashboard />,
+        path:"/admin-dashboard"
+      },
+
+      {
+        name:"Organizations",
+        icon:<MdBusiness />,
+        path:"/organizations"
+      },
+
+      {
+        name:"Users",
+        icon:<MdPeople />,
+        path:"/users"
+      },
+
+      {
+        name:"Permissions",
+        icon:<MdSecurity />,
+        path:"/roles"
+      },
+
+      {
+        name:"Analytics",
+        icon:<MdAnalytics />,
+        path:"/analytics"
+      },
+
+      {
+        name:"Settings",
+        icon:<MdSettings />,
+        path:"/settings"
+      }
+
     ],
 
-    recruiter: [
-      { name: "🏠 Dashboard", path: "/recruiter-dashboard" },
-      { name: "💼 Jobs", path: "/jobs" },
-      { name: "👥 Candidates", path: "/candidates" },
-      { name: "🎤 Interviews", path: "/recruiter-interviews" },
-      { name: "🤖 AI Results", path: "/ai-interview-results" },
-      { name: "📈 Reports", path: "/reports" },
-      { name: "👤 Profile", path: "/recruiter-profile" },
+
+
+    recruiter:[
+
+      {
+        name:"Dashboard",
+        icon:<MdDashboard />,
+        path:"/recruiter-dashboard"
+      },
+
+
+      {
+        name:"Jobs",
+        icon:<MdWork />,
+        path:"/jobs"
+      },
+
+
+      {
+        name:"Candidates",
+        icon:<MdPeople />,
+        path:"/candidates"
+      },
+
+
+      {
+        name:"Interviews",
+        icon:<MdRecordVoiceOver />,
+        path:"/recruiter-interviews"
+      },
+
+
+      {
+        name:"AI Results",
+        icon:<MdSmartToy />,
+        path:"/ai-interview-results"
+      },
+
+
+      {
+        name:"Reports",
+        icon:<MdAssessment />,
+        path:"/reports"
+      },
+
+
+      {
+        name:"Profile",
+        icon:<MdPerson />,
+        path:"/recruiter-profile"
+      }
+
+
     ],
 
-    candidate: [
-      { name: "🏠 Dashboard", path: "/candidate-dashboard" },
-      { name: "📄 Applications", path: "/applications" },
-      { name: "💼 Available Jobs", path: "/available-jobs"},
-      { name: "🎤 Interviews", path: "/interviews" },
-      { name: "📑 Resume", path: "/resume" },
-      { name: "👤 Profile", path: "/profile" },
-    ],
+
+
+
+    candidate:[
+
+
+      {
+        name:"Dashboard",
+        icon:<MdDashboard />,
+        path:"/candidate-dashboard"
+      },
+
+
+      {
+        name:"Applications",
+        icon:<MdDescription />,
+        path:"/applications"
+      },
+
+
+      {
+        name:"Jobs",
+        icon:<MdWork />,
+        path:"/available-jobs"
+      },
+
+
+      {
+        name:"Interviews",
+        icon:<MdRecordVoiceOver />,
+        path:"/interviews"
+      },
+
+
+      {
+        name:"Resume",
+        icon:<MdFolder />,
+        path:"/resume"
+      },
+
+
+      {
+        name:"Profile",
+        icon:<MdPerson />,
+        path:"/profile"
+      }
+
+    ]
+
   };
 
+
+
+
   return (
-    <div className="sidebar">
 
-      <h2>AIHIRE</h2>
+    <aside className="sidebar">
 
-      <p className="sidebar-subtitle" 
-        style={{
-          color: "#94a3b8",
-          marginBottom: "20px",
-          fontSize: "14px",
-        }}
-      >
-        AI Recruitment Platform
-      </p>
 
-      <ul>
-        {menus[role]?.map((item, index) => (
-          <li key={index}>
-            <Link
-              to={item.path}
-              className={`sidebar-link ${
-                location.pathname === item.path ? "active-link" : ""
-              }`}
-            >
-              {item.name}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <div className="logo-area">
 
-    </div>
+
+        <h1>
+          AI<span>HIRE</span>
+        </h1>
+
+
+        <p>
+          AI Recruitment Platform
+        </p>
+
+
+      </div>
+
+
+
+
+      <nav>
+
+
+        <ul>
+
+
+          {
+            menus[role]?.map((item)=>(
+
+
+              <li key={item.path}>
+
+
+                <Link
+
+                  to={item.path}
+
+                  className={
+                    location.pathname === item.path
+                    ?
+                    "sidebar-link active-link"
+                    :
+                    "sidebar-link"
+                  }
+
+                >
+
+
+                  <span className="menu-icon">
+
+                    {item.icon}
+
+                  </span>
+
+
+                  <span>
+                    {item.name}
+                  </span>
+
+
+                </Link>
+
+
+              </li>
+
+
+            ))
+          }
+
+
+
+        </ul>
+
+
+      </nav>
+
+
+
+
+      <div className="sidebar-bottom">
+
+
+        <Link
+          to="/"
+          className="sidebar-link"
+        >
+
+          <span className="menu-icon">
+
+            <MdLogout />
+
+          </span>
+
+
+          Logout
+
+
+        </Link>
+
+
+      </div>
+
+
+
+
+    </aside>
+
   );
+
+
 }
+
 
 export default Sidebar;

@@ -1,36 +1,62 @@
 import "../../styles/howItWorks.css";
 
+const steps = [
+  {
+    number: "01",
+    title: "Create Hiring Pipeline",
+    description:
+      "Build jobs, define requirements, and configure automated hiring workflows in minutes.",
+  },
+  {
+    number: "02",
+    title: "AI Candidate Screening",
+    description:
+      "AI evaluates resumes, skills, experience, and job fit instantly with intelligent ranking.",
+  },
+  {
+    number: "03",
+    title: "AI Interviews & Assessments",
+    description:
+      "Conduct automated video interviews and technical assessments with detailed scoring.",
+  },
+  {
+    number: "04",
+    title: "Collaborative Hiring",
+    description:
+      "Recruiters and hiring managers review candidates together with AI-powered insights.",
+  },
+];
+
 function HowItWorks() {
   return (
     <section className="how-section">
-      <h2>How AIHIRE Works</h2>
+      <div className="section-header">
+        <span>Workflow</span>
 
-      <div className="steps-container">
+        <h2>
+          From Application to Offer,
+          <br />
+          Powered by AI
+        </h2>
 
-        <div className="step-card">
-          <div className="step-number">1</div>
-          <h3>Create Job</h3>
-          <p>Create a job manually or let AI generate it.</p>
-        </div>
+        <p>
+          Streamline every stage of recruitment with automation,
+          analytics and intelligent decision making.
+        </p>
+      </div>
 
-        <div className="step-card">
-          <div className="step-number">2</div>
-          <h3>AI Screening</h3>
-          <p>AI analyzes resumes and ranks candidates.</p>
-        </div>
+      <div className="timeline">
+        {steps.map((step) => (
+          <div className="timeline-card" key={step.number}>
+            <div className="timeline-number">
+              {step.number}
+            </div>
 
-        <div className="step-card">
-          <div className="step-number">3</div>
-          <h3>AI Interview</h3>
-          <p>Conduct AI powered interviews and assessments.</p>
-        </div>
+            <h3>{step.title}</h3>
 
-        <div className="step-card">
-          <div className="step-number">4</div>
-          <h3>Hire Talent</h3>
-          <p>Select the best candidate with AI insights.</p>
-        </div>
-
+            <p>{step.description}</p>
+          </div>
+        ))}
       </div>
     </section>
   );

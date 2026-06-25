@@ -1,98 +1,77 @@
-.navbar {
-  height: 80px;
-  padding: 0 60px;
+.navbar{
+  position:sticky;
+  top:0;
+  z-index:1000;
 
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  height:80px;
+  padding:0 7%;
 
-  background: white;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 
-  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  background:#ffffff;
+
+  backdrop-filter:none;
+
+  border-bottom:1px solid #f1f0ef;
 }
 
-.logo h2 {
-  color: #ff6b00;
-  font-size: 30px;
-  margin: 0;
-  font-weight: 700;
+.logo h2{
+  margin:0;
+  color:#f77817;
+  font-size:30px;
+  font-weight:800;
 }
 
-.nav-menu {
-  display: flex;
-  align-items: center;
+.nav-menu{
+  display:flex;
+  list-style:none;
+  gap:40px;
+}
+
+.nav-menu a{
+  color:#0b0b0b;
+  text-decoration:none;
+  font-weight:500;
+  transition:.3s;
+}
+
+.nav-menu a:hover{
+  color:#f97316;
+}
+
+.nav-buttons{
+  display:flex;
+  gap:12px;
+}
+
+.nav-login-btn{
+  padding:12px 24px;
+  border:3px solid #f09329;
+  color:#f09329;
+  border-radius:10px;
+}
+
+.nav-start-btn{
+  padding:12px 24px;
+  border-radius:10px;
+  background:#ec721b;
+  color:white;
+}
+
+.nav-start-btn:hover{
+  background:#ec721b;
+}
+
+.navbar a,
+.navbar a:link,
+.navbar a:visited,
+.navbar a:hover,
+.navbar a:active {
+  text-decoration: none;
+}
+
+.nav-menu li {
   list-style: none;
-  gap: 35px;
-}
-
-.nav-menu a {
-  text-decoration: none;
-  color: #1e293b;
-  font-weight: 600;
-  transition: 0.3s;
-}
-
-.nav-menu a:hover {
-  color: #ff6b00;
-}
-
-.nav-buttons {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.login-btn {
-  padding: 10px 22px;
-  border: 2px solid #ff6b00;
-  background: white;
-  color: #ff6b00;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.nav-buttons {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.nav-buttons a {
-  text-decoration: none;
-}
-
-.nav-login-btn,
-.nav-start-btn {
-  height: 42px;
-  min-width: 130px;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  text-decoration: none;
-  border-radius: 8px;
-  font-weight: 600;
-
-  transition: 0.3s;
-}
-
-.nav-login-btn {
-  border: 2px solid #ff6b00;
-  background: white;
-  color: #ff6b00;
-}
-
-.nav-login-btn:hover {
-  background: #fff4eb;
-}
-
-.nav-start-btn {
-  background: #ff6b00;
-  color: white;
-}
-
-.nav-start-btn:hover {
-  background: #e65c00;
 }

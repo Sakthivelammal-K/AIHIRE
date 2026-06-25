@@ -1,278 +1,242 @@
 import DashboardLayout from "../../../components/dashboard/DashboardLayout";
-import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import {useEffect,useState} from "react";
+import {useNavigate} from "react-router-dom";
 import API from "../../../api/api";
 
 
-function Jobs() {
+import {
+FaBriefcase,
+FaPlus,
+FaEdit,
+FaTrash
+} from "react-icons/fa";
 
-    const navigate = useNavigate();
 
-    const [jobs, setJobs] = useState([]);
+function Jobs(){
 
 
+const navigate=useNavigate();
 
-    useEffect(()=>{
+const [jobs,setJobs]=useState([]);
 
-        loadJobs();
 
-    },[]);
 
+useEffect(()=>{
 
+loadJobs();
 
-    const loadJobs = async()=>{
+},[]);
 
-        try{
 
-            const response =
-            await API.get("/jobs/");
 
+const loadJobs=async()=>{
 
-            setJobs(response.data);
+const res =
+await API.get("/jobs/");
 
+setJobs(res.data);
 
-        }
-        catch(error){
+};
 
-            console.log(error);
 
-        }
 
-    };
+const deleteJob=async(id)=>{
 
+await API.delete(
+`/jobs/${id}`
+);
 
+loadJobs();
 
+};
 
-    const deleteJob = async(id)=>{
 
 
-        try{
+return (
 
+<DashboardLayout>
 
-            console.log("Deleting job:", id);
 
 
-            await API.delete(
-                `/jobs/${id}`
-            );
+<div className="candidate-banner">
 
 
-            alert("Job Deleted Successfully");
+<div>
 
+<h1>
+Job Management
+</h1>
 
-            loadJobs();
+<p>
+Create and manage open positions
+</p>
 
 
-        }
-        catch(error){
+</div>
 
 
-            console.log(
-                error.response?.data || error
-            );
+<div className="banner-icon">
 
+<FaBriefcase/>
 
-            alert("Delete API failed");
+</div>
 
 
-        }
+</div>
 
-    };
 
 
+<br /><br />
 
 
-    return (
+<div className="candidate-panel hover-card">
 
-        <DashboardLayout>
 
 
-            <h1>
-                Job Management
-            </h1>
+<div className="panel-header">
 
 
+<h2>
+Active Jobs
+</h2>
 
-            <div className="activity-card">
 
+<button
+onClick={()=>navigate("/create-job")}
+>
 
+<FaPlus/>
+ Create Job
 
-                <button
-                    onClick={()=>navigate("/create-job")}
-                >
+</button>
 
-                    Create New Job
 
-                </button>
+</div>
 
 
 
-                <br/>
-                <br/>
 
 
+<table className="recruiter-table animated-table">
 
 
-                <table>
+<thead>
 
+<tr>
 
-                    <thead>
+<th>
+Title
+</th>
 
-                    <tr>
+<th>
+Department
+</th>
 
-                        <th>
-                            Job Title
-                        </th>
+<th>
+Location
+</th>
 
-                        <th>
-                            Department
-                        </th>
+<th>
+Status
+</th>
 
-                        <th>
-                            Location
-                        </th>
+<th>
+Actions
+</th>
 
-                        <th>
-                            Status
-                        </th>
 
-                        <th>
-                            Applicants
-                        </th>
+</tr>
 
-                        <th>
-                            Actions
-                        </th>
 
-                    </tr>
+</thead>
 
 
-                    </thead>
 
+<tbody>
 
 
+{
+jobs.map(job=>(
 
-                    <tbody>
 
+<tr key={job._id}>
 
-                    {
 
-                    jobs.length > 0 ?
+<td>
+{job.title}
+</td>
 
 
-                    jobs.map((job)=>(
+<td>
+{job.department}
+</td>
 
 
-                        <tr key={job._id}>
+<td>
+{job.location}
+</td>
 
 
-                            <td>
-                                {job.title}
-                            </td>
+<td>
 
+<span className="green-badge">
+{job.status}
+</span>
 
-                            <td>
-                                {job.department}
-                            </td>
+</td>
 
 
-                            <td>
-                                {job.location}
-                            </td>
+<td>
 
 
-                            <td>
-                                {job.status}
-                            </td>
+<button
+onClick={()=>navigate(`/edit-job/${job._id}`)}
+>
 
+<FaEdit/>
 
-                            <td>
-                                {job.applicants || 0}
-                            </td>
+</button>
 
 
 
-                            <td>
+<button
+onClick={()=>deleteJob(job._id)}
+>
 
+<FaTrash/>
 
+</button>
 
-                                <button
 
-                                onClick={()=>navigate(
-                                    `/edit-job/${job._id}`
-                                )}
+</td>
 
-                                >
 
-                                    Edit
 
-                                </button>
+</tr>
 
 
+))
 
-                                {" "}
+}
 
 
 
-                                <button
+</tbody>
 
-                                onClick={()=>deleteJob(job._id)}
 
-                                >
+</table>
 
-                                    Delete
 
-                                </button>
 
+</div>
 
 
-                            </td>
 
 
-                        </tr>
+</DashboardLayout>
 
+);
 
-                    ))
-
-
-
-                    :
-
-
-
-                    (
-
-                        <tr>
-
-                            <td colSpan="6">
-
-                                No Jobs Available
-
-                            </td>
-
-
-                        </tr>
-
-                    )
-
-
-                    }
-
-
-
-                    </tbody>
-
-
-
-                </table>
-
-
-            </div>
-
-
-        </DashboardLayout>
-
-    );
 
 }
 

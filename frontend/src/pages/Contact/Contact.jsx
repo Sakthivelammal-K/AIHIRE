@@ -2,207 +2,316 @@ import Navbar from "../../components/common/Navbar";
 import Footer from "../../components/common/Footer";
 import "../../styles/contact.css";
 
+
 import {
-  FaEnvelope,
-  FaPhoneAlt,
-  FaMapMarkerAlt,
-  FaInstagram,
-  FaLinkedin,
-  FaFacebook,
-  FaTwitter
+FaEnvelope,
+FaPhoneAlt,
+FaMapMarkerAlt,
+FaLinkedin,
+FaInstagram,
+FaFacebook
 } from "react-icons/fa";
 
-function Contact() {
-  return (
-    <>
-      <Navbar />
 
-      <section className="contact-hero">
+function Contact(){
 
-        <span className="contact-tag">
-          CONTACT AIHIRE
-        </span>
 
-        <h1>
-          Let's Build Better Hiring Together
-        </h1>
+return(
 
-        <p>
-          Have questions about AIHIRE?
-          Our team is here to help you automate
-          recruitment and hire top talent faster.
-        </p>
+<>
 
-      </section>
+<Navbar/>
 
-      <section className="contact-main">
 
-        <div className="contact-info">
+<div className="contact-page">
 
-          <h2>Get In Touch</h2>
 
-          <p className="contact-desc">
-            Reach out to our team for demos,
-            support, partnerships or general inquiries.
-          </p>
+<section className="contact-hero">
 
-          <div className="info-item">
 
-            <FaEnvelope className="info-icon" />
+<span className="contact-tag">
+CONTACT AIHIRE
+</span>
 
-            <div>
-              <h4>Email</h4>
-              <p>support@aihire.com</p>
-            </div>
 
-          </div>
+<h1>
+Let's Talk About Smarter Hiring
+</h1>
 
-          <div className="info-item">
 
-            <FaPhoneAlt className="info-icon" />
+<p>
 
-            <div>
-              <h4>Phone</h4>
-              <p>+91 9876543210</p>
-            </div>
+Have questions, need a demo or want to transform
+your recruitment workflow?
 
-          </div>
+Our team is ready.
 
-          <div className="info-item">
+</p>
 
-            <FaMapMarkerAlt className="info-icon" />
 
-            <div>
-              <h4>Location</h4>
-              <p>Tuticorin, Tamil Nadu, India</p>
-            </div>
+</section>
 
-          </div>
 
-          <div className="social-links">
 
-            <a
-              href="https://www.linkedin.com/company/devopstrio"
-              target="_blank"
-              rel="noreferrer"
-            >
-              <FaLinkedin />
-            </a>
 
-            <a
-              href="https://www.instagram.com/devopstrio"
-              target="_blank"
-              rel="noreferrer"
-            >
-              <FaInstagram />
-            </a>
 
-            <a
-              href="https://www.facebook.com"
-              target="_blank"
-              rel="noreferrer"
-            >
-              <FaFacebook />
-            </a>
+<section className="contact-main">
 
-            <a
-              href="https://twitter.com"
-              target="_blank"
-              rel="noreferrer"
-            >
-              <FaTwitter />
-            </a>
 
-          </div>
 
-        </div>
+<div className="contact-card">
 
-        <div className="contact-form">
 
-          <h2>Send Us A Message</h2>
+<h2>
+Get In Touch
+</h2>
 
-          <form>
 
-            <input
-              type="text"
-              placeholder="Full Name"
-            />
+<p className="contact-desc">
 
-            <input
-              type="email"
-              placeholder="Work Email"
-            />
+Talk with our recruitment specialists
+and discover how AIHIRE can improve
+your hiring process.
 
-            <input
-              type="text"
-              placeholder="Company Name"
-            />
+</p>
 
-            <input
-              type="text"
-              placeholder="Subject"
-            />
 
-            <textarea
-              rows="6"
-              placeholder="Tell us how we can help..."
-            />
 
-            <button type="submit">
-              Send Message
-            </button>
+<div className="info-box">
 
-          </form>
+<div className="info-icon">
+<FaEnvelope/>
+</div>
 
-        </div>
+<div>
+<h4>Email</h4>
+<p>support@aihire.com</p>
+</div>
 
-      </section>
+</div>
 
-      <section className="faq-section">
 
-        <h2>Frequently Asked Questions</h2>
 
-        <div className="faq-container">
 
-          <div className="faq-card">
-            <h3>How quickly can we start?</h3>
-            <p>
-              Most companies can begin using AIHIRE
-              within a few days.
-            </p>
-          </div>
+<div className="info-box">
 
-          <div className="faq-card">
-            <h3>Do you support AI interviews?</h3>
-            <p>
-              Yes. AIHIRE provides AI-powered
-              candidate interviews and scoring.
-            </p>
-          </div>
+<div className="info-icon">
+<FaPhoneAlt/>
+</div>
 
-          <div className="faq-card">
-            <h3>Can workflows be customized?</h3>
-            <p>
-              Recruiters can customize hiring
-              stages and interview processes.
-            </p>
-          </div>
+<div>
+<h4>Phone</h4>
+<p>+91 9876543210</p>
+</div>
 
-          <div className="faq-card">
-            <h3>Do candidates need accounts?</h3>
-            <p>
-              Candidates can apply and manage
-              interviews through the platform.
-            </p>
-          </div>
+</div>
 
-        </div>
 
-      </section>
 
-      <Footer />
-    </>
-  );
+
+<div className="info-box">
+
+<div className="info-icon">
+<FaMapMarkerAlt/>
+</div>
+
+<div>
+<h4>Office</h4>
+<p>Tamil Nadu, India</p>
+</div>
+
+</div>
+
+
+
+<div className="social-links">
+
+
+<a href="#">
+<FaLinkedin/>
+</a>
+
+
+<a href="#">
+<FaInstagram/>
+</a>
+
+
+<a href="#">
+<FaFacebook/>
+</a>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+<div className="form-card">
+
+
+<h2>
+Send Message
+</h2>
+
+
+
+<form className="contact-form">
+
+
+<input placeholder="Full Name"/>
+
+<input placeholder="Work Email"/>
+
+<input placeholder="Company Name"/>
+
+
+<textarea
+rows="5"
+placeholder="Tell us how we can help"
+/>
+
+
+<button>
+Send Message
+</button>
+
+
+</form>
+
+
+
+</div>
+
+
+
+</section>
+
+
+
+
+
+<section className="contact-stats">
+
+
+<div className="stat-box">
+<h2>10K+</h2>
+<p>Candidates Managed</p>
+</div>
+
+
+<div className="stat-box">
+<h2>85%</h2>
+<p>Faster Screening</p>
+</div>
+
+
+<div className="stat-box">
+<h2>24/7</h2>
+<p>Support</p>
+</div>
+
+
+</section>
+
+
+
+
+
+
+<section className="faq-section">
+
+
+<h2>
+Frequently Asked Questions
+</h2>
+
+
+<div className="faq-container">
+
+
+<div className="faq-card">
+
+<h3>
+How fast can we start?
+</h3>
+
+<p>
+You can setup your hiring workspace within minutes.
+</p>
+
+</div>
+
+
+
+
+<div className="faq-card">
+
+<h3>
+Does AIHIRE support AI interviews?
+</h3>
+
+<p>
+Yes, AI powered interviews and evaluation reports.
+</p>
+
+</div>
+
+
+
+
+<div className="faq-card">
+
+<h3>
+Can recruiters customize workflows?
+</h3>
+
+<p>
+Yes. Hiring stages can be fully customized.
+</p>
+
+</div>
+
+
+
+
+<div className="faq-card">
+
+<h3>
+Is support available?
+</h3>
+
+<p>
+Our team helps companies throughout their journey.
+</p>
+
+</div>
+
+
+
+</div>
+
+
+</section>
+
+
+
+</div>
+
+
+<Footer/>
+
+
+</>
+
+)
+
 }
+
 
 export default Contact;

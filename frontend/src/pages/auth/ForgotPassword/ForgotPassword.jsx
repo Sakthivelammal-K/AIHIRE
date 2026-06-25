@@ -1,91 +1,93 @@
 import { useState } from "react";
-import "../../../styles/forgotpassword.css";
-import API from "../../../api/api";
+import { Link, useNavigate } from "react-router-dom";
+import "../../../styles/forgotPassword.css";
 
-function ForgotPassword() {
+import {
+  FaLock,
+  FaArrowLeft
+} from "react-icons/fa";
 
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [resetLink, setResetLink] = useState("");
 
-  const handleResetPassword = async (e) => {
+function ForgotPassword(){
+
+  const [email,setEmail] = useState("");
+  const navigate = useNavigate();
+
+
+  const handleSubmit=(e)=>{
+
     e.preventDefault();
 
-    if (!email) {
-      setMessage("Please enter your email");
-      return;
-    }
 
-
-    try {
-
-      setLoading(true);
-
-const response = await API.post("/auth/forgot-password", {
-    email: email
-});
-
-
-setMessage(response.data.message);
-
-setResetLink(response.data.reset_link);
-
-
-    } catch (error) {
-
-      setMessage(
-        error.response?.data?.message ||
-        "Something went wrong"
-      );
-
-    } finally {
-      setLoading(false);
-    }
+    // temporary reset link redirect
+    navigate(
+      `/reset-password?email=${email}`
+    );
 
   };
 
 
-  return (
-    <div className="forgot-container">
+  return(
+
+    <div className="forgot-page">
+
+
+      <div className="forgot-glow"></div>
+
 
       <div className="forgot-card">
 
-        <h1>AIHIRE</h1>
 
-        <h2>Forgot Password?</h2>
+        <center>
 
-        <p>
-          Enter your registered email address.
-        </p>
+          <div className="forgot-icon">
 
-
-        <form onSubmit={handleResetPassword}>
-
-
-          <div className="form-group">
-
-            <label>Email Address</label>
-
-            <input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e)=>setEmail(e.target.value)}
-            />
+            <FaLock/>
 
           </div>
 
+        </center>
 
-          <button 
-            className="reset-btn"
-            disabled={loading}
-          >
 
-            {loading 
-              ? "Sending..."
-              : "Send Reset Link"
-            }
+        <h1>
+          Forgot Password?
+        </h1>
+
+
+        <p>
+          Enter your email address and we'll send
+          you a secure link to reset your password.
+        </p>
+
+
+
+        <form onSubmit={handleSubmit}>
+
+
+          <label>
+            Email Address
+          </label>
+
+
+          <input
+
+            type="email"
+
+            placeholder="Enter your email"
+
+            value={email}
+
+            onChange={(e)=>setEmail(e.target.value)}
+
+            required
+
+          />
+
+
+
+          <button type="submit">
+
+            Send Reset Link
 
           </button>
 
@@ -93,28 +95,31 @@ setResetLink(response.data.reset_link);
         </form>
 
 
-        {message && (
-          <p className="message">
-            {message}
-          </p>
-        )}
 
-        {
- resetLink && (
-   <a 
-     href={resetLink}
-     className="reset-link"
-   >
-     Open Reset Password
-   </a>
- )
-}
+        <Link
+
+          to="/login"
+
+          className="back-login"
+
+        >
+
+          <FaArrowLeft/>
+
+          Back to Login
+
+
+        </Link>
 
 
       </div>
 
+
     </div>
-  );
+
+  )
+
 }
+
 
 export default ForgotPassword;

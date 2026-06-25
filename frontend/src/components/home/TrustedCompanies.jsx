@@ -1,4 +1,5 @@
 import "../../styles/trustedcompanies.css";
+
 import google from "../../assets/logos/google.svg";
 import microsoft from "../../assets/logos/microsoft.svg";
 import amazon from "../../assets/logos/amazon.svg";
@@ -9,43 +10,85 @@ import flipkart from "../../assets/logos/flipkart.svg";
 import swiggy from "../../assets/logos/swiggy.svg";
 import zomato from "../../assets/logos/zomato.svg";
 
-const companies = [
-  google,
-  microsoft,
-  amazon,
-  infosys,
-  tcs,
-  zoho,
-  swiggy,
-  flipkart,
-  zomato,
-];
-
-const logoStyle = {
-  height: "32px",
-  width: "auto",
-  maxWidth: "110px",
-  maxHeight: "32px",
-  objectFit: "contain",
-  display: "block",
-  filter: "grayscale(1)",
-  opacity: "0.6",
-};
-
 function TrustedCompanies() {
-  const doubled = [...companies, ...companies];
+
+  const logos = [
+    google,
+    microsoft,
+    amazon,
+    infosys,
+    tcs,
+    zoho,
+    flipkart,
+    swiggy,
+    zomato,
+  ];
+
+  const scrollingLogos = [
+    ...logos,
+    ...logos
+  ];
+
   return (
-    <section className="trusted">
-      <h1>Trusted by leading companies for hiring</h1>
-      <div className="slider-outer">
+    <section className="trusted-section">
+
+      <span className="section-badge">
+        Trusted Worldwide
+      </span>
+
+      <h2>
+        Trusted by modern hiring teams
+      </h2>
+
+      <p>
+        Thousands of recruiters use AIHIRE to automate hiring,
+        reduce screening time and discover top talent faster.
+      </p>
+
+      <div className="logo-slider">
+
         <div className="logo-track">
-          {doubled.map((logo, index) => (
-            <div className="logo-item" key={index}>
-              <img src={logo} alt="company" style={logoStyle} />
+
+          {scrollingLogos.map((logo, index) => (
+            <div
+              key={index}
+              className="logo-card"
+            >
+              <img
+                src={logo}
+                alt="company logo"
+              />
             </div>
           ))}
+
         </div>
+
       </div>
+
+      <div className="trust-grid">
+
+        <div>
+          <h3>50K+</h3>
+          <span>Candidates Screened</span>
+        </div>
+
+        <div>
+          <h3>1200+</h3>
+          <span>Recruiters</span>
+        </div>
+
+        <div>
+          <h3>92%</h3>
+          <span>Match Accuracy</span>
+        </div>
+
+        <div>
+          <h3>70%</h3>
+          <span>Faster Hiring</span>
+        </div>
+
+      </div>
+
     </section>
   );
 }

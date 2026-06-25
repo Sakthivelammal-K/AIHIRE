@@ -1,235 +1,334 @@
 import "../../styles/login.css";
+
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import API from "../../api/api";
 
+import {
+  FaArrowRight,
+  FaShieldAlt,
+  FaRobot,
+  FaUsers,
+  FaEye,
+  FaEyeSlash
+} from "react-icons/fa";
 
-function Login() {
 
-  const navigate = useNavigate();
+function Login(){
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+const navigate = useNavigate();
 
 
-const handleLogin = async (e) => {
+const [email,setEmail]=useState("");
+const [password,setPassword]=useState("");
+const [showPassword,setShowPassword] =
+useState(false);
 
-  e.preventDefault();
 
-  try {
+const handleLogin = async(e)=>{
+
+e.preventDefault();
+
+
+try{
+
 
 const response = await API.post(
-  "/auth/login",
-  {
-    email,
-    password
-  }
+"/auth/login",
+{
+email,
+password
+}
 );
+
+
 
 localStorage.setItem(
-  "username",
-  response.data.username
+"username",
+response.data.username
 );
+
 
 localStorage.setItem(
-  "email",
-  response.data.email
+"email",
+response.data.email
 );
+
 
 localStorage.setItem(
-  "role",
-  response.data.role
+"role",
+response.data.role
 );
+
 
 localStorage.setItem(
-  "token",
-  response.data.token
+"token",
+response.data.token
 );
 
 
-    alert("Login Successful");
+
+alert("Login Successful");
 
 
-    if(response.data.role === "admin"){
 
-      navigate("/admin-dashboard");
+if(response.data.role==="admin"){
 
-    }
-    else if(response.data.role === "recruiter"){
+navigate("/admin-dashboard");
 
-      navigate("/recruiter-dashboard");
+}
 
-    }
-    else if(response.data.role === "candidate"){
+else if(response.data.role==="recruiter"){
 
-      navigate("/candidate-dashboard");
+navigate("/recruiter-dashboard");
 
-    }
+}
 
+else if(response.data.role==="candidate"){
 
-  }
-  catch(error){
+navigate("/candidate-dashboard");
 
-    console.log(error);
+}
 
 
-    alert(
-      "Invalid Email or Password"
-    );
 
-  }
+}
+catch(error){
+
+console.log(error);
+
+alert(
+"Invalid Email or Password"
+);
+
+}
+
 
 };
 
 
 
-  return (
+return (
 
-    <div className="login-container">
+<div className="login-page">
 
-      <div className="login-card">
 
+<div className="login-glow"></div>
 
-        <h1>AIHIRE</h1>
 
 
-        <h2>Welcome Back</h2>
+<div className="login-wrapper">
 
 
-        <p>
-          Login to continue
-        </p>
 
+{/* LEFT SIDE */}
 
 
-        <form 
-          onSubmit={handleLogin}
-          autoComplete="off"
-        >
+<div className="login-brand">
 
 
+<h1>
+AI<span style={{ color: "#60A5FA" }}>HIRE</span>
+</h1>
 
-          <div className="form-group">
 
-            <label>
-              Email
-            </label>
+<h2>
+Smart Hiring Starts Here
+</h2>
 
 
-            <input
+<p>
 
-              type="email"
+AI powered recruitment platform
+that helps companies discover,
+interview and hire the best talent.
 
-              placeholder="Enter email"
+</p>
 
-              value={email}
 
-              onChange={(e)=>setEmail(e.target.value)}
 
-              required
+<div className="brand-feature">
 
-            />
+<FaRobot/>
 
-          </div>
+AI Resume Screening
 
+</div>
 
 
 
+<div className="brand-feature">
 
-          <div className="form-group">
+<FaUsers/>
 
+Candidate Management
 
-            <label>
-              Password
-            </label>
+</div>
 
 
-            <input
 
-              type="password"
+<div className="brand-feature">
 
-              placeholder="Enter password"
+<FaShieldAlt/>
 
-              value={password}
+Secure Hiring Workflow
 
-              onChange={(e)=>setPassword(e.target.value)}
+</div>
 
-              required
 
-            />
 
+</div>
 
-          </div>
 
 
 
 
 
+{/* LOGIN CARD */}
 
-          <div className="login-options">
 
 
-            <Link to="/forgot-password">
+<div className="login-card">
 
-              Forgot Password?
 
-            </Link>
+<h2>
+Welcome Back
+</h2>
 
 
-          </div>
+<p>
+Login to continue your workspace
+</p>
 
 
 
 
+<form onSubmit={handleLogin}>
 
 
-          <button
+<div className="input-group">
 
-            type="submit"
+<label>
+Email
+</label>
 
-            className="login-btn"
 
-          >
+<input
 
-            Login
+type="email"
 
+placeholder="Enter your email"
 
-          </button>
+value={email}
 
+onChange={
+(e)=>setEmail(e.target.value)
+}
 
+required
 
-        </form>
+/>
 
+</div>
 
 
 
 
 
-        <p className="register-link">
+<div className="input-group">
 
+<label>
+Password
+</label>
 
-          Don't have an account?{" "}
+<div className="password-wrapper">
 
+  <input
+    type={showPassword ? "text" : "password"}
+    placeholder="Enter password"
+    value={password}
+    onChange={(e)=>setPassword(e.target.value)}
+    required
+  />
 
-          <Link to="/register">
+  <button
+    type="button"
+    className="password-toggle"
+    onClick={() => setShowPassword(!showPassword)}
+  >
+    {showPassword ? <FaEyeSlash /> : <FaEye />}
+  </button>
 
-            Register
+</div>
 
-          </Link>
+</div>
 
 
-        </p>
 
 
 
+<div className="login-links">
 
 
-      </div>
+<Link to="/forgot-password">
 
+Forgot Password?
 
-    </div>
+</Link>
 
-  );
+
+</div>
+
+
+
+
+
+
+<button
+className="login-btn"
+type="submit"
+>
+
+Login
+
+<FaArrowRight/>
+
+</button>
+
+
+
+
+
+<p className="signup">
+
+Don't have an account?
+
+
+<Link to="/register">
+
+Create Account
+
+</Link>
+
+
+</p>
+
+
+
+</form>
+
+
+
+</div>
+
+
+</div>
+
+
+
+</div>
+
+);
 
 }
 
