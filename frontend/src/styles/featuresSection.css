@@ -1,6 +1,6 @@
 .features{
   padding:120px 8%;
-  background:#0b0d1a;
+  background:#ffffff;
 }
 
 .features-top{
@@ -11,12 +11,12 @@
 
 .features-top h2{
   font-size:52px;
-  color:white;
+  color:#1f2937;
   margin-bottom:20px;
 }
 
 .features-top p{
-  color:#94a3b8;
+  color:#64748b;
 }
 
 .features-grid{
@@ -27,31 +27,34 @@
 }
 
 .feature-box{
-  background:rgba(255,255,255,.03);
-  border:1px solid rgba(255,255,255,.08);
+  background:#ffffff;
+
+  border:1px solid #fed7aa;
+
   border-radius:20px;
   padding:30px;
   transition:.3s;
 }
 
+
 .feature-box:hover{
   transform:translateY(-8px);
-  border-color:#2a7de1;
+  border-color:#f97316;
 }
 
 .feature-number{
-  color:#2a7de1;
+  color:#f97316;
   font-size:32px;
   font-weight:700;
   margin-bottom:20px;
 }
 
 .feature-box h3{
-  color:white;
+  color:#1f2937;
   margin-bottom:15px;
 }
 
 .feature-box p{
-  color:#94a3b8;
+  color:#64748b;
   line-height:1.7;
 }

@@ -1,6 +1,6 @@
 .how-section{
   padding:120px 8%;
-  background:#0F172A;
+  background:#ffffff;
 }
 
 .section-header{
@@ -10,11 +10,12 @@
 }
 
 .section-header span{
-  color:#60A5FA;
+  color:#f97316;
 }
 
+
 .section-header h2{
-  color:white;
+  color:#1f2937;
   font-size:52px;
   margin:20px 0;
 }
@@ -28,27 +29,32 @@
   gap:24px;
 }
 
-.timeline-card{
-  background:#111827;
 
-  border:1px solid rgba(255,255,255,.05);
+
+.timeline-card{
+  background:#ffffff;
+
+  border:1px solid #fed7aa;
 
   padding:30px;
 
   border-radius:20px;
 }
 
+
 .timeline-number{
   font-size:42px;
   font-weight:800;
-  color:#3B82F6;
+  color:#f97316;
 }
 
+
 .timeline-card h3{
-  color:white;
+  color:#1f2937;
   margin:20px 0;
 }
 
+
 .timeline-card p{
-  color:#94A3B8;
+  color:#64748b;
 }
