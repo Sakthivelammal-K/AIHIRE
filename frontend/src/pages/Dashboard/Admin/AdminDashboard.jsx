@@ -3,17 +3,19 @@ import { useEffect, useState } from "react";
 import API from "../../../api/api";
 
 import {
-  FaUsers,
-  FaUserTie,
-  FaUserGraduate,
-  FaBriefcase,
-  FaFileAlt,
-  FaVideo,
-  FaChartLine,
+FaUsers,
+FaUserTie,
+FaUserGraduate,
+FaBriefcase,
+FaFileAlt,
+FaVideo,
+FaChartLine,
+FaClipboardList,
+FaUserPlus
 } from "react-icons/fa";
 
 
-function AdminDashboard() {
+function AdminDashboard(){
 
 
 const [users,setUsers]=useState([]);
@@ -31,14 +33,24 @@ loadData();
 
 
 
-const loadData = async()=>{
+const loadData=async()=>{
 
 try{
 
-const usersRes = await API.get("/users/");
-const jobsRes = await API.get("/jobs/");
-const appRes = await API.get("/applications/");
-const interviewRes = await API.get("/interviews/");
+const [
+usersRes,
+jobsRes,
+appRes,
+interviewRes
+
+]=await Promise.all([
+
+API.get("/users/"),
+API.get("/jobs/"),
+API.get("/applications/"),
+API.get("/interviews/")
+
+]);
 
 
 setUsers(usersRes.data);
@@ -64,6 +76,7 @@ user=>user.role==="recruiter"
 ).length;
 
 
+
 const candidates =
 users.filter(
 user=>user.role==="candidate"
@@ -71,13 +84,15 @@ user=>user.role==="candidate"
 
 
 
-return (
+return(
 
 <DashboardLayout>
 
 
-<div className="dashboard-header">
+<div className="admin-dashboard">
 
+
+<div className="dashboard-header">
 
 <div>
 
@@ -85,9 +100,11 @@ return (
 Admin Dashboard
 </h1>
 
+
 <p>
 Monitor AIHIRE platform performance and activity
 </p>
+
 
 </div>
 
@@ -101,7 +118,7 @@ Monitor AIHIRE platform performance and activity
 
 
 
-<div className="card">
+<div className="admin-card">
 
 <FaUsers className="dashboard-icon"/>
 
@@ -118,7 +135,7 @@ Total Users
 
 
 
-<div className="card">
+<div className="admin-card">
 
 <FaUserTie className="dashboard-icon"/>
 
@@ -135,7 +152,8 @@ Recruiters
 
 
 
-<div className="card">
+
+<div className="admin-card">
 
 <FaUserGraduate className="dashboard-icon"/>
 
@@ -152,7 +170,8 @@ Candidates
 
 
 
-<div className="card">
+
+<div className="admin-card">
 
 <FaBriefcase className="dashboard-icon"/>
 
@@ -173,6 +192,7 @@ Active Jobs
 
 
 
+
 <div className="dashboard-grid">
 
 
@@ -188,12 +208,11 @@ Platform Overview
 
 <div className="overview-item">
 
-<FaFileAlt/>
+<FaClipboardList/>
 
 <span>
-Applications Received
+Applications
 </span>
-
 
 <b>
 {applications.length}
@@ -201,6 +220,7 @@ Applications Received
 
 
 </div>
+
 
 
 
@@ -212,11 +232,9 @@ Applications Received
 AI Interviews
 </span>
 
-
 <b>
 {interviews.length}
 </b>
-
 
 </div>
 
@@ -231,13 +249,13 @@ AI Interviews
 Jobs Posted
 </span>
 
-
 <b>
 {jobs.length}
 </b>
 
-
 </div>
+
+
 
 
 
@@ -246,20 +264,18 @@ Jobs Posted
 <FaUsers/>
 
 <span>
-Total Accounts
+Accounts
 </span>
-
 
 <b>
 {users.length}
 </b>
 
-
 </div>
 
 
-
 </div>
+
 
 
 
@@ -273,6 +289,7 @@ Total Accounts
 <h2>
 Recruitment Analytics
 </h2>
+
 
 
 <div className="analytics-box">
@@ -289,7 +306,10 @@ Hiring Activity
 
 
 <p>
-AIHIRE is managing {applications.length} applications across {jobs.length} jobs.
+
+AIHIRE manages {applications.length}
+applications across {jobs.length} jobs.
+
 </p>
 
 
@@ -297,6 +317,8 @@ AIHIRE is managing {applications.length} applications across {jobs.length} jobs.
 
 
 </div>
+
+
 
 
 
@@ -313,7 +335,9 @@ Recruiters
 {recruiters}
 </strong>
 
+
 </div>
+
 
 
 
@@ -327,8 +351,6 @@ Candidates
 {candidates}
 </strong>
 
-</div>
-
 
 </div>
 
@@ -339,6 +361,12 @@ Candidates
 
 
 </div>
+
+
+
+</div>
+
+
 
 
 
@@ -348,42 +376,69 @@ Candidates
 
 
 <h2>
-Recent Platform Activity
+Recent Activity
 </h2>
+
 
 
 <ul>
 
 
 <li>
-👥 {users.length} users registered
+
+<FaUserPlus/>
+
+{users.length} users registered
+
 </li>
+
 
 
 <li>
-💼 {jobs.length} jobs created
+
+<FaBriefcase/>
+
+{jobs.length} jobs created
+
 </li>
+
+
 
 
 <li>
-📄 {applications.length} applications submitted
+
+<FaFileAlt/>
+
+{applications.length} applications submitted
+
 </li>
+
+
 
 
 <li>
-🎥 {interviews.length} interviews completed
+
+<FaVideo/>
+
+{interviews.length} interviews completed
+
 </li>
+
 
 
 </ul>
+
 
 
 </div>
 
 
 
-</DashboardLayout>
 
+</div>
+
+
+</DashboardLayout>
 
 );
 

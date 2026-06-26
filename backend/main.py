@@ -7,6 +7,7 @@ from routes.jobs import router as job_router
 from routes.applications import router as application_router
 from routes.interviews import router as interview_router
 from routes.resumes import router as resume_router
+from routes.organizations import router as organization_router
 
 
 app = FastAPI()
@@ -54,6 +55,11 @@ app.include_router(
 app.include_router(
     resume_router,
     prefix="/resumes"
+)
+
+app.include_router(
+    organization_router,
+    prefix="/organizations"
 )
 
 @app.get("/")

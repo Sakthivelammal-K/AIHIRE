@@ -33,30 +33,6 @@
   scrollLogos 25s linear infinite;
 }
 
-.company-pill{
-  flex-shrink:0;
-
-  padding:16px 40px;
-
-  border-radius:999px;
-
-  background:
-  rgba(255,255,255,.04);
-
-  border:
-  1px solid rgba(255,255,255,.08);
-
-  color:white;
-
-  font-weight:600;
-
-  transition:.3s;
-}
-
-.company-pill:hover{
-  border-color:#2a7de1;
-  transform:translateY(-3px);
-}
 
 @keyframes scrollLogos{
 
@@ -134,7 +110,7 @@
   align-items:center;
 
   background:
-  rgba(237, 235, 235, 0.932);
+  rgba(255, 254, 254, 0.932);
 
   border:
   1px solid rgba(255,255,255,.08);
@@ -148,11 +124,11 @@
 
 .logo-card:hover{
   transform:translateY(-4px);
-  border-color:#2a7de1;
+  border-color:#e1852a;
 }
 
 .logo-card img{
-  max-width:110px;
+  max-width:120px;
   max-height:40px;
 
   object-fit:contain;

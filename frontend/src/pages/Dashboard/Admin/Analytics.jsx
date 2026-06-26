@@ -1,138 +1,574 @@
 import DashboardLayout from "../../../components/dashboard/DashboardLayout";
+import { useEffect, useState } from "react";
+import API from "../../../api/api";
 
-function Analytics() {
+import {
+FaUsers,
+FaBriefcase,
+FaFileAlt,
+FaVideo,
+FaCheckCircle,
+FaTimesCircle,
+FaClock,
+FaChartLine
+} from "react-icons/fa";
 
-  const users =
-  JSON.parse(localStorage.getItem("users")) || [];
 
-  const jobs =
-  JSON.parse(localStorage.getItem("jobs")) || [];
+function Analytics(){
 
-  const applications =
-  JSON.parse(localStorage.getItem("applications")) || [];
 
-  const interviews =
-  JSON.parse(localStorage.getItem("interviews")) || [];
+const [users,setUsers]=useState([]);
+const [jobs,setJobs]=useState([]);
+const [applications,setApplications]=useState([]);
+const [interviews,setInterviews]=useState([]);
 
-  const shortlisted =
-  applications.filter((app) => app.status === "Shortlisted").length;
 
-  const rejected =
-  applications.filter((app) => app.status === "Rejected").length;
 
-  const pending =
-  applications.filter((app) => app.status === "Applied").length;
+useEffect(()=>{
 
-  return (
-    <DashboardLayout>
+loadData();
 
-      <h1>Analytics Dashboard</h1>
+},[]);
 
-      <div className="dashboard-stats">
 
-        <div className="stat-card">
-          <h2>{users.length}</h2>
-          <p>Total Users</p>
-        </div>
 
-        <div className="stat-card">
-          <h2>{jobs.length}</h2>
-          <p>Total Jobs</p>
-        </div>
+const loadData = async()=>{
 
-        <div className="stat-card">
-          <h2>{applications.length}</h2>
-          <p>Applications</p>
-        </div>
+try{
 
-        <div className="stat-card">
-          <h2>{interviews.length}</h2>
-          <p>Interviews</p>
-        </div>
 
-      </div>
+const [
+usersRes,
+jobsRes,
+appRes,
+interviewRes
 
-      <div className="activity-card">
-        <h2>Platform Insights</h2>
-        <p>
-          👥 Total Users: {users.length}
-        </p>
+]=await Promise.all([
 
-        <p>
-          💼 Active Jobs: {jobs.length}
-        </p>
+API.get("/users/"),
+API.get("/jobs/"),
+API.get("/applications/"),
+API.get("/interviews/")
 
-        <p>
-          📄 Applications Submitted: {applications.length}
-        </p>
+]);
 
-        <p>
-          🎤 Interviews Scheduled: {interviews.length}
-        </p>
 
-      </div>
 
-      <div className="activity-card">
-        <h2>Hiring Pipeline</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Status</th>
-              <th>Count</th>
-            </tr>
-          </thead>
+setUsers(usersRes.data);
+setJobs(jobsRes.data);
+setApplications(appRes.data);
+setInterviews(interviewRes.data);
 
-          <tbody>
-            <tr>
-              <td>Applied</td>
-              <td>{pending}</td>
-            </tr>
 
-            <tr>
-              <td>Shortlisted</td>
-              <td>{shortlisted}</td>
-            </tr>
 
-            <tr>
-              <td>Rejected</td>
-              <td>{rejected}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div className="activity-card">
-        <h2>All Applications</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Candidate</th>
-              <th>Job Title</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {applications.length > 0 ? (
-              applications.map((app) => (
-                <tr key={app.id}>
-                  <td>{app.candidateName}</td>
-                  <td>{app.jobTitle}</td>
-                  <td>{app.status}</td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="3" style={{ textAlign: "center" }}>
-                  No Applications Found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </DashboardLayout>
-  );
 }
+catch(error){
+
+console.log(error);
+
+}
+
+};
+
+
+
+
+const pending =
+applications.filter(
+app=>app.status==="Pending"
+).length;
+
+
+
+const shortlisted =
+applications.filter(
+app=>app.status==="Shortlisted"
+).length;
+
+
+
+const rejected =
+applications.filter(
+app=>app.status==="Rejected"
+).length;
+
+
+
+
+return (
+
+<DashboardLayout>
+
+
+<div className="admin-dashboard">
+
+
+
+{/* HEADER */}
+
+<div className="dashboard-header">
+
+
+<div>
+
+<h1>
+Analytics Dashboard
+</h1>
+
+
+<p>
+Monitor AIHIRE recruitment performance
+</p>
+
+
+</div>
+
+
+
+<FaChartLine
+className="dashboard-icon"
+/>
+
+
+
+</div>
+
+
+
+
+
+{/* STAT CARDS */}
+
+
+<div className="cards">
+
+
+
+<div className="admin-card">
+
+<FaUsers className="dashboard-icon"/>
+
+<h3>
+Total Users
+</h3>
+
+<h2>
+{users.length}
+</h2>
+
+</div>
+
+
+
+
+
+<div className="admin-card">
+
+<FaBriefcase className="dashboard-icon"/>
+
+<h3>
+Jobs
+</h3>
+
+<h2>
+{jobs.length}
+</h2>
+
+</div>
+
+
+
+
+
+<div className="admin-card">
+
+<FaFileAlt className="dashboard-icon"/>
+
+<h3>
+Applications
+</h3>
+
+<h2>
+{applications.length}
+</h2>
+
+</div>
+
+
+
+
+
+<div className="admin-card">
+
+<FaVideo className="dashboard-icon"/>
+
+<h3>
+Interviews
+</h3>
+
+<h2>
+{interviews.length}
+</h2>
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+{/* INSIGHTS */}
+
+
+
+<div className="dashboard-grid">
+
+
+
+<div className="activity-card">
+
+
+<h2>
+Platform Insights
+</h2>
+
+
+
+<div className="overview-item">
+
+<FaUsers/>
+
+<span>
+Total Users
+</span>
+
+<b>
+{users.length}
+</b>
+
+</div>
+
+
+
+
+
+<div className="overview-item">
+
+<FaBriefcase/>
+
+<span>
+Active Jobs
+</span>
+
+<b>
+{jobs.length}
+</b>
+
+</div>
+
+
+
+
+
+<div className="overview-item">
+
+<FaFileAlt/>
+
+<span>
+Applications
+</span>
+
+<b>
+{applications.length}
+</b>
+
+</div>
+
+
+
+
+
+<div className="overview-item">
+
+<FaVideo/>
+
+<span>
+Interviews
+</span>
+
+<b>
+{interviews.length}
+</b>
+
+</div>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+{/* PIPELINE */}
+
+
+
+<div className="activity-card">
+
+
+<h2>
+Hiring Pipeline
+</h2>
+
+
+
+<div className="overview-item">
+
+<FaClock/>
+
+<span>
+Pending
+</span>
+
+<b>
+{pending}
+</b>
+
+
+</div>
+
+
+
+
+
+<div className="overview-item">
+
+
+<FaCheckCircle/>
+
+<span>
+Shortlisted
+</span>
+
+
+<b>
+{shortlisted}
+</b>
+
+
+</div>
+
+
+
+
+
+
+<div className="overview-item">
+
+<FaTimesCircle/>
+
+<span>
+Rejected
+</span>
+
+
+<b>
+{rejected}
+</b>
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+{/* APPLICATION TABLE */}
+
+
+
+<div className="activity-card">
+
+
+<h2>
+All Applications
+</h2>
+
+
+
+
+<table className="recruiter-table">
+
+
+<thead>
+
+<tr>
+
+<th>
+Candidate
+</th>
+
+
+<th>
+Job
+</th>
+
+
+<th>
+Status
+</th>
+
+
+</tr>
+
+
+</thead>
+
+
+
+
+
+<tbody>
+
+
+{
+
+applications.length > 0 ? (
+
+
+applications.map(app=>(
+
+
+<tr key={app._id || app.id}>
+
+
+<td>
+
+{
+app.candidateName || "N/A"
+}
+
+</td>
+
+
+
+<td>
+
+{
+app.jobTitle || "N/A"
+}
+
+</td>
+
+
+
+<td>
+
+
+<span
+className={
+app.status==="Rejected"
+?
+"red-badge"
+:
+app.status==="Shortlisted"
+?
+"green-badge"
+:
+"blue-badge"
+}
+>
+
+{
+app.status || "Pending"
+}
+
+
+</span>
+
+
+</td>
+
+
+
+</tr>
+
+
+))
+
+
+):(
+
+
+<tr>
+
+<td colSpan="3">
+
+No Applications Found
+
+</td>
+
+</tr>
+
+
+)
+
+
+}
+
+
+
+</tbody>
+
+
+
+</table>
+
+
+
+</div>
+
+
+
+
+
+
+</div>
+
+
+</DashboardLayout>
+
+);
+
+
+}
+
 
 export default Analytics;

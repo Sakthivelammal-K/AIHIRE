@@ -1899,3 +1899,785 @@ border-radius:10px;
 background:#ffaa64ad;
 
 }
+
+/* =====================================
+      ADMIN DASHBOARD ONLY CSS
+===================================== */
+
+
+.admin-dashboard{
+
+padding:20px;
+
+position:relative;
+
+z-index:1;
+
+}
+
+
+
+/* HEADER */
+
+/* =====================================
+      ADMIN HEADER ONLY FIX
+===================================== */
+
+
+.admin-dashboard > .dashboard-header,
+.admin-dashboard .dashboard-header{
+
+
+/* prevent navbar override */
+
+position:relative !important;
+
+top:auto !important;
+
+left:auto !important;
+
+
+width:auto !important;
+
+height:auto !important;
+
+
+display:block !important;
+
+
+
+background:
+linear-gradient(
+135deg,
+#ffffff,
+#fff7ed
+) !important;
+
+
+
+padding:35px !important;
+
+
+
+border-radius:28px !important;
+
+
+
+margin-bottom:30px !important;
+
+
+
+border:1px solid #fed7aa !important;
+
+
+
+box-shadow:
+0 20px 50px rgba(249,115,22,.12) !important;
+
+
+
+/* IMPORTANT */
+
+z-index:1 !important;
+
+}
+
+
+
+.admin-dashboard .dashboard-header h1{
+
+
+display:block !important;
+
+
+font-size:42px !important;
+
+
+font-weight:900 !important;
+
+
+color:#111827 !important;
+
+
+margin:0 !important;
+
+
+}
+
+
+
+.admin-dashboard .dashboard-header p{
+
+
+display:block !important;
+
+
+color:#64748b !important;
+
+
+font-size:16px !important;
+
+
+margin-top:10px !important;
+
+
+}
+
+
+/* keep dashboard navbar above admin */
+
+.dashboard-container > .dashboard-header,
+.dashboard-main > .dashboard-header{
+
+
+z-index:1000 !important;
+
+position:sticky !important;
+
+top:0 !important;
+
+
+}
+
+
+
+/* =========================
+TOP CARDS
+========================= */
+
+
+.admin-dashboard .cards{
+
+display:grid;
+
+grid-template-columns:
+repeat(4,1fr);
+
+
+gap:24px;
+
+margin-bottom:30px;
+
+}
+
+
+
+.admin-dashboard .admin-card{
+
+
+background:white;
+
+
+border-radius:26px;
+
+
+padding:28px;
+
+
+border:1px solid #fed7aa;
+
+
+position:relative;
+
+
+overflow:hidden;
+
+
+transition:.3s;
+
+
+box-shadow:
+0 15px 40px rgba(0,0,0,.07);
+
+
+
+z-index:0;
+
+}
+
+
+
+
+.admin-dashboard .admin-card:hover{
+
+transform:translateY(-8px);
+
+box-shadow:
+0 30px 70px rgba(249,115,22,.25);
+
+}
+
+
+
+
+
+.admin-dashboard .admin-card::before{
+
+
+content:"";
+
+
+position:absolute;
+
+
+width:120px;
+
+height:120px;
+
+
+border-radius:50%;
+
+
+right:-50px;
+
+top:-50px;
+
+
+background:#fff1e6;
+
+
+z-index:-1;
+
+}
+
+
+
+
+.admin-dashboard .dashboard-icon{
+
+
+width:65px;
+
+height:65px;
+
+
+padding:18px;
+
+
+border-radius:20px;
+
+
+background:
+linear-gradient(
+135deg,
+#fb923c,
+#f97316
+);
+
+
+
+color:white;
+
+
+font-size:28px;
+
+
+margin-bottom:18px;
+
+
+}
+
+
+
+
+.admin-dashboard .admin-card h3{
+
+font-size:15px;
+
+color:#64748b;
+
+}
+
+
+
+.admin-dashboard .admin-card h2{
+
+
+font-size:45px;
+
+margin:10px 0;
+
+
+color:#111827;
+
+
+}
+
+
+
+
+
+
+/* =========================
+CONTENT CARDS
+========================= */
+
+
+.admin-dashboard .activity-card{
+
+
+background:white;
+
+
+border-radius:28px;
+
+
+padding:32px;
+
+
+border:1px solid #fed7aa;
+
+
+
+box-shadow:
+
+0 15px 40px rgba(0,0,0,.06);
+
+
+
+margin-bottom:25px;
+
+
+/* FIX OVERLAP */
+
+position:relative;
+
+z-index:0;
+
+
+}
+
+
+
+
+
+.admin-dashboard .activity-card h2{
+
+
+font-size:26px;
+
+color:#111827;
+
+margin-bottom:25px;
+
+
+}
+
+
+
+
+
+/* =========================
+GRID
+========================= */
+
+
+.admin-dashboard .dashboard-grid{
+
+
+display:grid;
+
+
+grid-template-columns:1fr 1fr;
+
+
+gap:25px;
+
+
+}
+
+
+
+
+
+/* =========================
+OVERVIEW
+========================= */
+
+
+.admin-dashboard .overview-item{
+
+
+display:flex;
+
+align-items:center;
+
+gap:15px;
+
+
+padding:18px;
+
+
+background:#fff7ed;
+
+
+border-radius:18px;
+
+
+margin-bottom:15px;
+
+
+}
+
+
+
+.admin-dashboard .overview-item svg{
+
+
+color:#f97316;
+
+font-size:24px;
+
+}
+
+
+
+.admin-dashboard .overview-item span{
+
+
+flex:1;
+
+color:#475569;
+
+}
+
+
+
+.admin-dashboard .overview-item b{
+
+
+color:#111827;
+
+font-size:22px;
+
+
+}
+
+
+
+
+
+
+/* =========================
+ANALYTICS
+========================= */
+
+
+.admin-dashboard .analytics-box{
+
+
+display:flex;
+
+align-items:center;
+
+gap:20px;
+
+
+padding:25px;
+
+
+border-radius:22px;
+
+
+background:#fff7ed;
+
+
+border:1px solid #fed7aa;
+
+
+}
+
+
+
+.admin-dashboard .analytics-box svg{
+
+
+font-size:45px;
+
+color:#f97316;
+
+
+}
+
+
+
+
+/* =========================
+PROGRESS
+========================= */
+
+
+.admin-dashboard .progress-box{
+
+
+display:flex;
+
+gap:20px;
+
+margin-top:25px;
+
+
+}
+
+
+
+.admin-dashboard .progress-box div{
+
+
+flex:1;
+
+
+background:#fff7ed;
+
+
+border-radius:20px;
+
+
+padding:25px;
+
+
+text-align:center;
+
+
+border:1px solid #fed7aa;
+
+
+}
+
+
+
+.admin-dashboard .progress-box strong{
+
+
+font-size:38px;
+
+
+color:#f97316;
+
+
+}
+
+
+
+
+
+
+/* =========================
+RECENT
+========================= */
+
+
+.admin-dashboard .recent ul{
+
+
+padding:0;
+
+list-style:none;
+
+
+}
+
+
+
+
+.admin-dashboard .recent li{
+
+
+display:flex;
+
+
+align-items:center;
+
+
+gap:14px;
+
+
+padding:18px;
+
+
+background:#fff7ed;
+
+
+border-radius:18px;
+
+
+margin-bottom:15px;
+
+
+color:#475569;
+
+
+}
+
+
+
+
+.admin-dashboard .recent svg{
+
+
+color:#f97316;
+
+}
+
+
+
+
+
+
+
+/* =========================
+TABLE
+========================= */
+
+
+.admin-dashboard table{
+
+
+width:100%;
+
+border-collapse:collapse;
+
+
+}
+
+
+
+
+.admin-dashboard th{
+
+
+text-align:left;
+
+
+padding:16px;
+
+
+color:#111827;
+
+
+border-bottom:1px solid #fed7aa;
+
+
+}
+
+
+
+
+.admin-dashboard td{
+
+
+padding:16px;
+
+
+color:#64748b;
+
+
+border-bottom:1px solid #f1f5f9;
+
+
+}
+
+
+
+
+
+
+/* =========================
+IMPORTANT NAVBAR FIX
+========================= */
+
+
+/* keeps sidebar/header above admin content */
+
+.sidebar,
+.dashboard-header{
+
+z-index:1000 !important;
+
+}
+
+
+
+/* admin content cannot cover navbar */
+
+.admin-dashboard{
+
+z-index:auto;
+
+}
+
+
+
+
+/* =========================
+RESPONSIVE
+========================= */
+
+
+@media(max-width:1100px){
+
+
+.admin-dashboard .cards{
+
+
+grid-template-columns:
+repeat(2,1fr);
+
+
+}
+
+
+
+.admin-dashboard .dashboard-grid{
+
+
+grid-template-columns:1fr;
+
+
+}
+
+
+}
+
+
+
+
+@media(max-width:650px){
+
+
+.admin-dashboard .cards{
+
+
+grid-template-columns:1fr;
+
+
+}
+
+
+.admin-dashboard{
+
+padding:10px;
+
+}
+
+
+
+.admin-dashboard .progress-box{
+
+
+flex-direction:column;
+
+
+}
+
+
+.admin-dashboard .dashboard-header h1{
+
+
+font-size:30px;
+
+
+}
+
+
+}

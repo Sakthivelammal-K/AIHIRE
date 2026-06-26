@@ -1,90 +1,487 @@
 import DashboardLayout from "../../../components/dashboard/DashboardLayout";
+import { useEffect, useState } from "react";
+import API from "../../../api/api";
 
-function Organizations() {
+import {
+FaBriefcase,
+FaCheckCircle,
+FaTimesCircle,
+FaBuilding,
+FaMapMarkerAlt,
+FaUsers
+} from "react-icons/fa";
 
-  const jobs =
-    JSON.parse(localStorage.getItem("jobs")) || [];
 
-  const activeJobs =
-    jobs.filter((job) => job.status === "Open").length;
 
-  const closedJobs =
-    jobs.filter((job) => job.status !== "Open").length;
+function Organizations(){
 
-  return (
-    <DashboardLayout>
 
-      <h1>Organization Management</h1>
+const [jobs,setJobs]=useState([]);
 
-      <div className="dashboard-stats">
 
-        <div className="stat-card">
-          <h2>{jobs.length}</h2>
-          <p>Total Jobs</p>
-        </div>
 
-        <div className="stat-card">
-          <h2>{activeJobs}</h2>
-          <p>Active Jobs</p>
-        </div>
+useEffect(()=>{
 
-        <div className="stat-card">
-          <h2>{closedJobs}</h2>
-          <p>Closed Jobs</p>
-        </div>
+loadJobs();
 
-      </div>
+},[]);
 
-      <div className="activity-card">
 
-        <h2>Organization Jobs</h2>
 
-        <table>
 
-          <thead>
-            <tr>
-              <th>Job Title</th>
-              <th>Department</th>
-              <th>Location</th>
-              <th>Status</th>
-              <th>Applicants</th>
-            </tr>
-          </thead>
+const loadJobs = async()=>{
 
-          <tbody>
 
-            {jobs.length > 0 ? (
+try{
 
-              jobs.map((job) => (
 
-                <tr key={job.id}>
-                  <td>{job.title}</td>
-                  <td>{job.department}</td>
-                  <td>{job.location}</td>
-                  <td>{job.status}</td>
-                  <td>{job.applicants || 0}</td>
-                </tr>
+const response =
+await API.get("/jobs/");
 
-              ))
 
-            ) : (
+setJobs(response.data);
 
-              <tr>
-                <td colSpan="5" style={{ textAlign: "center" }}>
-                  No Jobs Available
-                </td>
-              </tr>
 
-            )}
-
-          </tbody>
-
-        </table>
-
-      </div>
-
-    </DashboardLayout>
-  );
 }
+catch(error){
+
+console.log(error);
+
+}
+
+
+};
+
+
+
+
+const activeJobs =
+jobs.filter(
+job=>job.status==="Open"
+).length;
+
+
+
+
+const closedJobs =
+jobs.filter(
+job=>job.status!=="Open"
+).length;
+
+
+
+
+
+
+return(
+
+
+<DashboardLayout>
+
+
+<div className="admin-dashboard">
+
+
+
+
+
+{/* HEADER */}
+
+
+<div className="dashboard-header">
+
+
+<div>
+
+
+<h1>
+
+Organization Management
+
+</h1>
+
+
+<p>
+
+Manage AIHIRE company jobs and recruitment activity
+
+</p>
+
+
+</div>
+
+
+
+<FaBuilding className="dashboard-icon"/>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+{/* CARDS */}
+
+
+
+<div className="cards">
+
+
+
+
+
+<div className="admin-card">
+
+
+<FaBuilding className="dashboard-icon"/>
+
+
+<h3>
+Total Jobs
+</h3>
+
+
+<h2>
+{jobs.length}
+</h2>
+
+
+</div>
+
+
+
+
+
+
+
+
+<div className="admin-card">
+
+
+<FaCheckCircle className="dashboard-icon"/>
+
+
+<h3>
+Active Jobs
+</h3>
+
+
+<h2>
+{activeJobs}
+</h2>
+
+
+</div>
+
+
+
+
+
+
+
+
+<div className="admin-card">
+
+
+<FaTimesCircle className="dashboard-icon"/>
+
+
+<h3>
+Closed Jobs
+</h3>
+
+
+<h2>
+{closedJobs}
+</h2>
+
+
+</div>
+
+
+
+
+
+<div className="admin-card">
+
+
+<FaUsers className="dashboard-icon"/>
+
+
+<h3>
+Applicants
+</h3>
+
+
+<h2>
+
+{
+jobs.reduce(
+(total,job)=>
+total+(job.applicants || 0),
+0
+)
+}
+
+</h2>
+
+
+</div>
+
+
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+{/* JOB TABLE */}
+
+
+
+<div className="activity-card">
+
+
+
+<h2>
+
+Organization Jobs
+
+</h2>
+
+
+
+
+
+<table className="recruiter-table">
+
+
+
+<thead>
+
+
+<tr>
+
+
+<th>
+Job Title
+</th>
+
+
+<th>
+Department
+</th>
+
+
+<th>
+Location
+</th>
+
+
+<th>
+Status
+</th>
+
+
+<th>
+Applicants
+</th>
+
+
+</tr>
+
+
+</thead>
+
+
+
+
+
+
+
+<tbody>
+
+
+
+{
+
+
+jobs.length > 0 ? (
+
+
+jobs.map(job=>(
+
+
+<tr key={job._id || job.id}>
+
+
+<td>
+
+{job.title || "N/A"}
+
+</td>
+
+
+
+
+
+<td>
+
+{job.department || "N/A"}
+
+</td>
+
+
+
+
+
+
+
+<td>
+
+
+<FaMapMarkerAlt/>
+
+
+{" "}
+
+{job.location || "N/A"}
+
+
+</td>
+
+
+
+
+
+
+
+<td>
+
+
+<span
+
+className={
+job.status==="Open"
+?
+"green-badge"
+:
+"red-badge"
+}
+
+>
+
+
+{
+job.status || "Closed"
+}
+
+
+</span>
+
+
+</td>
+
+
+
+
+
+
+
+
+<td>
+
+
+<FaUsers/>
+
+
+{" "}
+
+{
+job.applicants || 0
+}
+
+
+</td>
+
+
+
+
+
+</tr>
+
+
+))
+
+
+):(
+
+
+
+<tr>
+
+
+<td colSpan="5" style={{textAlign:"center"}}>
+
+
+No Jobs Available
+
+
+</td>
+
+
+</tr>
+
+
+)
+
+
+
+}
+
+
+
+</tbody>
+
+
+
+</table>
+
+
+
+
+
+
+</div>
+
+
+
+
+
+
+</div>
+
+
+</DashboardLayout>
+
+
+);
+
+
+}
+
+
 
 export default Organizations;
