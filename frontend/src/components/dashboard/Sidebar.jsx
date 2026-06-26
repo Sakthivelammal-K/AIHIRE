@@ -185,7 +185,7 @@ function Sidebar(){
 
 
         <h1>
-          AI<span>HIRE</span>
+          AIHIRE
         </h1>
 
 

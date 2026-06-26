@@ -17,7 +17,7 @@ function Footer() {
         {/* Brand */}
           <div className="footer-brand">
 
-            <h2>AI<span style={{ color: "#60A5FA" }}>HIRE</span></h2>
+            <h2>AIHIRE</h2>
 
             <p>
             AI-powered hiring platform helping

@@ -1,29 +1,30 @@
 from fastapi import APIRouter
-from database import db
-from database import jobs
+from database import db, jobs
 from bson import ObjectId
-
 
 router = APIRouter()
 
 jobs_collection = db["jobs"]
 
+
+# Create Job
 @router.post("/create")
 def create_job(job: dict):
+
+    job["applicants"] = 0
 
     jobs.insert_one(job)
 
     return {
-        "message":"Job created successfully"
+        "message": "Job created successfully"
     }
 
 
-
-
+# Get All Jobs
 @router.get("/")
 def get_jobs():
 
-    result=[]
+    result = []
 
     for job in jobs.find():
 
@@ -31,10 +32,10 @@ def get_jobs():
 
         result.append(job)
 
-
     return result
 
 
+# Update Job
 @router.put("/{job_id}")
 def update_job(job_id: str, data: dict):
 
@@ -56,18 +57,47 @@ def update_job(job_id: str, data: dict):
         "message": "Job updated successfully"
     }
 
+
+# Increase Applicant Count
+@router.put("/{job_id}/applicant")
+def increase_applicant(job_id: str):
+
+    result = jobs_collection.update_one(
+        {
+            "_id": ObjectId(job_id)
+        },
+        {
+            "$inc": {
+                "applicants": 1
+            }
+        }
+    )
+
+    if result.modified_count == 0:
+        return {
+            "message": "Job not found"
+        }
+
+    return {
+        "message": "Applicant count updated"
+    }
+
+
+# Delete Job
 @router.delete("/{job_id}")
-async def delete_job(job_id:str):
+def delete_job(job_id: str):
 
     result = jobs_collection.delete_one(
-        {"_id": ObjectId(job_id)}
+        {
+            "_id": ObjectId(job_id)
+        }
     )
 
     if result.deleted_count == 0:
         return {
-            "message":"Job not found"
+            "message": "Job not found"
         }
 
     return {
-        "message":"Job deleted"
+        "message": "Job deleted"
     }

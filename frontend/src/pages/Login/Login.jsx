@@ -128,7 +128,7 @@ return (
 
 
 <h1>
-AI<span style={{ color: "#60A5FA" }}>HIRE</span>
+AIHIRE
 </h1>
 
 

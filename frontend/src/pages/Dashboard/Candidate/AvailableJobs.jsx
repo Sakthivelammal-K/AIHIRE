@@ -163,15 +163,15 @@ alert(
 
 }
 
-catch(error){
+catch (error) {
 
-console.log(error);
+  console.log("Full Error:", error);
 
+  console.log("Response:", error.response);
 
-alert(
-"Application failed"
-);
+  console.log("Data:", error.response?.data);
 
+  alert("Application failed");
 
 }
 
@@ -556,79 +556,35 @@ appliedJobs.includes(job._id)
 
 
 style={{
+  background:
+    appliedJobs.includes(job._id)
+      ? "linear-gradient(135deg,#22C55E,#16A34A)" // Green for Applied
+      : "linear-gradient(135deg,#F97316,#EA580C)", // Orange for Apply
 
+  border: "none",
 
+  padding: "12px 20px",
 
-background:
+  borderRadius: "14px",
 
-appliedJobs.includes(job._id)
+  color: "white",
 
+  fontWeight: "700",
 
-?
+  display: "flex",
 
-"linear-gradient(135deg,#10b981,#059669)"
+  alignItems: "center",
 
+  gap: "10px",
 
-:
+  cursor: appliedJobs.includes(job._id)
+    ? "default"
+    : "pointer",
 
-"linear-gradient(135deg,#2563eb,#7c3aed)",
+  boxShadow: "0 15px 30px rgba(249,115,22,.30)",
 
-
-
-
-
-
-border:"none",
-
-
-padding:"12px 20px",
-
-
-borderRadius:"14px",
-
-
-color:"white",
-
-
-fontWeight:"700",
-
-
-display:"flex",
-
-
-alignItems:"center",
-
-
-gap:"10px",
-
-
-cursor:
-
-appliedJobs.includes(job._id)
-
-?
-
-"default"
-
-:
-
-"pointer",
-
-
-
-
-
-boxShadow:
-"0 15px 30px rgba(37,99,235,.25)",
-
-
-
-transition:"0.3s"
-
-
-
+  transition: "0.3s"
 }}
-
 
 
 

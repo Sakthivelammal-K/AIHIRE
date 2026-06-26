@@ -3,9 +3,9 @@
 ========================= */
 
 .contact-page{
-  background:#071126;
+  background:#ffffff;
+  color:#1f2937;
   min-height:100vh;
-  color:white;
 }
 
 
@@ -32,7 +32,7 @@
   width:450px;
   height:450px;
 
-  background:rgba(59,130,246,.18);
+  background:rgba(249,115,22,.15);
 
   filter:blur(120px);
 
@@ -55,11 +55,9 @@
 
   border-radius:999px;
 
-  background:rgba(59,130,246,.12);
-
-  color:#60A5FA;
-
-  border:1px solid rgba(96,165,250,.25);
+  background:#fff7ed;
+  color:#f97316;
+  border:1px solid #fed7aa;
 
   font-size:13px;
   font-weight:600;
@@ -79,6 +77,7 @@
 
   font-weight:800;
 
+  color:#1f2937;
 }
 
 
@@ -91,7 +90,7 @@
 
   margin:25px auto;
 
-  color:#94A3B8;
+  color:#64748b;
 
   line-height:1.8;
 
@@ -127,11 +126,10 @@
 .contact-card,
 .form-card{
 
-  background:rgba(15,23,42,.75);
+  background:#fffefe;
+  border:2px solid #f8b262;
+  backdrop-filter:none;
 
-  border:1px solid rgba(255,255,255,.08);
-
-  backdrop-filter:blur(20px);
 
   border-radius:28px;
 
@@ -148,13 +146,15 @@
 
   margin-bottom:20px;
 
+  color:#1f2937;
+
 }
 
 
 
 .contact-desc{
 
- color:#94A3B8;
+ color:#64748b;
 
  line-height:1.8;
 
@@ -167,51 +167,51 @@
 /* INFO */
 
 
-.info-box{
+.contact-card .info-box{
 
- display:flex;
+    display:flex;
+    gap:18px;
+    margin-bottom:28px;
 
- gap:18px;
-
- margin-bottom:28px;
-
-}
-
-
-
-.info-icon{
-
- width:45px;
-
- height:45px;
-
- display:flex;
-
- align-items:center;
-
- justify-content:center;
-
- border-radius:14px;
-
- background:rgba(59,130,246,.15);
-
- color:#60A5FA;
+    background:#fff7ed;
+    border:1px solid #fed7aa;
+    border-radius:18px;
+    padding:18px;
 
 }
 
 
 
-.info-box h4{
+.contact-card .info-icon{
+
+    width:45px;
+    height:45px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border-radius:14px;
+
+    background:#ffffff;
+    color:#f97316;
+}
+
+
+
+.contact-card .info-box h4{
 
  margin-bottom:5px;
 
+ color:#1f2937;
+
+
 }
 
 
 
-.info-box p{
+.contact-card .info-box p{
 
- color:#94A3B8;
+  color:#64748b;
 
 }
 
@@ -246,13 +246,9 @@
 
  align-items:center;
 
-
- background:rgba(255,255,255,.05);
-
- color:#60A5FA;
-
- border:1px solid rgba(255,255,255,.08);
-
+  background:#fff7ed;
+  color:#f97316;
+  border:1px solid #fed7aa;
  transition:.3s;
 
 }
@@ -262,9 +258,8 @@
 
  transform:translateY(-5px);
 
- background:#2563EB;
-
- color:white;
+  background:#f97316;
+  color:white;
 
 }
 
@@ -290,15 +285,13 @@
 
  width:100%;
 
- background:#0B1730;
-
- border:1px solid rgba(255,255,255,.1);
+  background:#ffffff;
+  border:1px solid #fed7aa;
+  color:#1f2937;
 
  padding:15px;
 
  border-radius:12px;
-
- color:white;
 
  font-size:15px;
 
@@ -318,7 +311,7 @@
 
  outline:none;
 
- border-color:#3B82F6;
+ border-color:#f97316;
 
 }
 
@@ -330,11 +323,11 @@
 
  margin-top:10px;
 
- background:linear-gradient(
- 135deg,
- #3B82F6,
- #6366F1
- );
+  background:linear-gradient(
+    135deg,
+    #f97316,
+    #fb923c
+  );
 
 
  color:white;
@@ -359,7 +352,7 @@
 
  transform:translateY(-3px);
 
- box-shadow:0 15px 30px rgba(59,130,246,.3);
+  box-shadow:0 15px 30px rgba(249,115,22,.3);
 
 }
 
@@ -386,15 +379,16 @@ STATS
 
  gap:25px;
 
+ background:#ffffff;
+
 }
 
 
 
 .stat-box{
 
- background:rgba(15,23,42,.7);
-
- border:1px solid rgba(255,255,255,.08);
+  background:#ffffff;
+  border:1px solid #fed7aa;
 
  border-radius:24px;
 
@@ -408,7 +402,7 @@ STATS
 
 .stat-box h2{
 
- color:#60A5FA;
+color:#f97316;
 
  font-size:45px;
 
@@ -417,7 +411,7 @@ STATS
 
 .stat-box p{
 
- color:#94A3B8;
+color:#64748b;
 
 }
 
@@ -431,7 +425,7 @@ STATS
 
  padding:100px 8%;
 
- background:#020617;
+ background:#ffffff;
 
 }
 
@@ -444,6 +438,8 @@ STATS
  font-size:45px;
 
  margin-bottom:50px;
+
+ color:#1f2937;
 
 }
 
@@ -468,9 +464,8 @@ STATS
 .faq-card{
 
 
- background:rgba(15,23,42,.7);
-
- border:1px solid rgba(255,255,255,.08);
+  background:#ffffff;
+  border:1px solid #fed7aa;
 
  border-radius:22px;
 
@@ -484,13 +479,15 @@ STATS
 
  margin-bottom:12px;
 
+ color:#1f2937;
+
 }
 
 
 
 .faq-card p{
 
- color:#94A3B8;
+ color:#64748b;
 
  line-height:1.7;
 

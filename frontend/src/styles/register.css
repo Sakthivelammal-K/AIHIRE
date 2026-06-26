@@ -2,7 +2,7 @@
 
 min-height:100vh;
 
-background:#071126;
+background:#ffffff;
 
 display:flex;
 
@@ -24,7 +24,7 @@ position:absolute;
 width:500px;
 height:500px;
 
-background:rgba(59,130,246,.18);
+background:rgba(249,115,22,.15);
 
 border-radius:50%;
 
@@ -72,14 +72,7 @@ font-size:55px;
 
 font-weight:800;
 
-color:white;
-
-}
-
-
-.register-info h1 span{
-
-color:#3B82F6;
+color:#f97316;
 
 }
 
@@ -87,7 +80,7 @@ color:#3B82F6;
 
 .register-info h2{
 
-color:white;
+color:#1f2937;
 
 font-size:42px;
 
@@ -101,7 +94,7 @@ line-height:1.2;
 
 .register-info>p{
 
-color:#94A3B8;
+color:#64748b;
 
 font-size:18px;
 
@@ -124,9 +117,8 @@ gap:18px;
 
 align-items:center;
 
-background:rgba(15,23,42,.7);
-
-border:1px solid rgba(255,255,255,.08);
+background:#fff7ed;
+  border:1px solid #fed7aa;
 
 padding:18px;
 
@@ -140,7 +132,7 @@ border-radius:18px;
 
 font-size:25px;
 
-color:#60A5FA;
+color:#f97316;
 
 }
 
@@ -148,7 +140,7 @@ color:#60A5FA;
 
 .info-box h4{
 
-color:white;
+color:#1f2937;
 
 margin-bottom:5px;
 
@@ -158,7 +150,7 @@ margin-bottom:5px;
 
 .info-box p{
 
-color:#94A3B8;
+color:#64748b;
 
 }
 
@@ -172,17 +164,15 @@ color:#94A3B8;
 .register-card{
 
 
-background:rgba(15,23,42,.85);
-
-border:1px solid rgba(255,255,255,.1);
-
-backdrop-filter:blur(20px);
+  background:#ffffff;
+  border:1px solid #fed7aa;
+  backdrop-filter:none;
+  box-shadow:0 20px 40px rgba(0,0,0,.08);
 
 border-radius:28px;
 
 padding:38px;
 
-box-shadow:0 20px 60px rgba(0,0,0,.4);
 
 }
 
@@ -199,7 +189,7 @@ text-align:center;
 
 .register-title svg{
 
-color:#3B82F6;
+color:#f97316;
 
 font-size:35px;
 
@@ -209,7 +199,7 @@ font-size:35px;
 
 .register-title h2{
 
-color:white;
+ color:#1f2937;
 
 margin-top:15px;
 
@@ -219,7 +209,7 @@ margin-top:15px;
 
 .register-title p{
 
-color:#94A3B8;
+color:#64748b;
 
 margin-bottom:25px;
 
@@ -240,7 +230,7 @@ margin-bottom:18px;
 
 display:block;
 
-color:#CBD5E1;
+color:#1f2937;
 
 margin-bottom:8px;
 
@@ -258,13 +248,11 @@ width:100%;
 
 padding:14px;
 
-background:#0F172A;
-
-border:1px solid rgba(255,255,255,.1);
+  background:#ffffff;
+  border:1px solid #fed7aa;
+  color:#1f2937;
 
 border-radius:12px;
-
-color:white;
 
 outline:none;
 
@@ -275,7 +263,7 @@ outline:none;
 .input-group input:focus,
 .input-group select:focus{
 
-border-color:#3B82F6;
+ border-color:#f97316;
 
 }
 
@@ -295,11 +283,11 @@ border:none;
 border-radius:12px;
 
 
-background:linear-gradient(
-135deg,
-#3B82F6,
-#6366F1
-);
+  background:linear-gradient(
+    135deg,
+    #f97316,
+    #fb923c
+  );
 
 
 color:white;
@@ -318,7 +306,7 @@ transition:.3s;
 
 transform:translateY(-3px);
 
-box-shadow:0 12px 30px rgba(59,130,246,.35);
+box-shadow:0 12px 30px rgba(249,115,22,.35);
 
 }
 
@@ -332,7 +320,7 @@ text-align:center;
 
 margin-top:25px;
 
-color:#94A3B8;
+color:#64748b;
 
 }
 
@@ -340,7 +328,7 @@ color:#94A3B8;
 
 .login-link span{
 
-color:#60A5FA;
+color:#f97316;
 
 margin-left:6px;
 
@@ -429,7 +417,7 @@ font-size:32px;
   align-items:center;
   justify-content:center;
 
-  color:#94A3B8;
+  color:#94a3b8;
   font-size:18px;
   cursor:pointer;
 
@@ -437,7 +425,7 @@ font-size:32px;
 }
 
 .password-toggle:hover{
-  color:#60A5FA;
+  color:#f97316;
   transform:translateY(-50%);
 }
 

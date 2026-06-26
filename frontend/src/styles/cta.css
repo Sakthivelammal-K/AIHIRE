@@ -93,7 +93,7 @@
   font-size:64px;
   line-height:1.1;
 
-  color:white;
+  color:#1f2937;
 
   max-width:850px;
 
@@ -105,7 +105,7 @@
 
   margin:auto;
 
-  color:#94A3B8;
+  color:#64748b;
 
   line-height:1.8;
 
@@ -127,11 +127,12 @@
 }
 
 .cta-primary{
-  border:none;
+  border: 3px solid #f47734;
 
-  background:#3B82F6;
+   background:#f97316;
 
   color:white;
+
 
   padding:16px 34px;
 
@@ -148,15 +149,15 @@
 .cta-primary:hover{
   transform:translateY(-4px);
 
-  background:#2563EB;
+  background:#ea580c;
 }
 
 .cta-secondary{
-  background:transparent;
+  background:white;
 
-  color:white;
+  color:#f47734;
 
-  border:1px solid rgba(255,255,255,.15);
+  border:3px solid #f47734;
 
   padding:16px 34px;
 
@@ -171,7 +172,7 @@
 }
 
 .cta-secondary:hover{
-  background:rgba(255,255,255,.05);
+   background:#fff7ed;
 
   transform:translateY(-4px);
 }

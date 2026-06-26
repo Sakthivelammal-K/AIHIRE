@@ -1,11 +1,15 @@
 import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "../../styles/Navbar.css";
 
 function Navbar() {
+
+  const navigate = useNavigate();
+
   return (
     <nav className="navbar">
       <div className="logo">
-        <h2>AI<span style={{ color: "#ec721b" }}>HIRE</span></h2>
+        <h2 onClick={() => navigate("/")}>AIHIRE</h2>
       </div>
 
       <ul className="nav-menu">

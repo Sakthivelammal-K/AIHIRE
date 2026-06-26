@@ -1,7 +1,7 @@
 .about-hero{
 position:relative;
 padding:120px 8%;
-background:#071126;
+background:#ffffff;
 overflow:hidden;
 text-align:center;
 }
@@ -13,7 +13,7 @@ position:absolute;
 width:500px;
 height:500px;
 
-background:rgba(59,130,246,.2);
+background:rgba(249,115,22,.15);
 
 filter:blur(120px);
 
@@ -40,11 +40,9 @@ z-index:2;
 
 padding:10px 20px;
 
-background:rgba(59,130,246,.12);
-
-border-radius:30px;
-
-color:#60A5FA;
+background:#fff7ed;
+  color:#f97316;
+  border:1px solid #fed7aa;
 
 }
 
@@ -54,7 +52,7 @@ color:#60A5FA;
 
 font-size:70px;
 
-color:white;
+color:#1f2937;
 
 margin:30px 0;
 
@@ -63,7 +61,7 @@ margin:30px 0;
 
 .about-hero h1 span{
 
-color:#60A5FA;
+color:#f97316;
 
 }
 
@@ -71,7 +69,7 @@ color:#60A5FA;
 
 .about-hero p{
 
-color:#94A3B8;
+color:#64748b;
 
 font-size:18px;
 
@@ -96,9 +94,11 @@ border:none;
 
 border-radius:12px;
 
-background:linear-gradient(
-135deg,#3B82F6,#6366F1
-);
+  background:linear-gradient(
+    135deg,
+    #f97316,
+    #fb923c
+  );
 
 color:white;
 
@@ -120,7 +120,7 @@ cursor:pointer;
 
 padding:20px 9%;
 
-background:#071126;
+background:#ffffff;
 
 }
 
@@ -131,9 +131,8 @@ background:#071126;
 .value-card,
 .mission-dashboard{
 
-background:rgba(15,23,42,.75);
-
-border:1px solid rgba(255,255,255,.08);
+ background:#ffffff;
+  border:1px solid #fed7aa;
 
 border-radius:24px;
 
@@ -145,7 +144,7 @@ padding:40px;
 
 h2{
 
-color:white;
+color:#1f2937;
 
 font-size:42px;
 
@@ -156,7 +155,7 @@ margin-bottom:25px;
 
 p{
 
-color:#94A3B8;
+color:#64748b;
 
 line-height:1.8;
 
@@ -181,7 +180,7 @@ align-items:center;
 
 .platform-section li{
 
-color:#CBD5E1;
+color:#475569;
 
 margin:15px 0;
 
@@ -193,7 +192,7 @@ list-style:none;
 
 .platform-section svg{
 
-color:#22C55E;
+color:#22c55e;
 
 margin-right:10px;
 
@@ -204,15 +203,14 @@ margin-right:10px;
 .platform-card div,
 .metric{
 
-background:rgba(255,255,255,.05);
+background:#fff7ed;
+  color:#1f2937;
 
 padding:18px;
 
 border-radius:12px;
 
 margin-top:15px;
-
-color:white;
 
 display:flex;
 
@@ -246,7 +244,7 @@ text-align:center;
 
 font-size:35px;
 
-color:#60A5FA;
+color:#f97316;
 
 }
 
@@ -254,7 +252,7 @@ color:#60A5FA;
 
 .value-card h3{
 
-color:white;
+color:#1f2937;
 
 }
 
@@ -277,7 +275,7 @@ gap:50px;
 
 padding:90px 8%;
 
-background:#071126;
+background:#ffffff;
 
 display:grid;
 
@@ -291,7 +289,8 @@ gap:25px;
 
 .about-stats div{
 
-background:rgba(15,23,42,.75);
+background:#ffffff;
+  border:1px solid #fed7aa;
 
 padding:35px;
 
@@ -305,7 +304,7 @@ text-align:center;
 
 .about-stats h2{
 
-color:#60A5FA;
+color:#f97316;
 
 font-size:45px;
 
@@ -327,9 +326,8 @@ padding:130px 8%;
 
 text-align:center;
 
-background:#071126;
-
-border-top:1px solid rgba(255,255,255,.08);
+  background:#ffffff;
+  border-top:1px solid #fed7aa;
 
 }
 
@@ -338,6 +336,7 @@ border-top:1px solid rgba(255,255,255,.08);
 .about-cta h2{
 
 font-size:55px;
+color:#1f2937;
 
 }
 
