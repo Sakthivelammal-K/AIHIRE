@@ -5,7 +5,7 @@ import API from "../../../api/api";
 import {
 FaRobot,
 FaCheckCircle,
-FaTimesCircle
+FaTimesCircle,
 } from "react-icons/fa";
 
 
@@ -32,13 +32,23 @@ try{
 const res =
 await API.get("/interviews/results");
 
-setResults(res.data || []);
+
+setResults(
+Array.isArray(res.data)
+?
+res.data
+:
+[]
+);
+
 
 }
 
 catch(err){
 
 console.log(err);
+
+setResults([]);
 
 }
 
@@ -52,17 +62,33 @@ setLoading(false);
 
 
 
+
 const recommended =
 results.filter(
-r=>(r.score||0)>=80
+r=>r.verdict==="Hire"
 ).length;
+
+
+
+const consider =
+results.filter(
+r=>r.verdict==="Consider"
+).length;
+
+
+
+const rejected =
+results.filter(
+r=>r.verdict==="Reject"
+).length;
+
+
 
 
 
 return (
 
 <DashboardLayout>
-
 
 
 <div className="candidate-banner">
@@ -74,12 +100,14 @@ return (
 AI Interview Analytics
 </h1>
 
+
 <p>
 AI generated candidate evaluation reports
 </p>
 
 
 </div>
+
 
 
 <div className="banner-icon">
@@ -95,16 +123,66 @@ AI generated candidate evaluation reports
 
 
 
+{
+loading ?
+
+
+<div className="candidate-panel">
+
+<h2>
+Loading AI Results...
+</h2>
+
+</div>
+
+
+
+:
+
+results.length===0 ?
+
+
+
+<div className="candidate-panel empty-state">
+
+
+<FaRobot size={60}/>
+
+
+<h2>
+No Interview Results Yet
+</h2>
+
+
+<p>
+AI analysis will appear here after a candidate completes an interview.
+</p>
+
+
+</div>
+
+
+
+:
+
+
+
+<>
+
+
 <div className="candidate-stats">
 
 
+
 <div className="candidate-stat">
+
 
 <div className="stat-icon blue">
 
 <FaRobot/>
 
 </div>
+
 
 <div>
 
@@ -116,18 +194,23 @@ AI generated candidate evaluation reports
 
 </div>
 
+
 </div>
+
+
 
 
 
 
 <div className="candidate-stat">
 
+
 <div className="stat-icon green">
 
 <FaCheckCircle/>
 
 </div>
+
 
 <div>
 
@@ -137,13 +220,19 @@ AI generated candidate evaluation reports
 {recommended}
 </h2>
 
-</div>
 
 </div>
+
+
+</div>
+
+
+
 
 
 
 <div className="candidate-stat">
+
 
 <div className="stat-icon orange">
 
@@ -151,20 +240,26 @@ AI generated candidate evaluation reports
 
 </div>
 
+
 <div>
 
 <h3>Rejected</h3>
 
 <h2>
-{results.length-recommended}
+{rejected}
 </h2>
 
-</div>
 
 </div>
 
 
 </div>
+
+
+
+
+</div>
+
 
 
 
@@ -174,15 +269,21 @@ AI generated candidate evaluation reports
 <div className="candidate-panel hover-card">
 
 
+
 <h2>
 Interview Results
 </h2>
 
 
+
+
+
 <table className="recruiter-table animated-table">
 
 
+
 <thead>
+
 
 <tr>
 
@@ -191,47 +292,81 @@ Candidate
 </th>
 
 <th>
-Score
+Job
 </th>
 
 <th>
-Decision
+Overall
 </th>
+
+<th>
+Technical
+</th>
+
+<th>
+Communication
+</th>
+
+<th>
+Confidence
+</th>
+
+<th>
+Verdict
+</th>
+
 
 </tr>
 
+
 </thead>
+
+
+
 
 
 
 <tbody>
 
 
+
 {
-loading ?
+results.map((item,index)=>(
 
 
-<tr>
-<td colSpan="3">
-Loading...
-</td>
-</tr>
+<tr
+key={
+item._id || index
+}
+>
 
-
-:
-
-results.length ?
-
-
-results.map(item=>(
-
-
-<tr key={item._id}>
 
 
 <td>
-{item.candidateName || "Unknown"}
+
+{
+item.candidateName
+||
+"Unknown"
+}
+
 </td>
+
+
+
+
+
+<td>
+
+{
+item.jobTitle
+||
+"-"
+}
+
+</td>
+
+
 
 
 
@@ -239,11 +374,60 @@ results.map(item=>(
 
 <span className="blue-badge">
 
-{item.score || 0}%
+{
+item.overall
+||
+0
+}%
 
 </span>
 
 </td>
+
+
+
+
+
+<td>
+
+{
+item.technical
+||
+0
+}%
+
+</td>
+
+
+
+
+
+<td>
+
+{
+item.communication
+||
+0
+}%
+
+</td>
+
+
+
+
+
+<td>
+
+{
+item.confidence
+||
+0
+}%
+
+</td>
+
+
+
 
 
 
@@ -251,23 +435,53 @@ results.map(item=>(
 
 
 {
-(item.score||0)>=80 ?
+item.verdict==="Hire"
+
+?
 
 <span className="green-badge">
-Recommended
+
+Hire
+
 </span>
+
+
 
 :
 
-<span className="red-badge">
-Not Recommended
+item.verdict==="Consider"
+
+
+
+?
+
+<span className="orange-badge">
+
+Consider
+
 </span>
+
+
+
+:
+
+
+<span className="red-badge">
+
+Reject
+
+</span>
+
+
 
 }
 
 
 
 </td>
+
+
+
 
 
 
@@ -277,37 +491,42 @@ Not Recommended
 ))
 
 
-:
-
-<tr>
-
-<td colSpan="3">
-No Results
-</td>
-
-</tr>
-
-
 }
+
+
 
 
 
 </tbody>
 
 
+
 </table>
+
+
 
 
 </div>
 
 
 
+</>
+
+
+
+}
+
+
+
 
 </DashboardLayout>
 
+
 );
 
+
 }
+
 
 
 export default AIInterviewResults;

@@ -93,14 +93,12 @@ function ResetPassword() {
 
 
     }
-    catch(error){
-
-      setMessage(
-        error.response?.data?.message ||
-        "Unable to reset password"
-      );
-
-    }
+catch (error) {
+  setMessage(
+    error.response?.data?.detail ||
+    "Unable to reset password"
+  );
+}
     finally{
 
       setLoading(false);
@@ -125,7 +123,7 @@ function ResetPassword() {
 
         <div className="reset-logo">
 
-          AI<span style={{ color: "#60A5FA" }}>HIRE</span>
+          AIHIRE
 
         </div>
 
@@ -138,11 +136,11 @@ function ResetPassword() {
         </div>
 
 
-
+<center>
         <h1>
           Reset Password
         </h1>
-
+</center>
 
         <p>
           Create a new secure password

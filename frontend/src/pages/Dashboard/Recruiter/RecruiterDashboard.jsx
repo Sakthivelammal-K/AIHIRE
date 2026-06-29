@@ -26,23 +26,35 @@ loadData();
 
 
 
-const loadData=async()=>{
+const loadData = async () => {
 
-try{
+  try {
 
-const appResponse=await API.get("/applications/");
-setApplications(appResponse.data);
+    const appResponse = await API.get("/applications/");
+    const interviewResponse = await API.get("/interviews/");
 
+    setApplications(
+      Array.isArray(appResponse.data)
+        ? appResponse.data
+        : []
+    );
 
-const interviewResponse=await API.get("/interviews/");
-setInterviews(interviewResponse.data);
+    console.log(interviewResponse.data);
 
+    setInterviews(
+      Array.isArray(interviewResponse.data)
+        ? interviewResponse.data
+        : []
+    );
 
-}catch(error){
+  } catch (error) {
 
-console.log(error);
+    console.log(error);
 
-}
+    setApplications([]);
+    setInterviews([]);
+
+  }
 
 };
 
@@ -63,13 +75,12 @@ a=>a.status==="Rejected"
 
 
 const recentApplications =
-[...applications]
-.slice(0,5);
+(Array.isArray(applications) ? applications : []).slice(0,5);
 
 
 
 const upcomingInterviews =
-interviews.slice(0,5);
+(Array.isArray(interviews) ? interviews : []).slice(0,5);
 
 
 
@@ -99,11 +110,6 @@ Track candidates, interviews and hiring performance
 </div>
 
 
-<button>
-Create Job
-</button>
-
-
 </div>
 
 
@@ -114,89 +120,68 @@ Create Job
 
 <div className="recruiter-stats">
 
+    <div className="dashboard-stat-card">
 
-<div className="recruiter-stat">
+        <div className="dashboard-bg-circle"></div>
 
-<FaUsers/>
+        <div className="stat-icon-box blue">
+            <FaUsers/>
+        </div>
 
-<div>
+        <div className="stat-content">
+            <h3>Total Candidates</h3>
+            <h1>{applications.length}</h1>
+        </div>
 
-<h2>
-{applications.length}
-</h2>
-
-<p>
-Total Candidates
-</p>
-
-</div>
-
-</div>
+    </div>
 
 
+    <div className="dashboard-stat-card">
+
+        <div className="dashboard-bg-circle"></div>
+
+        <div className="stat-icon-box green">
+            <FaUserCheck/>
+        </div>
+
+        <div className="stat-content">
+            <h3>Shortlisted</h3>
+            <h1>{shortlisted}</h1>
+        </div>
+
+    </div>
 
 
-<div className="recruiter-stat">
+    <div className="dashboard-stat-card">
 
-<FaUserCheck/>
+        <div className="dashboard-bg-circle"></div>
 
-<div>
+        <div className="stat-icon-box orange">
+            <FaChartLine/>
+        </div>
 
-<h2>
-{shortlisted}
-</h2>
+        <div className="stat-content">
+            <h3>Rejected</h3>
+            <h1>{rejected}</h1>
+        </div>
 
-<p>
-Shortlisted
-</p>
-
-</div>
-
-</div>
+    </div>
 
 
+    <div className="dashboard-stat-card">
 
+        <div className="dashboard-bg-circle"></div>
 
-<div className="recruiter-stat">
+        <div className="stat-icon-box purple">
+            <FaCalendarAlt/>
+        </div>
 
-<FaCalendarAlt/>
+        <div className="stat-content">
+            <h3>Interviews</h3>
+            <h1>{interviews.length}</h1>
+        </div>
 
-<div>
-
-<h2>
-{interviews.length}
-</h2>
-
-<p>
-Interviews
-</p>
-
-</div>
-
-</div>
-
-
-
-
-<div className="recruiter-stat">
-
-<FaChartLine/>
-
-<div>
-
-<h2>
-85%
-</h2>
-
-<p>
-Match Score
-</p>
-
-</div>
-
-</div>
-
-
+    </div>
 
 </div>
 
@@ -294,7 +279,7 @@ recentApplications.length>0 ?
 recentApplications.map((app)=>(
 
 
-<tr key={app.id}>
+<tr key={app._id}>
 
 
 <td>
@@ -427,7 +412,7 @@ upcomingInterviews.map(
 (interview)=>(
 
 
-<tr key={interview.id}>
+<tr key={interview._id}>
 
 
 <td>

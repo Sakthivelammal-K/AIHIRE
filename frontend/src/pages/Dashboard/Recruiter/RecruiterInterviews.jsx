@@ -8,11 +8,12 @@ FaCalendar
 } from "react-icons/fa";
 
 
-
 function RecruiterInterviews(){
 
 
 const [interviews,setInterviews]=useState([]);
+
+const [selectedInterview,setSelectedInterview]=useState(null);
 
 
 
@@ -24,14 +25,95 @@ load();
 
 
 
-const load=async()=>{
+const load = async()=>{
+
+try{
 
 const res =
-await API.get("/interviews");
+await API.get("/interviews/");
 
-setInterviews(res.data);
+
+setInterviews(
+res.data.scheduled || []
+);
+
+
+}
+
+catch(err){
+
+console.log(err);
+
+setInterviews([]);
+
+}
 
 };
+
+
+
+
+const saveInterview = async()=>{
+
+
+try{
+
+
+await API.put(
+
+`/interviews/${selectedInterview._id}`,
+
+{
+
+
+type:selectedInterview.type,
+
+
+meetingLink:
+selectedInterview.meetingLink,
+
+
+instructions:
+selectedInterview.instructions,
+
+
+notes:
+selectedInterview.notes,
+
+
+result:
+selectedInterview.result,
+
+
+status:
+selectedInterview.status
+
+
+}
+
+);
+
+
+
+alert("Interview updated");
+
+
+load();
+
+
+}
+
+catch(err){
+
+console.log(err);
+
+alert("Update failed");
+
+}
+
+
+};
+
 
 
 
@@ -54,7 +136,7 @@ Interview Management
 </h1>
 
 <p>
-AI interview scheduling
+Manage candidate interviews
 </p>
 
 
@@ -72,14 +154,12 @@ AI interview scheduling
 
 
 
-<br /><br />
 
 
+<div className="candidate-panel">
 
-<div className="candidate-panel hover-card">
 
-
-<table className="recruiter-table animated-table">
+<table className="recruiter-table">
 
 
 <thead>
@@ -112,54 +192,75 @@ Status
 </thead>
 
 
-
 <tbody>
 
 
 {
 interviews.length ?
 
-interviews.map(i=>(
+
+interviews.map(item=>(
 
 
-<tr key={i._id}>
+<tr
+
+key={item._id}
+
+onClick={()=>
+setSelectedInterview(item)
+}
+
+style={{
+cursor:"pointer"
+}}
+
+>
 
 
 <td>
-{i.candidateName}
+{item.candidateName}
 </td>
+
 
 
 <td>
-{i.jobTitle}
+{item.jobTitle}
 </td>
+
 
 
 <td>
 
 <FaCalendar/>
 
- {i.date}
+{" "}
+
+{new Date(
+item.date
+).toLocaleDateString()}
 
 </td>
+
+
 
 
 <td>
 
 <span className="blue-badge">
 
-{i.type}
+{item.type || "Not Selected"}
 
 </span>
 
 </td>
 
 
+
 <td>
 
 <span className="green-badge">
 
-{i.status}
+{item.status}
 
 </span>
 
@@ -171,19 +272,22 @@ interviews.map(i=>(
 
 ))
 
+
 :
+
 
 <tr>
 
 <td colSpan="5">
+
 No Interviews
+
 </td>
 
 </tr>
 
 
 }
-
 
 
 </tbody>
@@ -194,6 +298,356 @@ No Interviews
 
 </div>
 
+
+
+
+
+{
+selectedInterview && (
+
+
+<div
+className="candidate-panel"
+style={{
+marginTop:"30px"
+}}
+>
+
+
+<h2>
+Interview Details
+</h2>
+
+
+
+
+
+
+<p>
+
+<strong>
+Candidate:
+</strong>
+
+{" "}
+
+{selectedInterview.candidateName}
+
+</p>
+
+
+
+
+<p>
+
+<strong>
+Role:
+</strong>
+
+{" "}
+
+{selectedInterview.jobTitle}
+
+</p>
+
+
+
+
+
+<p>
+
+<strong>
+Date:
+</strong>
+
+{" "}
+
+{selectedInterview.date}
+
+</p>
+
+
+
+
+
+<div className="input-group">
+
+
+<label>
+
+Interview Type
+
+</label>
+
+
+
+<select
+
+
+value={
+selectedInterview.type || ""
+}
+
+
+
+onChange={(e)=>
+
+setSelectedInterview({
+
+...selectedInterview,
+
+type:e.target.value
+
+})
+
+
+}
+
+
+>
+
+
+<option value="">
+
+Select Type
+
+</option>
+
+
+<option value="Video Interview">
+
+Video Interview
+
+</option>
+
+
+<option value="AI Interview">
+
+AI Interview
+
+</option>
+
+
+</select>
+
+
+</div>
+
+
+
+
+
+
+
+<div className="input-group">
+
+
+<label>
+
+Status
+
+</label>
+
+
+<select
+
+value={
+selectedInterview.status
+}
+
+
+onChange={(e)=>
+
+setSelectedInterview({
+
+...selectedInterview,
+
+status:e.target.value
+
+})
+
+
+}
+
+>
+
+
+<option>
+Scheduled
+</option>
+
+
+<option>
+Completed
+</option>
+
+
+<option>
+Cancelled
+</option>
+
+
+<option>
+Rescheduled
+</option>
+
+
+</select>
+
+
+
+</div>
+
+
+
+
+
+
+
+<div className="input-group">
+
+
+<label>
+
+Meeting Link
+
+</label>
+
+
+
+<input
+
+value={
+selectedInterview.meetingLink || ""
+}
+
+
+placeholder="Google Meet / Zoom Link"
+
+
+onChange={(e)=>
+
+setSelectedInterview({
+
+...selectedInterview,
+
+meetingLink:e.target.value
+
+})
+
+}
+
+
+/>
+
+
+</div>
+
+
+
+
+
+
+<div className="input-group">
+
+
+<label>
+Instructions
+</label>
+
+
+<textarea
+
+rows="4"
+
+value={
+selectedInterview.instructions || ""
+}
+
+
+onChange={(e)=>
+
+setSelectedInterview({
+
+...selectedInterview,
+
+instructions:e.target.value
+
+})
+
+}
+
+
+/>
+
+
+</div>
+
+
+
+
+
+
+<div className="input-group">
+
+
+<label>
+Recruiter Notes
+</label>
+
+
+<textarea
+
+rows="4"
+
+value={
+selectedInterview.notes || ""
+}
+
+
+onChange={(e)=>
+
+setSelectedInterview({
+
+...selectedInterview,
+
+notes:e.target.value
+
+})
+
+}
+
+
+/>
+
+
+</div>
+
+
+
+
+
+
+<button
+
+className="profile-save-btn"
+
+onClick={saveInterview}
+
+>
+
+Save Changes
+
+</button>
+
+
+
+</div>
+
+
+)
+
+}
 
 
 

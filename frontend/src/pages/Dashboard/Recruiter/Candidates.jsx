@@ -1,5 +1,6 @@
 import DashboardLayout from "../../../components/dashboard/DashboardLayout";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import API from "../../../api/api";
 
 import {
@@ -17,10 +18,11 @@ import {
 
 function Candidates() {
 
-
+const navigate = useNavigate();
 const [applications,setApplications] = useState([]);
 const [searchTerm,setSearchTerm] = useState("");
-
+const [selectedCandidate,setSelectedCandidate] = useState("");
+const [interviewType,setInterviewType] = useState("");
 
 
 useEffect(()=>{
@@ -83,7 +85,16 @@ console.log(error);
 
 
 
-const scheduleInterview = async(candidate)=>{
+const scheduleInterview = async()=>{
+
+
+if(!interviewType){
+
+alert("Please select interview type");
+
+return;
+
+}
 
 
 try{
@@ -93,13 +104,13 @@ await API.post(
 "/interviews/create",
 {
 
-candidateName:candidate.candidateName,
+candidateName:selectedCandidate.candidateName,
 
-jobTitle:candidate.jobTitle,
+jobTitle:selectedCandidate.jobTitle,
 
 date:"25-Jun-2026",
 
-type:"AI Video",
+type:interviewType,
 
 status:"Scheduled"
 
@@ -108,18 +119,64 @@ status:"Scheduled"
 );
 
 
+
+
+await API.put(
+
+`/applications/${selectedCandidate._id}`,
+
+{
+status:"Scheduled"
+}
+
+);
+
+
+
+setApplications(prev =>
+
+prev.map(app =>
+
+app._id === selectedCandidate._id
+
+?
+
+{
+...app,
+status:"Scheduled"
+}
+
+:
+
+app
+
+)
+
+);
+
+
+
+setSelectedCandidate(null);
+
+setInterviewType("");
+
+
+
 alert("Interview Scheduled");
 
 
 }
+
 catch(error){
 
 console.log(error);
 
+alert("Failed scheduling interview");
+
 }
 
-};
 
+};
 
 
 
@@ -328,7 +385,7 @@ background:"transparent",
 border:"1px solid #334155",
 padding:"10px",
 borderRadius:"10px",
-color:"white"
+color:"black"
 }}
 
 placeholder="Search candidate..."
@@ -407,8 +464,6 @@ filteredApplications.map(app=>(
 </td>
 
 
-
-
 <td>
 
 {app.jobTitle}
@@ -433,7 +488,6 @@ filteredApplications.map(app=>(
 
 app.status==="Shortlisted" ?
 
-
 <span className="green-badge">
 Shortlisted
 </span>
@@ -441,9 +495,7 @@ Shortlisted
 
 :
 
-
 app.status==="Rejected" ?
-
 
 <span className="red-badge">
 Rejected
@@ -452,11 +504,17 @@ Rejected
 
 :
 
+app.status==="Scheduled" ?
 
 <span className="blue-badge">
+Scheduled
+</span>
 
+
+:
+
+<span className="blue-badge">
 {app.status || "Applied"}
-
 </span>
 
 
@@ -471,70 +529,38 @@ Rejected
 
 <td>
 
-
+<div className="action-buttons">
 
 <button
-
-className="panel-header button"
-
-style={{
-marginRight:"8px"
-}}
-
-onClick={()=>updateStatus(
-app._id,
-"Shortlisted"
-)}
-
+className="action-btn approve-btn"
+title="Shortlist Candidate"
+onClick={() =>
+updateStatus(app._id,"Shortlisted")
+}
 >
-
 <FaCheck/>
-
 </button>
 
-
-
-
-
 <button
-
-style={{
-background:"#7f1d1d",
-color:"white",
-border:"none",
-padding:"10px",
-borderRadius:"10px",
-marginRight:"8px"
-}}
-
-onClick={()=>updateStatus(
-app._id,
-"Rejected"
-)}
-
+className="action-btn reject-btn"
+title="Reject Candidate"
+onClick={() =>
+updateStatus(app._id,"Rejected")
+}
 >
-
 <FaTimes/>
-
 </button>
 
+{
 
+app.status==="Scheduled"
 
-
-
+?
 
 <button
-
-style={{
-background:"linear-gradient(135deg,#2563eb,#6366f1)",
-color:"white",
-border:"none",
-padding:"10px",
-borderRadius:"10px"
-}}
-
-onClick={()=>scheduleInterview(app)}
-
+className="action-btn interview-btn disabled-btn"
+disabled
+title="Interview Already Scheduled"
 >
 
 <FaVideo/>
@@ -542,10 +568,43 @@ onClick={()=>scheduleInterview(app)}
 </button>
 
 
+:
+
+<button
+className="action-btn interview-btn"
+title="Schedule Interview"
+onClick={() => {
+
+setSelectedCandidate(app);
+
+setInterviewType("");
+
+}}
+>
+
+<FaVideo/>
+
+</button>
+
+}
+
+</div>
+
 
 </td>
 
+<td>
 
+<button
+ className="resume-btn"
+ onClick={()=>navigate(`/resume-screening/${app._id}`)}
+>
+
+ AI Resume
+
+</button>
+
+</td>
 
 </tr>
 
@@ -582,7 +641,127 @@ No candidates found
 
 </div>
 
+{
+selectedCandidate && (
 
+<div
+className="candidate-panel"
+style={{
+position:"fixed",
+top:"20%",
+left:"35%",
+width:"400px",
+zIndex:1000
+}}
+>
+
+
+<h2>
+Schedule Interview
+</h2>
+
+
+<p>
+
+Candidate:
+
+<strong>
+{" "}
+{selectedCandidate.candidateName}
+</strong>
+
+</p>
+
+
+
+<div className="input-group">
+
+
+<label>
+Interview Type
+</label>
+
+
+<select
+
+value={interviewType}
+
+onChange={(e)=>
+setInterviewType(e.target.value)
+}
+
+>
+
+
+<option value="">
+Select Type
+</option>
+
+
+<option value="Video Interview">
+Video Interview
+</option>
+
+
+<option value="AI Interview">
+AI Interview
+</option>
+
+
+</select>
+
+
+</div>
+
+
+
+
+
+<div
+style={{
+display:"flex",
+gap:"15px",
+marginTop:"20px"
+}}
+>
+
+
+<button
+
+className="profile-save-btn"
+
+onClick={scheduleInterview}
+
+>
+
+Schedule
+
+</button>
+
+
+
+
+<button
+
+className="profile-cancel-btn"
+
+onClick={()=>setSelectedCandidate(null)}
+
+>
+
+Cancel
+
+</button>
+
+
+</div>
+
+
+</div>
+
+)
+
+}
 
 
 </DashboardLayout>

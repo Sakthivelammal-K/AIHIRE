@@ -436,3 +436,17 @@ font-size:32px;
 .password-toggle svg{
   pointer-events:none;
 }
+
+/* Hide Edge password reveal icon */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear{
+    display: none;
+}
+
+/* Hide Chromium/Edge built-in password icon */
+input::-webkit-credentials-auto-fill-button,
+input::-webkit-password-toggle-button{
+    display: none !important;
+    visibility: hidden;
+    pointer-events: none;
+}

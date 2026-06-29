@@ -23,13 +23,11 @@ const [appliedJobs,setAppliedJobs]=useState([]);
 
 
 
-
 useEffect(()=>{
 
 loadJobs();
 
 },[]);
-
 
 
 
@@ -41,11 +39,54 @@ const loadJobs=async()=>{
 try{
 
 
-const res =
-await API.get("/jobs/");
+const [
+jobsRes,
+applicationsRes
+
+]=await Promise.all([
 
 
-setJobs(res.data);
+API.get("/jobs/"),
+
+API.get("/applications/")
+
+]);
+
+
+
+
+
+setJobs(jobsRes.data);
+
+
+
+
+
+const candidateName =
+localStorage.getItem("username");
+
+
+
+const myApplications =
+applicationsRes.data.filter(
+app =>
+app.candidateName === candidateName
+);
+
+
+
+
+
+const appliedIds =
+myApplications.map(
+app=>app.job_id
+);
+
+
+
+
+setAppliedJobs(appliedIds);
+
 
 
 
@@ -66,12 +107,15 @@ console.log(err);
 
 
 
+
+
 const handleApply=async(job)=>{
 
 
 
 if(appliedJobs.includes(job._id))
 return;
+
 
 
 
@@ -88,6 +132,8 @@ const application={
 
 candidateName,
 
+job_id:job._id,
+
 jobTitle:job.title,
 
 department:job.department,
@@ -102,7 +148,6 @@ appliedDate:
 new Date().toLocaleDateString()
 
 
-
 };
 
 
@@ -110,7 +155,11 @@ new Date().toLocaleDateString()
 
 
 
+
+
 try{
+
+
 
 
 
@@ -139,7 +188,7 @@ await API.put(
 
 setAppliedJobs(
 
-prev => [
+prev=>[
 
 ...prev,
 
@@ -160,18 +209,21 @@ alert(
 
 
 
-
 }
 
-catch (error) {
+catch(error){
 
-  console.log("Full Error:", error);
 
-  console.log("Response:", error.response);
+console.log(
+"Application Error:",
+error.response?.data || error
+);
 
-  console.log("Data:", error.response?.data);
 
-  alert("Application failed");
+alert(
+"Application failed"
+);
+
 
 }
 
@@ -185,11 +237,12 @@ catch (error) {
 
 
 
+
+
 return (
 
 
 <DashboardLayout>
-
 
 
 
@@ -221,7 +274,6 @@ AI powered job matching platform
 
 
 
-
 <div className="banner-icon">
 
 
@@ -246,7 +298,6 @@ AI powered job matching platform
 
 
 <div className="candidate-stats">
-
 
 
 
@@ -369,7 +420,6 @@ AIHIRE
 
 
 
-
 </div>
 
 
@@ -386,9 +436,11 @@ AIHIRE
 
 
 
+
 <h2>
 Recommended Jobs
 </h2>
+
 
 
 
@@ -446,6 +498,8 @@ Action
 
 
 
+
+
 <tbody>
 
 
@@ -459,6 +513,7 @@ jobs.length ?
 
 
 jobs.map(job=>(
+
 
 
 
@@ -483,11 +538,13 @@ jobs.map(job=>(
 
 
 
+
 <td>
 
 {job.department}
 
 </td>
+
 
 
 
@@ -506,6 +563,8 @@ jobs.map(job=>(
 
 
 </td>
+
+
 
 
 
@@ -534,6 +593,8 @@ jobs.map(job=>(
 
 
 
+
+
 <td>
 
 
@@ -541,7 +602,10 @@ jobs.map(job=>(
 
 
 
+
+
 <button
+
 
 
 
@@ -555,40 +619,75 @@ appliedJobs.includes(job._id)
 
 
 
+
 style={{
-  background:
-    appliedJobs.includes(job._id)
-      ? "linear-gradient(135deg,#22C55E,#16A34A)" // Green for Applied
-      : "linear-gradient(135deg,#F97316,#EA580C)", // Orange for Apply
 
-  border: "none",
+background:
 
-  padding: "12px 20px",
+appliedJobs.includes(job._id)
 
-  borderRadius: "14px",
+?
 
-  color: "white",
+"linear-gradient(135deg,#22C55E,#16A34A)"
 
-  fontWeight: "700",
+:
 
-  display: "flex",
+"linear-gradient(135deg,#F97316,#EA580C)",
 
-  alignItems: "center",
 
-  gap: "10px",
 
-  cursor: appliedJobs.includes(job._id)
-    ? "default"
-    : "pointer",
+border:"none",
 
-  boxShadow: "0 15px 30px rgba(249,115,22,.30)",
 
-  transition: "0.3s"
+padding:"12px 20px",
+
+
+borderRadius:"14px",
+
+
+color:"white",
+
+
+fontWeight:"700",
+
+
+display:"flex",
+
+
+alignItems:"center",
+
+
+gap:"10px",
+
+
+cursor:
+
+appliedJobs.includes(job._id)
+
+?
+
+"default"
+
+:
+
+"pointer",
+
+
+boxShadow:
+"0 15px 30px rgba(249,115,22,.30)",
+
+
+transition:"0.3s"
+
+
 }}
 
 
 
+
+
 >
+
 
 
 
@@ -636,6 +735,9 @@ Apply Now
 
 
 
+
+
+
 </td>
 
 
@@ -644,7 +746,10 @@ Apply Now
 
 
 
+
+
 </tr>
+
 
 
 
@@ -688,8 +793,10 @@ No jobs available
 
 
 
-
 </tbody>
+
+
+
 
 
 
@@ -721,7 +828,6 @@ No jobs available
 
 
 }
-
 
 
 

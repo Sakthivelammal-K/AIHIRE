@@ -34,10 +34,17 @@ await API.get("/applications/");
 
 setApplications(app.data);
 
-const interview =
+const response =
 await API.get("/interviews/");
 
-setInterviews(interview.data);
+
+setInterviews(
+Array.isArray(response.data)
+?
+response.data
+:
+[]
+);
 
 }
 catch(error){
@@ -63,8 +70,9 @@ item=>item.status==="Shortlisted"
 );
 
 const myInterviews =
-interviews.filter(
-item=>item.candidateName===username
+(interviews || []).filter(
+item =>
+item.candidateName===username
 );
 
 return (
@@ -135,7 +143,7 @@ style={{cursor:"pointer"}}
 
 <div
 className="candidate-stat"
-onClick={()=>navigate("/candidate-interviews")}
+onClick={()=>navigate("/interviews")}
 style={{cursor:"pointer"}}
 >
 

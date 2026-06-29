@@ -189,24 +189,25 @@ jobs.map(job=>(
 <td>
 
 
+<div className="action-buttons">
+
 <button
+className="action-btn edit-btn"
 onClick={()=>navigate(`/edit-job/${job._id}`)}
+title="Edit Job"
 >
-
 <FaEdit/>
-
 </button>
-
-
 
 <button
+className="action-btn delete-btn"
 onClick={()=>deleteJob(job._id)}
+title="Delete Job"
 >
-
 <FaTrash/>
-
 </button>
 
+</div>
 
 </td>
 

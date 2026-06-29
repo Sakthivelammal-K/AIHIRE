@@ -31,6 +31,9 @@ import AvailableJobs from "../pages/Dashboard/Candidate/AvailableJobs";
 import EditJob from "../pages/Dashboard/Recruiter/EditJob";
 import AIInterview from "../pages/Dashboard/Candidate/AIInterview";
 import AIInterviewResults from "../pages/Dashboard/Recruiter/AIInterviewResults";
+import ResumeScreening from "../pages/Dashboard/Recruiter/ResumeScreening";
+import VideoInterview from "../pages/Dashboard/Candidate/VideoInterview";
+
 
 
 function AppRoutes() {
@@ -44,7 +47,7 @@ function AppRoutes() {
   <Route path="/login" element={<Login />} />
   <Route path="/register" element={<Register />} />
   <Route path="/forgot-password" element={<ForgotPassword />} />
-  <Route path="/reset-password" element={<ResetPassword />} />
+  <Route path="/reset-password/:token" element={<ResetPassword />} />
 
   {/* Admin */}
   <Route
@@ -246,6 +249,25 @@ function AppRoutes() {
     </ProtectedRoute>
   }
   />
+
+  <Route
+  path="/resume-screening/:id"
+  element={
+  <ProtectedRoute>
+    <ResumeScreening />
+  </ProtectedRoute>}
+/>
+
+<Route
+path="/video-interview"
+element={
+  <ProtectedRoute>
+    <VideoInterview />
+  </ProtectedRoute>
+}
+/>
+
+
 
 </Routes>
   );
