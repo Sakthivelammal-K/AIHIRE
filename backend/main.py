@@ -9,6 +9,8 @@ from routes.interviews import router as interview_router
 from routes.resumes import router as resume_router
 from routes.organizations import router as organization_router
 from routes.ai_interview import router as ai_router
+from routes.video_interview import router as videoInterview_router
+from fastapi.staticfiles import StaticFiles
 
 
 app = FastAPI()
@@ -66,6 +68,17 @@ app.include_router(
 app.include_router(
     ai_router
 )
+
+app.include_router(
+    videoInterview_router
+)
+
+app.mount(
+    "/uploads",
+    StaticFiles(directory="uploads"),
+    name="uploads"
+)
+
 
 @app.get("/")
 def home():

@@ -10,5 +10,6 @@ db = client["aihire"]
 
 users = db["users"]
 jobs = db["jobs"]
+video_results = db["video_results"]
 
 print("MongoDB connected")

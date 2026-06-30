@@ -4,8 +4,9 @@ import API from "../../../api/api";
 
 import {
 FaRobot,
+FaVideo,
 FaCheckCircle,
-FaTimesCircle,
+FaTimesCircle
 } from "react-icons/fa";
 
 
@@ -13,7 +14,19 @@ function AIInterviewResults(){
 
 
 const [results,setResults]=useState([]);
+
 const [loading,setLoading]=useState(true);
+
+const [selectedResult,setSelectedResult]=useState(null);
+
+
+const [recruiterComment,setRecruiterComment]=useState("");
+
+const [recruiterRating,setRecruiterRating]=useState(0);
+
+const [finalDecision,setFinalDecision]=useState("");
+
+
 
 
 
@@ -25,12 +38,14 @@ loadResults();
 
 
 
+
 const loadResults=async()=>{
 
 try{
 
+
 const res =
-await API.get("/interviews/results");
+await API.get("/video-interviews/");
 
 
 setResults(
@@ -42,15 +57,17 @@ res.data
 );
 
 
+
 }
 
-catch(err){
+catch(error){
 
-console.log(err);
+console.log(error);
 
 setResults([]);
 
 }
+
 
 finally{
 
@@ -63,16 +80,75 @@ setLoading(false);
 
 
 
-const recommended =
+const saveReview=async()=>{
+
+
+if(!selectedResult)
+return;
+
+
+
+try{
+
+
+await API.put(
+
+`/interviews/result/${selectedResult._id}`,
+
+{
+
+recruiterComment,
+
+recruiterRating,
+
+finalDecision
+
+}
+
+);
+
+
+
+alert(
+"Review Saved"
+);
+
+
+
+setSelectedResult(null);
+
+
+loadResults();
+
+
+
+}
+
+catch(error){
+
+
+console.log(error);
+
+
+alert(
+"Review Failed"
+);
+
+
+}
+
+
+};
+
+
+
+
+
+
+
+const hired =
 results.filter(
 r=>r.verdict==="Hire"
-).length;
-
-
-
-const consider =
-results.filter(
-r=>r.verdict==="Consider"
 ).length;
 
 
@@ -86,9 +162,15 @@ r=>r.verdict==="Reject"
 
 
 
-return (
+
+
+
+
+return(
+
 
 <DashboardLayout>
+
 
 
 <div className="candidate-banner">
@@ -97,12 +179,12 @@ return (
 <div>
 
 <h1>
-AI Interview Analytics
+Interview Results
 </h1>
 
 
 <p>
-AI generated candidate evaluation reports
+AI + Video Interview Evaluation
 </p>
 
 
@@ -130,7 +212,7 @@ loading ?
 <div className="candidate-panel">
 
 <h2>
-Loading AI Results...
+Loading Results...
 </h2>
 
 </div>
@@ -138,36 +220,9 @@ Loading AI Results...
 
 
 :
-
-results.length===0 ?
-
-
-
-<div className="candidate-panel empty-state">
-
-
-<FaRobot size={60}/>
-
-
-<h2>
-No Interview Results Yet
-</h2>
-
-
-<p>
-AI analysis will appear here after a candidate completes an interview.
-</p>
-
-
-</div>
-
-
-
-:
-
-
 
 <>
+
 
 
 <div className="candidate-stats">
@@ -175,7 +230,6 @@ AI analysis will appear here after a candidate completes an interview.
 
 
 <div className="candidate-stat">
-
 
 <div className="stat-icon blue">
 
@@ -186,11 +240,15 @@ AI analysis will appear here after a candidate completes an interview.
 
 <div>
 
-<h3>Total Interviews</h3>
+<h3>
+Total
+</h3>
+
 
 <h2>
 {results.length}
 </h2>
+
 
 </div>
 
@@ -214,12 +272,14 @@ AI analysis will appear here after a candidate completes an interview.
 
 <div>
 
-<h3>Recommended</h3>
+<h3>
+Hired
+</h3>
+
 
 <h2>
-{recommended}
+{hired}
 </h2>
-
 
 </div>
 
@@ -241,9 +301,13 @@ AI analysis will appear here after a candidate completes an interview.
 </div>
 
 
+
 <div>
 
-<h3>Rejected</h3>
+<h3>
+Rejected
+</h3>
+
 
 <h2>
 {rejected}
@@ -256,8 +320,6 @@ AI analysis will appear here after a candidate completes an interview.
 </div>
 
 
-
-
 </div>
 
 
@@ -266,62 +328,58 @@ AI analysis will appear here after a candidate completes an interview.
 
 
 
-<div className="candidate-panel hover-card">
 
+
+<div className="candidate-panel">
 
 
 <h2>
-Interview Results
+All Results
 </h2>
 
 
 
 
 
-<table className="recruiter-table animated-table">
-
+<table className="recruiter-table">
 
 
 <thead>
 
-
 <tr>
+
+<th>
+Type
+</th>
 
 <th>
 Candidate
 </th>
 
+
 <th>
 Job
 </th>
 
-<th>
-Overall
-</th>
 
 <th>
-Technical
+Score
 </th>
 
-<th>
-Communication
-</th>
-
-<th>
-Confidence
-</th>
 
 <th>
 Verdict
 </th>
 
 
+<th>
+Action
+</th>
+
+
 </tr>
 
-
 </thead>
-
-
 
 
 
@@ -329,56 +387,92 @@ Verdict
 <tbody>
 
 
-
 {
-results.map((item,index)=>(
 
+results.length===0 ?
 
-<tr
-key={
-item._id || index
-}
->
+<tr>
 
+<td colSpan="6">
 
-
-<td>
-
-{
-item.candidateName
-||
-"Unknown"
-}
+No interview results found
 
 </td>
 
 
+</tr>
 
+
+:
+
+results.map(item=>(
+
+
+
+<tr key={item._id}>
 
 
 <td>
+
 
 {
-item.jobTitle
-||
-"-"
-}
+item.type==="Video Interview"
 
-</td>
-
-
-
-
-
-<td>
+?
 
 <span className="blue-badge">
 
-{
-item.overall
-||
-0
-}%
+<FaVideo/>
+
+Video
+
+</span>
+
+
+:
+
+<span className="orange-badge">
+
+<FaRobot/>
+
+AI
+
+</span>
+
+}
+
+
+</td>
+
+
+
+
+
+<td>
+
+{item.candidateName}
+
+</td>
+
+
+
+
+
+<td>
+
+{item.jobTitle || "-"}
+
+</td>
+
+
+
+
+
+<td>
+
+<span className="green-badge">
+
+{item.overall || 0}%
 
 </span>
 
@@ -390,54 +484,14 @@ item.overall
 
 <td>
 
-{
-item.technical
-||
-0
-}%
-
-</td>
-
-
-
-
-
-<td>
 
 {
-item.communication
-||
-0
-}%
 
-</td>
-
-
-
-
-
-<td>
-
-{
-item.confidence
-||
-0
-}%
-
-</td>
-
-
-
-
-
-
-<td>
-
-
-{
 item.verdict==="Hire"
 
+
 ?
+
 
 <span className="green-badge">
 
@@ -449,21 +503,11 @@ Hire
 
 :
 
-item.verdict==="Consider"
 
+item.verdict==="Reject"
 
 
 ?
-
-<span className="orange-badge">
-
-Consider
-
-</span>
-
-
-
-:
 
 
 <span className="red-badge">
@@ -472,6 +516,16 @@ Reject
 
 </span>
 
+
+
+:
+
+
+<span className="orange-badge">
+
+Pending
+
+</span>
 
 
 }
@@ -485,7 +539,58 @@ Reject
 
 
 
+
+
+<td>
+
+
+<button
+
+className="profile-save-btn"
+
+onClick={()=>{
+
+
+setSelectedResult(item);
+
+
+
+setRecruiterComment(
+item.recruiterComment || ""
+);
+
+
+
+setRecruiterRating(
+item.recruiterRating || 0
+);
+
+
+
+setFinalDecision(
+item.finalDecision || ""
+);
+
+
+
+}}
+
+>
+
+Review
+
+</button>
+
+
+
+</td>
+
+
+
+
+
 </tr>
+
 
 
 ))
@@ -495,14 +600,10 @@ Reject
 
 
 
-
-
 </tbody>
 
 
-
 </table>
-
 
 
 
@@ -512,9 +613,389 @@ Reject
 
 </>
 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{
+selectedResult &&
+
+
+
+<div className="candidate-panel">
+
+
+
+<h2>
+Candidate Review
+</h2>
+
+
+
+
+
+<h3>
+{selectedResult.type}
+</h3>
+
+
+
+
+<p>
+
+Candidate :
+
+{selectedResult.candidateName}
+
+</p>
+
+
+
+
+
+<p>
+
+Role :
+
+{selectedResult.jobTitle}
+
+</p>
+
+
+
+
+
+
+
+
+
+{
+selectedResult.videoPath &&
+
+<>
+
+
+<h3>
+Recorded Interview
+</h3>
+
+
+<video
+
+width="600"
+
+controls
+
+>
+
+
+<source
+
+src={
+
+`http://127.0.0.1:8000/${selectedResult.videoPath}`
+
+}
+
+/>
+
+
+</video>
+
+
+
+
+
+<h3>
+
+Violations
+
+</h3>
+
+
+<p>
+
+{selectedResult.violations || 0}
+
+</p>
+
+
+
+</>
+
+}
+
+
+
+
+
+
+
+
+<h3>
+Answers
+</h3>
+
+
+
+<ul>
+
+
+{
+
+selectedResult.answers?.map(
+(a,i)=>(
+
+
+<li key={i}>
+
+
+<b>
+
+Q{a.questionNo}
+
+</b>
+
+
+{" : "}
+
+{a.answer}
+
+
+
+</li>
+
+
+)
+
+)
 
 
 }
+
+
+</ul>
+
+
+
+
+
+
+
+
+
+<h3>
+AI Scores
+</h3>
+
+
+<p>
+
+Technical :
+
+{selectedResult.technical || 0}%
+
+</p>
+
+
+<p>
+
+Communication :
+
+{selectedResult.communication || 0}%
+
+</p>
+
+
+<p>
+
+Confidence :
+
+{selectedResult.confidence || 0}%
+
+</p>
+
+
+<p>
+
+Overall :
+
+{selectedResult.overall || 0}%
+
+</p>
+
+
+
+
+
+
+
+
+
+<label>
+
+Recruiter Rating
+
+</label>
+
+
+
+<select
+
+value={recruiterRating}
+
+onChange={
+e=>
+setRecruiterRating(
+Number(e.target.value)
+)
+}
+
+>
+
+
+<option value="0">
+Select
+</option>
+
+
+<option value="1">
+1
+</option>
+
+
+<option value="2">
+2
+</option>
+
+
+<option value="3">
+3
+</option>
+
+
+<option value="4">
+4
+</option>
+
+
+<option value="5">
+5
+</option>
+
+
+</select>
+
+
+
+
+
+
+
+
+<textarea
+
+rows="4"
+
+placeholder="Recruiter comment"
+
+value={recruiterComment}
+
+onChange={
+e=>
+setRecruiterComment(
+e.target.value
+)
+}
+
+
+/>
+
+
+
+
+
+
+
+
+
+<select
+
+value={finalDecision}
+
+onChange={
+e=>
+setFinalDecision(
+e.target.value
+)
+}
+
+>
+
+
+<option value="">
+Decision
+</option>
+
+
+<option value="Selected">
+Selected
+</option>
+
+
+<option value="Hold">
+Hold
+</option>
+
+
+<option value="Rejected">
+Rejected
+</option>
+
+
+</select>
+
+
+
+
+
+
+
+
+
+<button
+
+className="profile-save-btn"
+
+onClick={saveReview}
+
+>
+
+Save Review
+
+</button>
+
+
+
+
+
+</div>
+
+
+
+}
+
 
 
 
@@ -526,7 +1007,6 @@ Reject
 
 
 }
-
 
 
 export default AIInterviewResults;

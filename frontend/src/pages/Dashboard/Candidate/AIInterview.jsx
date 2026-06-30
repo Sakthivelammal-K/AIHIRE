@@ -266,50 +266,16 @@ const aiResponse = await API.post(
 "/ai/evaluate",
 {
 answers,
-jobTitle
+jobTitle,
+candidateName: currentUser
 }
 );
 
 
-
-const interviewResult = {
-
-
-candidateName: currentUser,
+const interviewResult = aiResponse.data;
 
 
-jobTitle,
-
-
-technical:
-aiResponse.data.technical,
-
-
-communication:
-aiResponse.data.communication,
-
-
-confidence:
-aiResponse.data.confidence,
-
-
-overall:
-aiResponse.data.overall,
-
-
-verdict:
-aiResponse.data.verdict,
-
-
-strengths:
-aiResponse.data.strengths,
-
-
-improvements:
-aiResponse.data.improvements
-
-
-};
+setResult(interviewResult);
 
 
 

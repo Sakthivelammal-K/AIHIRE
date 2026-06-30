@@ -23,7 +23,7 @@ const [applications,setApplications] = useState([]);
 const [searchTerm,setSearchTerm] = useState("");
 const [selectedCandidate,setSelectedCandidate] = useState("");
 const [interviewType,setInterviewType] = useState("");
-
+const [interviewDate,setInterviewDate] = useState("");
 
 useEffect(()=>{
 
@@ -88,9 +88,9 @@ console.log(error);
 const scheduleInterview = async()=>{
 
 
-if(!interviewType){
+if(!interviewType || !interviewDate){
 
-alert("Please select interview type");
+alert("Please select interview type and date");
 
 return;
 
@@ -108,14 +108,19 @@ candidateName:selectedCandidate.candidateName,
 
 jobTitle:selectedCandidate.jobTitle,
 
-date:"25-Jun-2026",
+date:interviewDate,
 
 type:interviewType,
 
-status:"Scheduled"
+status:"Scheduled",
+
+meetingLink:"",
+
+instructions:"",
+
+notes:""
 
 }
-
 );
 
 
@@ -160,7 +165,7 @@ setSelectedCandidate(null);
 
 setInterviewType("");
 
-
+setInterviewDate("");
 
 alert("Interview Scheduled");
 
@@ -713,7 +718,19 @@ AI Interview
 
 </div>
 
+<div className="input-group">
 
+<label>
+Interview Date
+</label>
+
+<input
+type="date"
+value={interviewDate}
+onChange={(e)=>setInterviewDate(e.target.value)}
+/>
+
+</div>
 
 
 

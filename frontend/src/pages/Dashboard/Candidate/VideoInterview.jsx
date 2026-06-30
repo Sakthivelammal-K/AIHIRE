@@ -24,6 +24,8 @@ function VideoInterview() {
   const [micReady, setMicReady] = useState(false);
 
   const [started, setStarted] = useState(false);
+  const [interviewId, setInterviewId] = useState("");
+
   const [security, setSecurity] = useState(false);
 
   const [violations, setViolations] = useState(0);
@@ -158,91 +160,225 @@ function VideoInterview() {
 
     const startRecording = () => {
 
-    if (!webcamRef.current) return;
+  if (!webcamRef.current) return;
 
-    const stream = webcamRef.current.stream;
+  const stream = webcamRef.current.stream;
 
-    if (!stream) return;
+  if (!stream) return;
 
-    mediaRecorderRef.current = new MediaRecorder(stream);
+  recordedChunks.current = [];
 
-    mediaRecorderRef.current.ondataavailable = (event) => {
+  mediaRecorderRef.current = new MediaRecorder(stream);
 
-      if (event.data.size > 0) {
+  mediaRecorderRef.current.ondataavailable = (event) => {
 
-        recordedChunks.current.push(event.data);
+    if (event.data.size > 0) {
 
+      recordedChunks.current.push(event.data);
+
+    }
+
+  };
+
+  mediaRecorderRef.current.start();
+
+};
+
+const uploadVideo = async () => {
+
+  if(recordedChunks.current.length === 0){
+    return;
+  }
+
+  try{
+
+    const blob = new Blob(
+      recordedChunks.current,
+      {
+        type:"video/webm"
+      }
+    );
+
+    const formData = new FormData();
+
+    formData.append(
+      "video",
+      blob,
+      "interview.webm"
+    );
+
+    await API.post(
+
+      `/video-interviews/${interviewId}/upload`,
+
+      formData,
+
+      {
+        headers:{
+          "Content-Type":"multipart/form-data"
+        }
       }
 
-    };
+    );
 
-    mediaRecorderRef.current.start();
+    console.log("Video uploaded");
 
-  };
+  }
 
-    const startInterview = async () => {
+  catch(error){
 
-    try {
+    console.log(error);
 
-      await document.documentElement.requestFullscreen();
+    alert("Video upload failed");
 
-      setStarted(true);
+  }
 
-      setSecurity(true);
+};
 
-      setPage("interview");
+  const startInterview = async () => {
 
-      setTimeout(() => {
+  try {
 
-        startRecording();
+    const response = await API.post("/video-interviews/start", {
 
-      }, 1500);
+      candidateName: localStorage.getItem("username"),
 
-    }
+      jobId: localStorage.getItem("jobId"),
 
-    catch {
+      jobTitle: localStorage.getItem("jobTitle")
 
-      alert("Fullscreen permission required.");
+    });
 
-    }
+    setInterviewId(response.data._id);
+    
+    localStorage.setItem(
+    "videoInterviewId",
+    response.data._id
+);
 
-  };
+    const element = document.documentElement;
 
-    const saveCurrentAnswer = () => {
+try{
 
-    const updated = [...answers];
+  if(element.requestFullscreen){
 
-    updated[currentQuestion] = {
+    await element.requestFullscreen();
 
-      question: questions[currentQuestion],
+  }
 
-      answer
+  else if(element.webkitRequestFullscreen){
 
-    };
+    element.webkitRequestFullscreen();
 
-    setAnswers(updated);
+  }
 
-  };
+  else if(element.msRequestFullscreen){
 
-    const nextQuestion = () => {
+    element.msRequestFullscreen();
 
-    saveCurrentAnswer();
+  }
 
-    if (currentQuestion < questions.length - 1) {
+}
+catch(error){
 
-      setCurrentQuestion(currentQuestion + 1);
+  console.log("Fullscreen failed:", error);
 
-      setAnswer("");
+}
 
-    }
+setStarted(true);
 
-    else {
+setSecurity(true);
 
-      finishInterview();
+setPage("interview");
 
-    }
+    setTimeout(() => {
+      startRecording();
+    }, 1500);
 
-  };
+  }
+
+  catch(error){
+
+    console.log(error);
+
+    alert("Unable to start interview.");
+
+  }
+
+};
+
+const saveCurrentAnswer = async () => {
+
+  const existing = answers.find(
+    item => item.questionNo === currentQuestion + 1
+  );
+
+  if(existing){
+    return true;
+  }
+
+  if(answer.trim()===""){
+    alert("Please answer the question.");
+    return false;
+  }
+
+
+  try{
+
+    await API.put(
+      `/video-interviews/${interviewId}/answer`,
+      {
+        questionNo: currentQuestion + 1,
+        question: questions[currentQuestion],
+        answer
+      }
+    );
+
+
+    setAnswers(prev=>[
+      ...prev,
+      {
+        questionNo:currentQuestion+1,
+        answer
+      }
+    ]);
+
+
+    return true;
+
+  }
+  catch(error){
+
+    console.log(error);
+
+    alert("Unable to save answer.");
+
+    return false;
+  }
+
+};
+
+  const nextQuestion = async () => {
+
+  const saved = await saveCurrentAnswer();
+
+  if(!saved) return;
+
+  setAnswer("");
+
+  if(currentQuestion < questions.length-1){
+
+    setCurrentQuestion(prev=>prev+1);
+
+  }
+
+  else{
+
+    finishInterview();
+
+  }
+
+};
 
     const minutes = String(
     Math.floor(timeLeft / 60)
@@ -252,73 +388,212 @@ function VideoInterview() {
     timeLeft % 60
   ).padStart(2, "0");
 
-  const finishInterview = async () => {
+const finishInterview = async () => {
 
-  saveCurrentAnswer();
+  try {
 
-  try{
 
-    // Stop Recording
+    if(answer.trim() !== ""){
+
+      await saveCurrentAnswer();
+
+    }
+
+
 
     if(
       mediaRecorderRef.current &&
       mediaRecorderRef.current.state !== "inactive"
     ){
 
-      mediaRecorderRef.current.stop();
+      await new Promise((resolve)=>{
+
+        mediaRecorderRef.current.onstop = resolve;
+
+        mediaRecorderRef.current.stop();
+
+      });
 
     }
 
-    // Exit Security
 
-    setSecurity(false);
 
-    if(document.fullscreenElement){
+    await uploadVideo();
 
-      await document.exitFullscreen();
 
-    }
 
-    // Save Interview Answers
 
-    const interviewData={
+    // temporary video evaluation scores
+    // later AI evaluation will replace this
 
-      candidateName:username,
+let verdict="Pending";
 
-      answers,
+const technical =
+answers.length >= 3 ? 80 : 60;
 
-      violations,
 
-      interviewType:"Video",
+const communication =
+answers.length >= 3 ? 75 : 60;
 
-      submittedAt:new Date()
 
-    };
+const confidence =
+violations === 0 ? 85 : 65;
 
-    console.log(interviewData);
 
-    /*
-    await API.post(
-      "/video-interview/submit",
-      interviewData
+
+const overall =
+Math.round(
+(
+technical +
+communication +
+confidence
+) / 3
+);
+
+
+
+if(overall >= 75){
+
+  verdict="Hire";
+
+}
+
+else if(overall < 50){
+
+  verdict="Reject";
+
+}
+
+
+
+
+
+    await API.put(
+
+      `/video-interviews/${interviewId}/finish`,
+
+      {
+
+        violations,
+
+
+        technical,
+
+        communication,
+
+        confidence,
+
+        overall,
+
+        verdict
+
+      }
+
     );
-    */
 
-    alert("Interview Submitted Successfully");
+
+
+
+
+    localStorage.removeItem(
+      "videoInterviewId"
+    );
+
+
+
+    // stop security first
+setSecurity(false);
+
+
+// remove fullscreen listener trigger
+if(document.fullscreenElement){
+
+await document.exitFullscreen();
+
+}
+
+
+    await API.post(
+ `/video-interviews/${interviewId}/evaluate`
+);
+
+
+    alert(
+      "Interview Submitted Successfully"
+    );
+
+
 
     window.location.href="/interviews";
 
+
+
   }
+
 
   catch(error){
 
     console.log(error);
 
-    alert("Submission Failed");
+    alert(
+      "Submission Failed"
+    );
 
   }
 
 };
+
+useEffect(()=>{
+
+  if(!started || !security) return;
+
+
+  const handleFullscreenChange = ()=>{
+
+
+    // only detect exit while interview is active
+    if(!document.fullscreenElement && security){
+
+
+      setViolations(prev=>prev+1);
+
+
+      alert(
+        "Please stay in fullscreen during the interview."
+      );
+
+
+      document.documentElement
+      .requestFullscreen()
+      .catch(()=>{});
+
+
+    }
+
+
+  };
+
+
+  document.addEventListener(
+    "fullscreenchange",
+    handleFullscreenChange
+  );
+
+
+  return ()=>{
+
+
+    document.removeEventListener(
+      "fullscreenchange",
+      handleFullscreenChange
+    );
+
+
+  };
+
+
+},[started,security]);
+
 
 return(
 
