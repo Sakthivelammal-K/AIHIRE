@@ -459,6 +459,71 @@ async def get_completed_interviews():
 
     return data
 
+
+# SAVE RECRUITER REVIEW
+
+@router.put("/{interview_id}/review")
+async def save_review(
+
+    interview_id: str,
+
+    data: dict
+
+):
+
+
+    interview = db.video_interviews.find_one(
+        {
+            "_id": ObjectId(interview_id)
+        }
+    )
+
+
+    if not interview:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Interview not found"
+        )
+
+
+    db.video_interviews.update_one(
+
+        {
+            "_id": ObjectId(interview_id)
+        },
+
+        {
+
+            "$set":{
+
+                "recruiterComment":
+                data.get("recruiterComment",""),
+
+
+                "recruiterRating":
+                data.get("recruiterRating",0),
+
+
+                "finalDecision":
+                data.get("finalDecision","Pending")
+
+            }
+
+        }
+
+    )
+
+
+    return {
+
+        "message":
+        "Review saved"
+
+    }
+
+
+
 @router.post("/{interview_id}/evaluate")
 async def evaluate_interview(interview_id: str):
 

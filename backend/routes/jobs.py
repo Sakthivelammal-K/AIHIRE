@@ -39,23 +39,48 @@ def get_jobs():
 @router.put("/{job_id}")
 def update_job(job_id: str, data: dict):
 
-    result = jobs_collection.update_one(
-        {
-            "_id": ObjectId(job_id)
-        },
-        {
-            "$set": data
-        }
-    )
+    try:
 
-    if result.modified_count == 0:
+        result = jobs_collection.update_one(
+            {
+                "_id": ObjectId(job_id)
+            },
+            {
+                "$set": data
+            }
+        )
+
+
+        print("Matched:", result.matched_count)
+        print("Modified:", result.modified_count)
+
+
+        if result.matched_count == 0:
+
+            return {
+                "message":"Job not found"
+            }
+
+
+        if result.modified_count == 0:
+
+            return {
+                "message":"No changes made"
+            }
+
+
         return {
-            "message": "No changes made"
+            "message":"Job updated successfully"
         }
 
-    return {
-        "message": "Job updated successfully"
-    }
+
+    except Exception as e:
+
+        print("UPDATE ERROR:",e)
+
+        return {
+            "error":str(e)
+        }
 
 
 # Increase Applicant Count

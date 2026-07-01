@@ -4,26 +4,39 @@ import { useNavigate } from "react-router-dom";
 import API from "../../../api/api";
 
 import {
-  FaUsers,
-  FaUserCheck,
-  FaUserTimes,
-  FaCalendarCheck,
-  FaSearch,
-  FaRobot,
-  FaCheck,
-  FaTimes,
-  FaVideo
+FaUsers,
+FaUserCheck,
+FaUserTimes,
+FaCalendarCheck,
+FaSearch,
+FaRobot,
+FaCheck,
+FaTimes,
+FaVideo
 } from "react-icons/fa";
 
 
-function Candidates() {
+
+function Candidates(){
+
 
 const navigate = useNavigate();
-const [applications,setApplications] = useState([]);
-const [searchTerm,setSearchTerm] = useState("");
-const [selectedCandidate,setSelectedCandidate] = useState("");
-const [interviewType,setInterviewType] = useState("");
-const [interviewDate,setInterviewDate] = useState("");
+
+
+const [applications,setApplications]=useState([]);
+
+const [searchTerm,setSearchTerm]=useState("");
+
+
+const [selectedCandidate,setSelectedCandidate]=useState(null);
+
+
+const [interviewType,setInterviewType]=useState("");
+
+const [interviewDate,setInterviewDate]=useState("");
+
+
+
 
 useEffect(()=>{
 
@@ -32,21 +45,36 @@ loadCandidates();
 },[]);
 
 
-const loadCandidates = async()=>{
+
+
+
+const loadCandidates=async()=>{
 
 try{
+
 
 const response =
 await API.get("/applications");
 
-console.log("Applications:", response.data);
+
 
 const data =
+
 Array.isArray(response.data)
-? response.data
-: response.data.applications || [];
+
+?
+
+response.data
+
+:
+
+response.data.applications || [];
+
+
 
 setApplications(data);
+
+
 
 }
 
@@ -60,28 +88,42 @@ setApplications([]);
 
 };
 
-const updateStatus = async(id,status)=>{
+
+
+
+
+
+
+const updateStatus=async(id,status)=>{
 
 
 try{
 
+
 await API.put(
+
 `/applications/${id}`,
+
 {
 status
 }
+
 );
+
 
 
 loadCandidates();
 
 
 }
+
+
 catch(error){
 
 console.log(error);
 
 }
+
 
 };
 
@@ -89,43 +131,53 @@ console.log(error);
 
 
 
-const scheduleInterview = async()=>{
+
+
+
+
+const scheduleInterview=async()=>{
 
 
 if(!interviewType || !interviewDate){
 
-alert("Please select interview type and date");
+alert("Select interview type and date");
 
 return;
 
 }
 
 
+
 try{
 
 
 await API.post(
+
 "/interviews/create",
+
 {
 
 candidateName:selectedCandidate.candidateName,
 
 jobTitle:selectedCandidate.jobTitle,
 
+
+applicationId:selectedCandidate._id,
+
+
 date:interviewDate,
+
 
 type:interviewType,
 
-status:"Scheduled",
 
-meetingLink:"",
-
-instructions:"",
-
-notes:""
+status:"Scheduled"
 
 }
+
+
 );
+
 
 
 
@@ -135,33 +187,14 @@ await API.put(
 `/applications/${selectedCandidate._id}`,
 
 {
+
 status:"Scheduled"
+
 }
 
 );
 
 
-
-setApplications(prev =>
-
-prev.map(app =>
-
-app._id === selectedCandidate._id
-
-?
-
-{
-...app,
-status:"Scheduled"
-}
-
-:
-
-app
-
-)
-
-);
 
 
 
@@ -171,16 +204,24 @@ setInterviewType("");
 
 setInterviewDate("");
 
+
+
+loadCandidates();
+
+
+
 alert("Interview Scheduled");
 
 
 }
 
+
+
 catch(error){
 
 console.log(error);
 
-alert("Failed scheduling interview");
+alert("Failed");
 
 }
 
@@ -191,51 +232,239 @@ alert("Failed scheduling interview");
 
 
 
+
+
+
+
 const safeApplications =
+
 Array.isArray(applications)
-? applications
-: [];
+
+?
+
+applications
+
+:
+
+[];
+
+
+
+
+
+
 
 const filteredApplications =
+
 safeApplications.filter(app=>
 
+
 (app.candidateName || "")
+
 .toLowerCase()
+
 .includes(searchTerm.toLowerCase())
+
 
 ||
 
 (app.jobTitle || "")
+
 .toLowerCase()
+
 .includes(searchTerm.toLowerCase())
+
 
 );
 
 
 
 
-const total =
-safeApplications.length;
+
+
+
+
+
+const total=safeApplications.length;
+
+
+
 
 
 const shortlisted =
+
 safeApplications.filter(
+
 a=>a.status==="Shortlisted"
+
 ).length;
+
+
 
 
 
 const rejected =
+
 safeApplications.filter(
+
 a=>a.status==="Rejected"
+
 ).length;
 
 
 
 
-return (
+
+
+
+const interviews =
+
+safeApplications.filter(
+
+a=>
+
+a.status==="Scheduled"
+
+||
+
+a.status==="Completed"
+
+).length;
+
+
+
+
+
+
+
+
+const selected =
+
+safeApplications.filter(
+
+a=>a.status==="Selected"
+
+).length;
+
+
+
+
+
+
+
+const statusBadge=(status)=>{
+
+
+switch(status){
+
+
+
+case "Shortlisted":
+
+return(
+
+<span className="green-badge">
+
+Shortlisted
+
+</span>
+
+);
+
+
+
+case "Scheduled":
+
+return(
+
+<span className="blue-badge">
+
+Interview Scheduled
+
+</span>
+
+);
+
+
+
+case "Completed":
+
+return(
+
+<span className="purple-badge">
+
+Completed
+
+</span>
+
+);
+
+
+
+case "Selected":
+
+return(
+
+<span className="green-badge">
+
+Selected
+
+</span>
+
+);
+
+
+
+case "Hold":
+
+return(
+
+<span className="orange-badge">
+
+Hold
+
+</span>
+
+);
+
+
+
+case "Rejected":
+
+return(
+
+<span className="red-badge">
+
+Rejected
+
+</span>
+
+);
+
+
+
+default:
+
+return(
+
+<span className="blue-badge">
+
+Applied
+
+</span>
+
+);
+
+
+}
+
+
+};
+
+return(
 
 <DashboardLayout>
+
 
 
 <div className="candidate-banner">
@@ -247,8 +476,9 @@ return (
 Candidate Pipeline
 </h1>
 
+
 <p>
-Manage applicants with AI powered hiring workflow
+Manage applicants with AI hiring workflow
 </p>
 
 
@@ -269,11 +499,13 @@ Manage applicants with AI powered hiring workflow
 
 
 
+
 <div className="candidate-stats">
 
 
 
 <div className="candidate-stat">
+
 
 <div className="stat-icon blue">
 
@@ -281,13 +513,21 @@ Manage applicants with AI powered hiring workflow
 
 </div>
 
+
 <div>
 
-<h3>Total Candidates</h3>
+<h3>
+Total Candidates
+</h3>
 
-<h2>{total}</h2>
+
+<h2>
+{total}
+</h2>
+
 
 </div>
+
 
 </div>
 
@@ -296,6 +536,7 @@ Manage applicants with AI powered hiring workflow
 
 
 <div className="candidate-stat">
+
 
 <div className="stat-icon green">
 
@@ -303,15 +544,24 @@ Manage applicants with AI powered hiring workflow
 
 </div>
 
+
 <div>
 
-<h3>Shortlisted</h3>
+<h3>
+Shortlisted
+</h3>
 
-<h2>{shortlisted}</h2>
+
+<h2>
+{shortlisted}
+</h2>
+
 
 </div>
 
+
 </div>
+
 
 
 
@@ -319,6 +569,7 @@ Manage applicants with AI powered hiring workflow
 
 
 <div className="candidate-stat">
+
 
 <div className="stat-icon orange">
 
@@ -326,13 +577,21 @@ Manage applicants with AI powered hiring workflow
 
 </div>
 
+
 <div>
 
-<h3>Rejected</h3>
+<h3>
+Rejected
+</h3>
 
-<h2>{rejected}</h2>
+
+<h2>
+{rejected}
+</h2>
+
 
 </div>
+
 
 </div>
 
@@ -343,30 +602,75 @@ Manage applicants with AI powered hiring workflow
 
 <div className="candidate-stat">
 
+
 <div className="stat-icon purple">
 
 <FaCalendarCheck/>
 
 </div>
 
+
 <div>
 
-<h3>Interviews</h3>
+<h3>
+Interviews
+</h3>
+
 
 <h2>
-{safeApplications.filter(
-a=>a.status==="Scheduled"
-).length}
+{interviews}
 </h2>
 
-</div>
 
 </div>
 
 
+</div>
+
+
+
+
+
+
+<div className="candidate-stat">
+
+
+<div className="stat-icon green">
+
+
+<FaCheck/>
 
 
 </div>
+
+
+
+<div>
+
+
+<h3>
+Selected
+</h3>
+
+
+<h2>
+
+{selected}
+
+</h2>
+
+
+</div>
+
+
+</div>
+
+
+
+</div>
+
+
+
 
 
 
@@ -381,8 +685,12 @@ a=>a.status==="Scheduled"
 
 
 <h2>
+
 Applications
+
 </h2>
+
+
 
 
 <div>
@@ -391,62 +699,101 @@ Applications
 <FaSearch/>
 
 
+
 <input
 
+
 style={{
+
 marginLeft:"10px",
+
 background:"transparent",
+
 border:"1px solid #334155",
+
 padding:"10px",
+
 borderRadius:"10px",
+
 color:"black"
+
 }}
+
+
 
 placeholder="Search candidate..."
 
+
+
 value={searchTerm}
 
-onChange={
-e=>setSearchTerm(e.target.value)
+
+
+onChange={e=>
+setSearchTerm(e.target.value)
 }
+
 
 
 />
 
 
-</div>
-
 
 </div>
 
 
 
+</div>
 
 
 
 
 
-<table className="recruiter-table animated-table">
+
+
+
+
+<table className="recruiter-table">
 
 
 <thead>
 
+
 <tr>
 
-<th>Candidate</th>
 
-<th>Role</th>
+<th>
+Candidate
+</th>
 
-<th>Location</th>
 
-<th>Status</th>
+<th>
+Role
+</th>
 
-<th>Actions</th>
+
+<th>
+Location
+</th>
+
+
+<th>
+Status
+</th>
+
+
+<th>
+Actions
+</th>
 
 
 </tr>
 
+
 </thead>
+
+
+
 
 
 
@@ -454,12 +801,16 @@ e=>setSearchTerm(e.target.value)
 <tbody>
 
 
+
+
 {
 
 filteredApplications.length ?
 
 
+
 filteredApplications.map(app=>(
+
 
 
 <tr key={app._id}>
@@ -467,15 +818,25 @@ filteredApplications.map(app=>(
 
 <td>
 
+
 <h3>
+
 {app.candidateName}
+
 </h3>
 
+
 <p>
+
 {app.email}
+
 </p>
 
+
 </td>
+
+
+
 
 
 <td>
@@ -483,6 +844,8 @@ filteredApplications.map(app=>(
 {app.jobTitle}
 
 </td>
+
+
 
 
 
@@ -495,48 +858,16 @@ filteredApplications.map(app=>(
 
 
 
+
+
 <td>
 
-
-{
-
-app.status==="Shortlisted" ?
-
-<span className="green-badge">
-Shortlisted
-</span>
-
-
-:
-
-app.status==="Rejected" ?
-
-<span className="red-badge">
-Rejected
-</span>
-
-
-:
-
-app.status==="Scheduled" ?
-
-<span className="blue-badge">
-Scheduled
-</span>
-
-
-:
-
-<span className="blue-badge">
-{app.status || "Applied"}
-</span>
-
-
-}
-
-
+{statusBadge(app.status)}
 
 </td>
+
+
+
 
 
 
@@ -545,55 +876,74 @@ Scheduled
 
 <div className="action-buttons">
 
-<button
-className="action-btn approve-btn"
-title="Shortlist Candidate"
-onClick={() =>
-updateStatus(app._id,"Shortlisted")
-}
->
-<FaCheck/>
-</button>
 
-<button
-className="action-btn reject-btn"
-title="Reject Candidate"
-onClick={() =>
-updateStatus(app._id,"Rejected")
-}
->
-<FaTimes/>
-</button>
+{/* Applied */}
 
 {
+app.status==="Applied" &&
 
-app.status==="Scheduled"
-
-?
+<>
 
 <button
-className="action-btn interview-btn disabled-btn"
-disabled
-title="Interview Already Scheduled"
+
+className="action-btn approve-btn"
+
+title="Shortlist Candidate"
+
+onClick={()=>updateStatus(app._id,"Shortlisted")}
+
 >
 
-<FaVideo/>
+<FaCheck/>
 
 </button>
 
 
-:
 
 <button
+
+className="action-btn reject-btn"
+
+title="Reject Candidate"
+
+onClick={()=>updateStatus(app._id,"Rejected")}
+
+>
+
+<FaTimes/>
+
+</button>
+
+</>
+
+}
+
+
+
+
+
+
+{/* Shortlisted */}
+
+{
+app.status==="Shortlisted" &&
+
+<button
+
 className="action-btn interview-btn"
+
 title="Schedule Interview"
-onClick={() => {
+
+onClick={()=>{
 
 setSelectedCandidate(app);
 
 setInterviewType("");
 
+setInterviewDate("");
+
 }}
+
 >
 
 <FaVideo/>
@@ -602,31 +952,122 @@ setInterviewType("");
 
 }
 
-</div>
 
 
-</td>
 
-<td>
+
+
+{/* Scheduled */}
+
+{
+app.status==="Scheduled" &&
 
 <button
- className="resume-btn"
- onClick={()=>navigate(`/resume-screening/${app._id}`)}
+
+className="resume-btn"
+
+onClick={()=>navigate("/recruiter-interviews")}
+
 >
 
- AI Resume
+View Interview
 
 </button>
 
+}
+
+
+
+
+
+
+{/* Completed */}
+
+{
+app.status==="Completed" &&
+
+<button
+
+className="resume-btn"
+
+onClick={()=>navigate("/ai-results")}
+
+>
+
+View Result
+
+</button>
+
+}
+
+
+
+
+
+
+
+{/* Final decisions */}
+
+{
+app.status==="Selected" &&
+
+<span className="green-badge">
+
+Hired
+
+</span>
+
+}
+
+
+
+{
+app.status==="Hold" &&
+
+<span className="orange-badge">
+
+Hold
+
+</span>
+
+}
+
+
+
+{
+app.status==="Rejected" &&
+
+<span className="red-badge">
+
+Rejected
+
+</span>
+
+}
+
+
+
+</div>
+
 </td>
 
+
+
+
+
 </tr>
+
 
 
 ))
 
 
+
+
+
 :
+
+
 
 
 <tr>
@@ -640,7 +1081,10 @@ No candidates found
 </tr>
 
 
+
 }
+
+
 
 
 
@@ -653,110 +1097,206 @@ No candidates found
 
 
 
+
+
 </div>
 
+
+
+
+
+
+
+
+
 {
-selectedCandidate && (
+
+selectedCandidate &&
+
+
 
 <div
+
+
 className="candidate-panel"
+
+
 style={{
+
+
 position:"fixed",
+
+
 top:"20%",
+
+
 left:"35%",
+
+
 width:"400px",
+
+
 zIndex:1000
+
+
 }}
+
+
 >
 
 
+
 <h2>
+
 Schedule Interview
+
 </h2>
+
+
+
 
 
 <p>
 
 Candidate:
 
-<strong>
+<b>
+
 {" "}
+
 {selectedCandidate.candidateName}
-</strong>
+
+</b>
 
 </p>
 
 
 
-<div className="input-group">
+
 
 
 <label>
+
 Interview Type
+
 </label>
+
+
+
 
 
 <select
 
+
 value={interviewType}
 
-onChange={(e)=>
+
+
+onChange={e=>
+
 setInterviewType(e.target.value)
+
 }
+
+
 
 >
 
 
 <option value="">
-Select Type
+
+Select
+
 </option>
+
 
 
 <option value="Video Interview">
+
 Video Interview
+
 </option>
+
 
 
 <option value="Online Assessment">
+
 Online Assessment
+
 </option>
+
 
 
 </select>
 
 
-</div>
 
-<div className="input-group">
+
+
+
 
 <label>
+
 Interview Date
+
 </label>
 
+
+
+
+
 <input
+
+
 type="date"
+
+
 value={interviewDate}
-onChange={(e)=>setInterviewDate(e.target.value)}
+
+
+
+onChange={e=>
+
+setInterviewDate(e.target.value)
+
+}
+
+
 />
 
-</div>
+
+
+
+
 
 
 
 <div
+
 style={{
+
 display:"flex",
+
 gap:"15px",
+
 marginTop:"20px"
+
 }}
+
 >
+
+
+
 
 
 <button
 
+
 className="profile-save-btn"
 
+
 onClick={scheduleInterview}
+
 
 >
 
@@ -767,11 +1307,17 @@ Schedule
 
 
 
+
+
+
 <button
+
 
 className="profile-cancel-btn"
 
+
 onClick={()=>setSelectedCandidate(null)}
+
 
 >
 
@@ -780,14 +1326,26 @@ Cancel
 </button>
 
 
-</div>
+
+
 
 
 </div>
 
-)
+
+
+
+
+
+
+</div>
+
+
 
 }
+
+
+
 
 
 </DashboardLayout>
@@ -797,6 +1355,7 @@ Cancel
 
 
 }
+
 
 
 export default Candidates;

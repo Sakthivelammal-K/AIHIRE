@@ -23,6 +23,9 @@ def create_interview(data:dict):
         "jobTitle":
         data.get("jobTitle"),
 
+        "applicationId":
+        data.get("applicationId"),
+
         "date":
         data.get("date"),
 
@@ -265,6 +268,11 @@ def get_results():
 
 
 
+            "applicationId":
+            item.get("applicationId"),
+
+
+
             "answers":
             item.get("answers",[]),
 
@@ -297,36 +305,58 @@ def get_results():
 
 
 
-# SAVE RECRUITER REVIEW
+# UPDATE INTERVIEW + SAVE RECRUITER REVIEW
 
+
+# UPDATE INTERVIEW + SAVE RECRUITER REVIEW + UPDATE APPLICATION STATUS
 
 @router.put("/result/{id}")
-def save_review(id:str,data:dict):
+def update_interview(id:str,data:dict):
 
 
     update={
 
 
+        "type":
+        data.get("type"),
+
+
+        "status":
+        data.get("status"),
+
+
+        "meetingLink":
+        data.get("meetingLink"),
+
+
+        "instructions":
+        data.get("instructions"),
+
+
+        "notes":
+        data.get("notes"),
+
+
         "recruiterComment":
-        data.get("recruiterComment"),
+        data.get("recruiterComment",""),
 
 
         "recruiterRating":
-        data.get("recruiterRating"),
+        data.get("recruiterRating",0),
 
 
         "finalDecision":
-        data.get("finalDecision"),
+        data.get("finalDecision",""),
 
 
-        "reviewedAt":
+        "updatedAt":
         datetime.utcnow()
 
     }
 
 
 
-    result=interviews.update_one(
+    result = interviews.update_one(
 
         {
         "_id":ObjectId(id)
@@ -340,22 +370,74 @@ def save_review(id:str,data:dict):
 
 
 
-    if result.matched_count==0:
+    if result.matched_count == 0:
+
+        return {
+            "message":"Interview not found"
+        }
 
 
-        db["video_interviews"].update_one(
 
-            {
-            "_id":ObjectId(id)
-            },
+    # ==============================
+    # UPDATE APPLICATION STATUS
+    # ==============================
 
-            {
-            "$set":update
-            }
 
-        )
+    interview = interviews.find_one(
+        {
+        "_id":ObjectId(id)
+        }
+    )
+
+
+    if interview and interview.get("applicationId"):
+
+
+        application_id = interview["applicationId"]
+
+
+        decision = data.get("finalDecision")
+
+
+        status = None
+
+
+
+        if decision == "Selected":
+
+            status = "Selected"
+
+
+        elif decision == "Rejected":
+
+            status = "Rejected"
+
+
+        elif decision == "Hold":
+
+            status = "Hold"
+
+
+
+        if status:
+
+
+            db["applications"].update_one(
+
+                {
+                "_id":ObjectId(application_id)
+                },
+
+                {
+                "$set":{
+                    "status":status
+                }
+                }
+
+            )
+
 
 
     return {
-        "message":"Review saved"
+        "message":"Interview updated"
     }

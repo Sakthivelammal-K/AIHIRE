@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter,HTTPException
 from database import db
 from bson import ObjectId
 from datetime import datetime
@@ -350,3 +350,49 @@ def get_assessment(username: str):
     return result
 
 
+@router.put("/{id}/review")
+def review_assessment(id:str,data:dict):
+
+    assessment = assessments.find_one(
+        {
+            "_id":ObjectId(id)
+        }
+    )
+
+
+    if not assessment:
+        raise HTTPException(
+            404,
+            "Assessment not found"
+        )
+
+
+    assessments.update_one(
+
+        {
+        "_id":ObjectId(id)
+        },
+
+        {
+        "$set":{
+
+            "recruiterComment":
+            data.get("recruiterComment"),
+
+
+            "recruiterRating":
+            data.get("recruiterRating"),
+
+
+            "finalDecision":
+            data.get("finalDecision")
+
+        }
+        }
+
+    )
+
+
+    return {
+        "message":"Assessment review saved"
+    }

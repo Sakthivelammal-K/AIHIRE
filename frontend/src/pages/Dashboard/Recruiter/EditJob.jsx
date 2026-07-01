@@ -67,27 +67,35 @@ setJob({
 };
 
 
-
 const handleUpdate=async(e)=>{
-
 
 e.preventDefault();
 
-
 try{
+
+const updatedJob = {
+
+title: job.title,
+
+department: job.department,
+
+location: job.location,
+
+description: job.description,
+
+status: job.status
+
+};
 
 
 await API.put(
-`/jobs/${id}`,
-updatedjob
+ `/jobs/${id}`,
+ updatedJob
 );
-
 
 alert("Job Updated successfully");
 
-
 navigate("/jobs");
-
 
 }
 
@@ -99,10 +107,7 @@ alert("Update failed");
 
 }
 
-
 };
-
-
 
 
 return (

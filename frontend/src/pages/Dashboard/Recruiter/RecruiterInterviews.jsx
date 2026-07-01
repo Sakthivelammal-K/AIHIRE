@@ -34,7 +34,7 @@ await API.get("/interviews/");
 
 
 setInterviews(
-res.data.scheduled || []
+res.data.scheduled || res.data || []
 );
 
 
@@ -51,47 +51,67 @@ setInterviews([]);
 };
 
 
-
-
 const saveInterview = async()=>{
-
 
 try{
 
 
 await API.put(
 
-`/interviews/${selectedInterview._id}`,
+`/interviews/result/${selectedInterview._id}`,
 
 {
 
-
 type:selectedInterview.type,
 
+meetingLink:selectedInterview.meetingLink,
 
-meetingLink:
-selectedInterview.meetingLink,
+instructions:selectedInterview.instructions,
 
+notes:selectedInterview.notes,
 
-instructions:
-selectedInterview.instructions,
-
-
-notes:
-selectedInterview.notes,
-
-
-result:
-selectedInterview.result,
-
-
-status:
-selectedInterview.status
-
+status:selectedInterview.status
 
 }
 
 );
+
+
+// update UI immediately
+
+setInterviews(prev =>
+
+prev.map(item =>
+
+item._id === selectedInterview._id
+
+?
+
+{
+...item,
+type:selectedInterview.type,
+meetingLink:selectedInterview.meetingLink,
+instructions:selectedInterview.instructions,
+notes:selectedInterview.notes,
+status:selectedInterview.status
+}
+
+:
+
+item
+
+)
+
+);
+
+
+// update selected card also
+
+setSelectedInterview({
+
+...selectedInterview
+
+});
 
 
 
@@ -111,19 +131,12 @@ alert("Update failed");
 
 }
 
-
 };
-
-
-
-
 
 
 return (
 
 <DashboardLayout>
-
-
 
 
 <div className="candidate-banner">
@@ -135,8 +148,9 @@ return (
 Interview Management
 </h1>
 
+
 <p>
-Manage candidate interviews
+Manage scheduled candidate interviews
 </p>
 
 
@@ -152,7 +166,11 @@ Manage candidate interviews
 
 </div>
 
-<br />
+
+
+<br/>
+
+
 
 
 
@@ -186,16 +204,18 @@ Type
 Status
 </th>
 
-
 </tr>
 
 </thead>
 
 
+
 <tbody>
 
 
+
 {
+
 interviews.length ?
 
 
@@ -206,9 +226,7 @@ interviews.map(item=>(
 
 key={item._id}
 
-onClick={()=>
-setSelectedInterview(item)
-}
+onClick={()=>setSelectedInterview(item)}
 
 style={{
 cursor:"pointer"
@@ -246,25 +264,58 @@ item.date
 
 <td>
 
+
 <span className="blue-badge">
 
 {item.type || "Not Selected"}
 
 </span>
 
+
 </td>
+
 
 
 
 <td>
 
+
+{
+
+item.status==="Completed"
+
+?
+
 <span className="green-badge">
-
-{item.status}
-
+Completed
 </span>
 
+
+:
+
+
+item.status==="Cancelled"
+
+?
+
+
+<span className="red-badge">
+Cancelled
+</span>
+
+
+:
+
+<span className="orange-badge">
+Scheduled
+</span>
+
+
+}
+
+
 </td>
+
 
 
 </tr>
@@ -274,7 +325,6 @@ item.date
 
 
 :
-
 
 <tr>
 
@@ -290,6 +340,7 @@ No Interviews
 }
 
 
+
 </tbody>
 
 
@@ -302,16 +353,13 @@ No Interviews
 
 
 
+
 {
+
 selectedInterview && (
 
 
-<div
-className="candidate-panel"
-style={{
-marginTop:"30px"
-}}
->
+<div className="candidate-panel">
 
 
 <h2>
@@ -320,14 +368,11 @@ Interview Details
 
 
 
-
-
-
 <p>
 
-<strong>
+<b>
 Candidate:
-</strong>
+</b>
 
 {" "}
 
@@ -337,12 +382,11 @@ Candidate:
 
 
 
-
 <p>
 
-<strong>
+<b>
 Role:
-</strong>
+</b>
 
 {" "}
 
@@ -352,13 +396,11 @@ Role:
 
 
 
-
-
 <p>
 
-<strong>
+<b>
 Date:
-</strong>
+</b>
 
 {" "}
 
@@ -374,21 +416,13 @@ Date:
 
 
 <label>
-
 Interview Type
-
 </label>
-
 
 
 <select
 
-
-value={
-selectedInterview.type || ""
-}
-
-
+value={selectedInterview.type || ""}
 
 onChange={(e)=>
 
@@ -400,31 +434,23 @@ type:e.target.value
 
 })
 
-
 }
-
 
 >
 
 
 <option value="">
-
 Select Type
-
 </option>
 
 
-<option value="Video Interview">
-
+<option>
 Video Interview
-
 </option>
 
 
-<option value="Online Assessment">
-
+<option>
 Online Assessment
-
 </option>
 
 
@@ -443,18 +469,13 @@ Online Assessment
 
 
 <label>
-
 Status
-
 </label>
 
 
 <select
 
-value={
-selectedInterview.status
-}
-
+value={selectedInterview.status}
 
 onChange={(e)=>
 
@@ -465,7 +486,6 @@ setSelectedInterview({
 status:e.target.value
 
 })
-
 
 }
 
@@ -495,9 +515,7 @@ Rescheduled
 </select>
 
 
-
 </div>
-
 
 
 
@@ -508,11 +526,8 @@ Rescheduled
 
 
 <label>
-
 Meeting Link
-
 </label>
-
 
 
 <input
@@ -522,7 +537,7 @@ selectedInterview.meetingLink || ""
 }
 
 
-placeholder="Google Meet / Zoom Link"
+placeholder="Meeting link"
 
 
 onChange={(e)=>
@@ -587,7 +602,6 @@ instructions:e.target.value
 
 
 
-
 <div className="input-group">
 
 
@@ -637,6 +651,24 @@ onClick={saveInterview}
 >
 
 Save Changes
+
+</button>
+
+
+
+<button
+
+className="profile-cancel-btn"
+
+style={{
+marginLeft:"15px"
+}}
+
+onClick={()=>setSelectedInterview(null)}
+
+>
+
+Close
 
 </button>
 
