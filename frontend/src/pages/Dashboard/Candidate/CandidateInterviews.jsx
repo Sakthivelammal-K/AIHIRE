@@ -10,7 +10,8 @@ FaRobot,
 FaBrain,
 FaMicrophone,
 FaChartLine,
-FaLightbulb
+FaLightbulb,
+FaClipboardCheck
 } from "react-icons/fa";
 
 
@@ -25,10 +26,10 @@ const [interviews,setInterviews]=useState([]);
 
 const [results,setResults]=useState([]);
 
-
 const [selectedInterview,setSelectedInterview]=useState(null);
 
 const [selectedResult,setSelectedResult]=useState(null);
+
 
 
 
@@ -40,7 +41,6 @@ loadInterviews();
 loadResults();
 
 },[]);
-
 
 
 
@@ -73,6 +73,7 @@ setInterviews([]);
 }
 
 };
+
 
 
 
@@ -145,12 +146,12 @@ item.candidateName===username
 
 
 
+
+
 return(
 
 
 <DashboardLayout>
-
-
 
 
 
@@ -165,7 +166,7 @@ My Interviews
 
 
 <p>
-AI and Video interview status
+AI, Video and Online Assessment status
 </p>
 
 
@@ -187,7 +188,11 @@ AI and Video interview status
 
 
 
+
+
 <div className="candidate-stats">
+
+
 
 
 
@@ -219,7 +224,11 @@ Scheduled
 
 
 
+
+
+
 <div className="candidate-stat">
+
 
 <div className="stat-icon green">
 
@@ -242,7 +251,11 @@ Completed
 
 </div>
 
+
 </div>
+
+
+
 
 
 
@@ -250,9 +263,10 @@ Completed
 
 <div className="candidate-stat">
 
+
 <div className="stat-icon purple">
 
-<FaRobot/>
+<FaChartLine/>
 
 </div>
 
@@ -273,6 +287,8 @@ Results
 
 
 </div>
+
+
 
 
 
@@ -307,21 +323,27 @@ Scheduled Interviews
 Job
 </th>
 
+
 <th>
 Date
 </th>
+
 
 <th>
 Type
 </th>
 
+
 <th>
 Status
 </th>
 
+
 </tr>
 
+
 </thead>
+
 
 
 
@@ -330,12 +352,12 @@ Status
 
 {
 
+
 myInterviews.length ?
 
 
 
 myInterviews.map(item=>(
-
 
 
 <tr
@@ -356,7 +378,6 @@ cursor:"pointer"
 </td>
 
 
-
 <td>
 {item.date}
 </td>
@@ -364,11 +385,66 @@ cursor:"pointer"
 
 
 
+
 <td>
+
 
 <span className="blue-badge">
 
-{item.type}
+
+{
+
+item.type==="Online Assessment"
+
+?
+
+<>
+
+<FaClipboardCheck/>
+
+&nbsp;
+
+Online Assessment
+
+</>
+
+
+:
+
+
+item.type==="Video Interview"
+
+?
+
+
+<>
+
+<FaVideo/>
+
+&nbsp;
+
+Video
+
+</>
+
+
+:
+
+
+<>
+
+<FaRobot/>
+
+&nbsp;
+
+AI Interview
+
+</>
+
+
+}
+
+
 
 </span>
 
@@ -378,7 +454,10 @@ cursor:"pointer"
 
 
 
+
+
 <td>
+
 
 <span className="green-badge">
 
@@ -399,7 +478,6 @@ cursor:"pointer"
 
 :
 
-
 <tr>
 
 <td colSpan="4">
@@ -414,7 +492,9 @@ No Interviews
 }
 
 
+
 </tbody>
+
 
 
 </table>
@@ -424,19 +504,16 @@ No Interviews
 
 
 
-
-
-
 <br/>
 <br/>
+
+
 
 
 
 
 <h2>
-
 Interview Results
-
 </h2>
 
 
@@ -491,6 +568,7 @@ Action
 
 {
 
+
 results.length ?
 
 
@@ -515,6 +593,7 @@ results.map(item=>(
 
 
 
+
 <td>
 
 {item.jobTitle}
@@ -524,11 +603,13 @@ results.map(item=>(
 
 
 
+
 <td>
+
 
 <span className="green-badge">
 
-{item.overall}%
+{item.overall || item.score || 0}%
 
 </span>
 
@@ -538,11 +619,13 @@ results.map(item=>(
 
 
 
+
 <td>
 
-{item.verdict}
+{item.verdict || "Pending"}
 
 </td>
+
 
 
 
@@ -571,6 +654,7 @@ View
 </tr>
 
 
+
 ))
 
 
@@ -592,12 +676,11 @@ No Results
 
 
 
-
 </tbody>
 
 
-
 </table>
+
 
 
 
@@ -613,9 +696,9 @@ No Results
 
 
 
-
 {
 selectedInterview && (
+
 
 
 <div className="candidate-panel">
@@ -627,7 +710,9 @@ Interview Details
 
 
 
+
 <p>
+
 <strong>
 Job:
 </strong>
@@ -640,7 +725,10 @@ Job:
 
 
 
+
+
 <p>
+
 <strong>
 Type:
 </strong>
@@ -654,7 +742,9 @@ Type:
 
 
 
+
 <p>
+
 <strong>
 Date:
 </strong>
@@ -669,6 +759,8 @@ Date:
 
 
 
+
+
 <button
 
 className="profile-save-btn"
@@ -676,16 +768,7 @@ className="profile-save-btn"
 onClick={()=>{
 
 
-if(
-selectedInterview.type==="AI Interview"
-){
-
-navigate("/ai-interview");
-
-}
-
-
-else if(
+ if(
 selectedInterview.type==="Video Interview"
 ){
 
@@ -694,18 +777,34 @@ navigate("/video-interview");
 }
 
 
+else if(
+selectedInterview.type==="Online Assessment"
+){
+
+navigate("/online-assessment");
+
+}
+
+
 
 }}
 
+
 >
 
+
 Start Interview
+
 
 </button>
 
 
 
+
+
+
 </div>
+
 
 
 )
@@ -724,6 +823,7 @@ Start Interview
 selectedResult && (
 
 
+
 <div className="candidate-panel">
 
 
@@ -733,7 +833,10 @@ Interview Report
 
 
 
+
 <div className="candidate-stats">
+
+
 
 
 
@@ -741,13 +844,21 @@ Interview Report
 
 <FaBrain/>
 
+<div>
+
 <h3>
 Technical
 </h3>
 
+
 <h2>
-{selectedResult.technical}%
+
+{selectedResult.technical || 0}%
+
 </h2>
+
+
+</div>
 
 
 </div>
@@ -756,20 +867,34 @@ Technical
 
 
 
+
+
 <div className="candidate-stat">
 
+
 <FaMicrophone/>
+
+
+<div>
 
 <h3>
 Communication
 </h3>
 
+
 <h2>
-{selectedResult.communication}%
+
+{selectedResult.communication || 0}%
+
 </h2>
 
 
 </div>
+
+
+</div>
+
+
 
 
 
@@ -777,20 +902,33 @@ Communication
 
 <div className="candidate-stat">
 
+
 <FaChartLine/>
+
+
+<div>
 
 <h3>
 Confidence
 </h3>
 
+
 <h2>
-{selectedResult.confidence}%
+
+{selectedResult.confidence || 0}%
+
 </h2>
 
 
 </div>
 
 
+</div>
+
+
+
+
+
 
 </div>
 
@@ -799,9 +937,15 @@ Confidence
 
 
 
+
+
+
 <h3>
+
 <FaLightbulb/>
- Feedback
+
+Feedback
+
 </h3>
 
 
@@ -812,7 +956,8 @@ Confidence
 {
 
 selectedResult.strengths?.map(
-(s,i)=>
+
+(s,i)=>(
 
 <li key={i}>
 ✅ {s}
@@ -820,24 +965,31 @@ selectedResult.strengths?.map(
 
 )
 
-}
+)
 
+}
 
 </ul>
 
 
 
 
+
 <ul>
+
 
 {
 
 selectedResult.improvements?.map(
-(s,i)=>
+
+(s,i)=>(
 
 <li key={i}>
 ⚠️ {s}
 </li>
+
+
+)
 
 )
 
@@ -845,6 +997,8 @@ selectedResult.improvements?.map(
 
 
 </ul>
+
+
 
 
 
@@ -864,7 +1018,9 @@ Close
 
 
 
+
 </div>
+
 
 
 )
@@ -873,9 +1029,13 @@ Close
 
 
 
+
+
 </DashboardLayout>
 
+
 );
+
 
 }
 

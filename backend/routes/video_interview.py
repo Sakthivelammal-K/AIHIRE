@@ -385,39 +385,74 @@ async def finish_interview(
 @router.get("/")
 async def get_video_interviews():
 
+    data = []
 
-    data=[]
-
-
+    # Video Interview Results
     for item in db.video_interviews.find():
 
-
-        item["_id"]=str(
-            item["_id"]
-        )
-
+        item["_id"] = str(item["_id"])
 
         data.append(item)
 
+    # Assessment Results
+    for item in db.assessments.find({"status": "Completed"}):
 
+        item["_id"] = str(item["_id"])
+
+        data.append({
+
+            "_id": item["_id"],
+
+            "type": "Online Assessment",
+
+            "candidateName": item.get("candidateName"),
+
+            "jobTitle": item.get("jobTitle", "-"),
+
+            "overall": item.get("score", 0),
+
+            "verdict": "Completed",
+
+            "answers": item.get("answers", []),
+
+            "questions": item.get("questions", []),
+
+            "assessmentScore": item.get("score", 0)
+
+        })
 
     return data
+
 
 @router.get("/completed")
 async def get_completed_interviews():
 
     data=[]
 
-
     for item in db.video_interviews.find(
-        {
-        "status":"Completed"
-        }
+        {"status":"Completed"}
     ):
 
-        item["_id"]=str(
-            item["_id"]
-        )
+        if not item.get("jobTitle"):
+
+            jobId=item.get("jobId")
+
+            if jobId:
+
+                job=db.jobs.find_one(
+                    {"_id":ObjectId(jobId)}
+                )
+
+                if job:
+                    item["jobTitle"]=job.get("title","-")
+                else:
+                    item["jobTitle"]="-"
+
+            else:
+                item["jobTitle"]="-"
+
+
+        item["_id"]=str(item["_id"])
 
         data.append(item)
 

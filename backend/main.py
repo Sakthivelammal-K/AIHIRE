@@ -11,6 +11,7 @@ from routes.organizations import router as organization_router
 from routes.ai_interview import router as ai_router
 from routes.video_interview import router as videoInterview_router
 from fastapi.staticfiles import StaticFiles
+from routes.assessment import router as assessment_router
 
 
 app = FastAPI()
@@ -77,6 +78,10 @@ app.mount(
     "/uploads",
     StaticFiles(directory="uploads"),
     name="uploads"
+)
+
+app.include_router(
+    assessment_router
 )
 
 

@@ -1,5 +1,5 @@
 import DashboardLayout from "../../../components/dashboard/DashboardLayout";
-import {useEffect,useState} from "react";
+import { useEffect, useState } from "react";
 import API from "../../../api/api";
 
 import {
@@ -12,21 +12,19 @@ FaTimesCircle
 
 function AIInterviewResults(){
 
-
 const [results,setResults]=useState([]);
+const [assessmentResults,setAssessmentResults]=useState([]);
 
 const [loading,setLoading]=useState(true);
 
 const [selectedResult,setSelectedResult]=useState(null);
+const [assessment,setAssessment]=useState(null);
 
+const [reviewType,setReviewType]=useState("");
 
 const [recruiterComment,setRecruiterComment]=useState("");
-
 const [recruiterRating,setRecruiterRating]=useState(0);
-
 const [finalDecision,setFinalDecision]=useState("");
-
-
 
 
 
@@ -39,23 +37,40 @@ loadResults();
 
 
 
-const loadResults=async()=>{
+const loadResults = async()=>{
 
 try{
 
+const [videoRes,assessmentRes]=await Promise.all([
 
-const res =
-await API.get("/video-interviews/");
+API.get("/video-interviews/completed"),
+
+API.get("/assessments/results")
+
+]);
 
 
-setResults(
-Array.isArray(res.data)
-?
-res.data
-:
-[]
-);
+const videos = videoRes.data.map(item=>({
+    ...item,
+    resultType:"video"
+}));
 
+
+const assessments = assessmentRes.data.map(item=>({
+    ...item,
+    resultType:"assessment"
+}));
+
+
+// put console here
+console.log("VIDEOS", videos);
+console.log("ASSESSMENTS", assessments);
+
+
+setResults([
+    ...videos,
+    ...assessments
+]);
 
 
 }
@@ -67,7 +82,6 @@ console.log(error);
 setResults([]);
 
 }
-
 
 finally{
 
@@ -82,14 +96,10 @@ setLoading(false);
 
 const saveReview=async()=>{
 
-
-if(!selectedResult)
+if(reviewType!=="video")
 return;
 
-
-
 try{
-
 
 await API.put(
 
@@ -107,36 +117,23 @@ finalDecision
 
 );
 
-
-
-alert(
-"Review Saved"
-);
-
-
+alert("Review Saved");
 
 setSelectedResult(null);
-
+setAssessment(null);
+setReviewType("");
 
 loadResults();
-
-
 
 }
 
 catch(error){
 
-
 console.log(error);
 
-
-alert(
-"Review Failed"
-);
-
+alert("Review Failed");
 
 }
-
 
 };
 
@@ -144,37 +141,38 @@ alert(
 
 
 
+const hired=
 
-
-const hired =
 results.filter(
+
 r=>r.verdict==="Hire"
+
 ).length;
 
 
 
-const rejected =
+const rejected=
+
 results.filter(
+
 r=>r.verdict==="Reject"
+
 ).length;
 
 
 
+const total=
 
+results.length+
 
-
-
+assessmentResults.length;
 
 
 return(
 
-
 <DashboardLayout>
 
-
-
 <div className="candidate-banner">
-
 
 <div>
 
@@ -182,15 +180,11 @@ return(
 Interview Results
 </h1>
 
-
 <p>
 AI + Video Interview Evaluation
 </p>
 
-
 </div>
-
-
 
 <div className="banner-icon">
 
@@ -198,36 +192,27 @@ AI + Video Interview Evaluation
 
 </div>
 
-
 </div>
 
-
-
-
-
 {
-loading ?
 
+loading ?
 
 <div className="candidate-panel">
 
 <h2>
+
 Loading Results...
+
 </h2>
 
 </div>
-
-
 
 :
 
 <>
 
-
-
 <div className="candidate-stats">
-
-
 
 <div className="candidate-stat">
 
@@ -237,31 +222,21 @@ Loading Results...
 
 </div>
 
-
 <div>
 
 <h3>
 Total
 </h3>
 
-
 <h2>
-{results.length}
+{total}
 </h2>
 
-
 </div>
 
-
 </div>
-
-
-
-
-
 
 <div className="candidate-stat">
-
 
 <div className="stat-icon green">
 
@@ -269,13 +244,11 @@ Total
 
 </div>
 
-
 <div>
 
 <h3>
 Hired
 </h3>
-
 
 <h2>
 {hired}
@@ -283,16 +256,9 @@ Hired
 
 </div>
 
-
 </div>
 
-
-
-
-
-
 <div className="candidate-stat">
-
 
 <div className="stat-icon orange">
 
@@ -300,153 +266,99 @@ Hired
 
 </div>
 
-
-
 <div>
 
 <h3>
 Rejected
 </h3>
 
-
 <h2>
 {rejected}
 </h2>
 
+</div>
 
 </div>
 
-
 </div>
-
-
-</div>
-
-
-
-
-
-
-
-
 
 <div className="candidate-panel">
 
-
 <h2>
+
 All Results
+
 </h2>
 
-
-
-
-
 <table className="recruiter-table">
-
 
 <thead>
 
 <tr>
 
-<th>
-Type
-</th>
+<th>Type</th>
 
-<th>
-Candidate
-</th>
+<th>Candidate</th>
 
+<th>Score</th>
 
-<th>
-Job
-</th>
+<th>Verdict</th>
 
-
-<th>
-Score
-</th>
-
-
-<th>
-Verdict
-</th>
-
-
-<th>
-Action
-</th>
-
+<th>Action</th>
 
 </tr>
 
 </thead>
 
-
-
-
 <tbody>
-
 
 {
 
-results.length===0 ?
+results.length===0 && assessmentResults.length===0 ?
 
 <tr>
 
 <td colSpan="6">
 
-No interview results found
+No Results Found
 
 </td>
 
-
 </tr>
-
 
 :
 
+<>
+
+{
+
 results.map(item=>(
-
-
 
 <tr key={item._id}>
 
-
 <td>
 
-
 {
-item.type==="Video Interview"
+item.resultType==="video"
 
 ?
 
 <span className="blue-badge">
-
 <FaVideo/>
-
 Video
-
 </span>
 
 
 :
 
-<span className="orange-badge">
-
+<span className="green-badge">
 <FaRobot/>
-
-AI
-
+Assessment
 </span>
 
 }
 
-
 </td>
-
-
-
-
 
 <td>
 
@@ -454,95 +366,75 @@ AI
 
 </td>
 
-
-
-
-
-<td>
-
-{item.jobTitle || "-"}
-
-</td>
-
-
-
-
-
 <td>
 
 <span className="green-badge">
 
-{item.overall || 0}%
+{
+item.resultType==="video"
+
+?
+
+item.overall || 0
+
+:
+
+item.score || 0
+
+}%
 
 </span>
 
 </td>
-
-
-
-
 
 <td>
 
 
 {
+item.resultType==="assessment"
+
+?
+
+<span className="blue-badge">
+Completed
+</span>
+
+
+:
+
 
 item.verdict==="Hire"
 
-
 ?
 
-
 <span className="green-badge">
-
 Hire
-
 </span>
 
 
-
 :
-
 
 item.verdict==="Reject"
 
-
 ?
 
-
 <span className="red-badge">
-
 Reject
-
 </span>
-
 
 
 :
 
-
 <span className="orange-badge">
-
 Pending
-
 </span>
-
 
 }
 
 
-
 </td>
 
-
-
-
-
-
-
-
 <td>
-
 
 <button
 
@@ -551,27 +443,35 @@ className="profile-save-btn"
 onClick={()=>{
 
 
+if(item.resultType==="video"){
+
+
+setReviewType("video");
+
 setSelectedResult(item);
 
+setAssessment(null);
 
 
-setRecruiterComment(
-item.recruiterComment || ""
-);
+}
+else{
 
 
+setReviewType("assessment");
 
-setRecruiterRating(
-item.recruiterRating || 0
-);
+setAssessment(item);
 
-
-
-setFinalDecision(
-item.finalDecision || ""
-);
+setSelectedResult(null);
 
 
+}
+
+
+setRecruiterComment("");
+
+setRecruiterRating(0);
+
+setFinalDecision("");
 
 }}
 
@@ -581,115 +481,84 @@ Review
 
 </button>
 
-
-
 </td>
-
-
-
-
 
 </tr>
 
-
-
 ))
-
 
 }
 
+</>
 
+}
 
 </tbody>
 
-
 </table>
 
-
-
 </div>
-
-
 
 </>
 
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 {
-selectedResult &&
 
-
+reviewType &&
 
 <div className="candidate-panel">
 
-
-
 <h2>
+
 Candidate Review
+
 </h2>
 
+{
 
+reviewType==="video" && selectedResult &&
 
-
+<>
 
 <h3>
-{selectedResult.type}
+
+Video Interview
+
 </h3>
-
-
-
 
 <p>
 
-Candidate :
+<b>Candidate :</b>
+
+{" "}
 
 {selectedResult.candidateName}
 
 </p>
 
-
-
-
-
 <p>
 
-Role :
+<b>Role :</b>
+
+{" "}
 
 {selectedResult.jobTitle}
 
 </p>
 
-
-
-
-
-
-
-
-
 {
+
 selectedResult.videoPath &&
 
 <>
 
-
 <h3>
-Recorded Interview
-</h3>
 
+Recorded Interview
+
+</h3>
 
 <video
 
@@ -699,67 +568,31 @@ controls
 
 >
 
-
 <source
 
-src={
-
-`http://127.0.0.1:8000/${selectedResult.videoPath}`
-
-}
+src={`http://127.0.0.1:8000/${selectedResult.videoPath}`}
 
 />
 
-
 </video>
-
-
-
-
-
-<h3>
-
-Violations
-
-</h3>
-
-
-<p>
-
-{selectedResult.violations || 0}
-
-</p>
-
-
 
 </>
 
 }
 
-
-
-
-
-
-
-
 <h3>
-Answers
+
+Candidate Answers
+
 </h3>
-
-
 
 <ul>
 
-
 {
 
-selectedResult.answers?.map(
-(a,i)=>(
-
+selectedResult.answers?.map((a,i)=>(
 
 <li key={i}>
-
 
 <b>
 
@@ -767,80 +600,197 @@ Q{a.questionNo}
 
 </b>
 
-
 {" : "}
 
 {a.answer}
 
-
-
 </li>
 
-
-)
-
-)
-
+))
 
 }
 
-
 </ul>
 
-
-
-
-
-
-
-
-
 <h3>
-AI Scores
-</h3>
 
+AI Scores
+
+</h3>
 
 <p>
 
 Technical :
 
-{selectedResult.technical || 0}%
+{" "}
+
+{selectedResult.technical}%
 
 </p>
-
 
 <p>
 
 Communication :
 
-{selectedResult.communication || 0}%
+{" "}
+
+{selectedResult.communication}%
 
 </p>
-
 
 <p>
 
 Confidence :
 
-{selectedResult.confidence || 0}%
+{" "}
+
+{selectedResult.confidence}%
 
 </p>
-
 
 <p>
 
 Overall :
 
-{selectedResult.overall || 0}%
+{" "}
+
+{selectedResult.overall}%
 
 </p>
 
+<p>
 
+Violations :
 
+{" "}
 
+{selectedResult.violations}
 
+</p>
 
+</>
 
+}
+
+{
+
+reviewType==="assessment" && assessment &&
+
+<>
+
+<h3>
+
+Online Assessment
+
+</h3>
+
+<p>
+
+<b>
+
+Candidate :
+
+</b>
+
+{" "}
+
+{assessment.candidateName}
+
+</p>
+
+<p>
+
+<b>
+
+Assessment Score :
+
+</b>
+
+{" "}
+
+{assessment.score}%
+
+</p>
+
+{
+
+assessment.questions?.map((q,index)=>(
+
+<div
+
+key={index}
+
+className="application-item"
+
+>
+
+<h4>
+
+Question {index+1}
+
+</h4>
+
+<p>
+
+{q.question}
+
+</p>
+
+<p>
+
+<b>
+
+Candidate Answer :
+
+</b>
+
+{" "}
+
+{assessment.answers[index]}
+
+</p>
+
+<p>
+
+<b>
+
+Correct Answer :
+
+</b>
+
+{" "}
+
+{q.answer}
+
+</p>
+
+<p>
+
+{
+
+assessment.answers[index]===q.answer
+
+?
+
+"✅ Correct"
+
+:
+
+"❌ Incorrect"
+
+}
+
+</p>
+
+</div>
+
+))
+
+}
+
+</>
+
+}
 
 
 <label>
@@ -849,14 +799,11 @@ Recruiter Rating
 
 </label>
 
-
-
 <select
 
 value={recruiterRating}
 
-onChange={
-e=>
+onChange={(e)=>
 setRecruiterRating(
 Number(e.target.value)
 )
@@ -864,78 +811,65 @@ Number(e.target.value)
 
 >
 
-
 <option value="0">
-Select
-</option>
 
+Select
+
+</option>
 
 <option value="1">
-1
-</option>
 
+1
+
+</option>
 
 <option value="2">
-2
-</option>
 
+2
+
+</option>
 
 <option value="3">
-3
-</option>
 
+3
+
+</option>
 
 <option value="4">
-4
-</option>
 
+4
+
+</option>
 
 <option value="5">
+
 5
+
 </option>
 
-
 </select>
-
-
-
-
-
-
-
 
 <textarea
 
 rows="4"
 
-placeholder="Recruiter comment"
+placeholder="Recruiter Comment"
 
 value={recruiterComment}
 
-onChange={
-e=>
+onChange={(e)=>
 setRecruiterComment(
 e.target.value
 )
 }
 
-
 />
-
-
-
-
-
-
-
-
 
 <select
 
 value={finalDecision}
 
-onChange={
-e=>
+onChange={(e)=>
 setFinalDecision(
 e.target.value
 )
@@ -943,36 +877,35 @@ e.target.value
 
 >
 
-
 <option value="">
-Decision
-</option>
 
+Decision
+
+</option>
 
 <option value="Selected">
-Selected
-</option>
 
+Selected
+
+</option>
 
 <option value="Hold">
-Hold
-</option>
 
+Hold
+
+</option>
 
 <option value="Rejected">
-Rejected
-</option>
 
+Rejected
+
+</option>
 
 </select>
 
+{
 
-
-
-
-
-
-
+reviewType==="video" &&
 
 <button
 
@@ -986,27 +919,42 @@ Save Review
 
 </button>
 
+}
 
+<button
 
+className="profile-cancel-btn"
 
+onClick={()=>{
+
+setReviewType("");
+
+setSelectedResult(null);
+
+setAssessment(null);
+
+setRecruiterComment("");
+
+setRecruiterRating(0);
+
+setFinalDecision("");
+
+}}
+
+>
+
+Close
+
+</button>
 
 </div>
 
-
-
 }
-
-
-
-
 
 </DashboardLayout>
 
-
 );
 
-
 }
-
 
 export default AIInterviewResults;

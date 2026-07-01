@@ -421,9 +421,9 @@ Video Interview
 </option>
 
 
-<option value="AI Interview">
+<option value="Online Assessment">
 
-AI Interview
+Online Assessment
 
 </option>
 

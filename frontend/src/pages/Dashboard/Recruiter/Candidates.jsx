@@ -32,7 +32,6 @@ loadCandidates();
 },[]);
 
 
-
 const loadCandidates = async()=>{
 
 try{
@@ -40,21 +39,26 @@ try{
 const response =
 await API.get("/applications");
 
+console.log("Applications:", response.data);
 
-setApplications(response.data);
+const data =
+Array.isArray(response.data)
+? response.data
+: response.data.applications || [];
 
+setApplications(data);
 
 }
+
 catch(error){
 
 console.log(error);
 
+setApplications([]);
+
 }
 
 };
-
-
-
 
 const updateStatus = async(id,status)=>{
 
@@ -187,8 +191,13 @@ alert("Failed scheduling interview");
 
 
 
+const safeApplications =
+Array.isArray(applications)
+? applications
+: [];
+
 const filteredApplications =
-applications.filter(app=>
+safeApplications.filter(app=>
 
 (app.candidateName || "")
 .toLowerCase()
@@ -206,18 +215,18 @@ applications.filter(app=>
 
 
 const total =
-applications.length;
+safeApplications.length;
 
 
 const shortlisted =
-applications.filter(
+safeApplications.filter(
 a=>a.status==="Shortlisted"
 ).length;
 
 
 
 const rejected =
-applications.filter(
+safeApplications.filter(
 a=>a.status==="Rejected"
 ).length;
 
@@ -345,8 +354,8 @@ Manage applicants with AI powered hiring workflow
 <h3>Interviews</h3>
 
 <h2>
-{applications.filter(
-a=>a.status==="Interview"
+{safeApplications.filter(
+a=>a.status==="Scheduled"
 ).length}
 </h2>
 
@@ -708,8 +717,8 @@ Video Interview
 </option>
 
 
-<option value="AI Interview">
-AI Interview
+<option value="Online Assessment">
+Online Assessment
 </option>
 
 

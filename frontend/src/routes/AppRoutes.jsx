@@ -33,6 +33,7 @@ import AIInterview from "../pages/Dashboard/Candidate/AIInterview";
 import AIInterviewResults from "../pages/Dashboard/Recruiter/AIInterviewResults";
 import ResumeScreening from "../pages/Dashboard/Recruiter/ResumeScreening";
 import VideoInterview from "../pages/Dashboard/Candidate/VideoInterview";
+import OnlineAssessment from "../pages/Dashboard/Candidate/OnlineAssessment";
 
 
 
@@ -267,6 +268,14 @@ element={
 }
 />
 
+<Route
+path="/online-assessment"
+element={
+  <ProtectedRoute>
+    <OnlineAssessment />
+  </ProtectedRoute>
+}
+/>
 
 
 </Routes>
