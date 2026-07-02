@@ -104,11 +104,6 @@ console.log(err);
 
 
 
-
-
-
-
-
 const handleApply=async(job)=>{
 
 
@@ -116,51 +111,36 @@ const handleApply=async(job)=>{
 if(appliedJobs.includes(job._id))
 return;
 
-
-
-
-
-
 const candidateName =
 localStorage.getItem("username");
 
+const email = localStorage.getItem("email");
 
+const application = {
 
+    candidateName,
 
-const application={
+    email,
 
+    job_id: job._id,
 
-candidateName,
+    jobTitle: job.title,
 
-job_id:job._id,
+    department: job.department,
 
-jobTitle:job.title,
+    location: job.location,
 
-department:job.department,
+    company: "AIHIRE",
 
-location:job.location,
+    status: "Applied",
 
-company:"AIHIRE",
-
-status:"Applied",
-
-appliedDate:
-new Date().toLocaleDateString()
-
+    appliedDate: new Date().toLocaleDateString()
 
 };
 
 
 
-
-
-
-
-
 try{
-
-
-
 
 
 await API.post(
@@ -171,18 +151,27 @@ application
 
 );
 
+// Run Resume Screening
+await API.post(
 
+"/resumes/screen",
 
+{
 
+email,
 
+jobId: job._id
+
+}
+
+);
+
+// Increase Applicant Count
 await API.put(
 
 `/jobs/${job._id}/applicant`
 
 );
-
-
-
 
 
 
@@ -575,7 +564,7 @@ jobs.map(job=>(
 <td>
 
 
-<span className="blue-badge">
+<span>
 
 
 {job.requiredSkills}

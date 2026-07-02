@@ -25,17 +25,15 @@ const navigate = useNavigate();
 
 const [applications,setApplications]=useState([]);
 
+const [atsScores, setAtsScores]=useState({});
+
 const [searchTerm,setSearchTerm]=useState("");
 
-
 const [selectedCandidate,setSelectedCandidate]=useState(null);
-
 
 const [interviewType,setInterviewType]=useState("");
 
 const [interviewDate,setInterviewDate]=useState("");
-
-
 
 
 useEffect(()=>{
@@ -74,7 +72,29 @@ response.data.applications || [];
 
 setApplications(data);
 
+const scores = {};
 
+for (const app of data) {
+
+    try {
+
+        const report = await API.get(
+            `/resumes/report/${app.job_id}/${app.email}`
+        );
+
+        scores[app._id] = report.data.atsScore || 0;
+
+    }
+
+    catch {
+
+        scores[app._id] = 0;
+
+    }
+
+}
+
+setAtsScores(scores);
 
 }
 
@@ -250,38 +270,33 @@ applications
 
 
 
-
-
-
-
 const filteredApplications =
 
-safeApplications.filter(app=>
+safeApplications
 
+.filter(app=>
 
 (app.candidateName || "")
-
 .toLowerCase()
-
 .includes(searchTerm.toLowerCase())
-
 
 ||
 
 (app.jobTitle || "")
-
 .toLowerCase()
-
 .includes(searchTerm.toLowerCase())
 
+)
+
+.sort((a,b)=>
+
+(atsScores[b._id] || 0)
+
+-
+
+(atsScores[a._id] || 0)
 
 );
-
-
-
-
-
-
 
 
 
@@ -783,6 +798,16 @@ Status
 
 
 <th>
+ATS Score
+</th>
+
+
+<th>
+Resume Screening
+</th>
+
+
+<th>
 Actions
 </th>
 
@@ -826,12 +851,6 @@ filteredApplications.map(app=>(
 </h3>
 
 
-<p>
-
-{app.email}
-
-</p>
-
 
 </td>
 
@@ -868,8 +887,34 @@ filteredApplications.map(app=>(
 
 
 
+<td>
+
+<span>
+
+{atsScores[app._id] || 0}%
+
+</span>
+
+</td>
 
 
+<td>
+
+<button
+
+className="resume-btn"
+
+onClick={() =>
+navigate(`/resume-screening/${app.job_id}/${app.email}`)
+}
+
+>
+
+View Screening
+
+</button>
+
+</td>
 
 
 <td>
@@ -898,8 +943,6 @@ onClick={()=>updateStatus(app._id,"Shortlisted")}
 
 </button>
 
-
-
 <button
 
 className="action-btn reject-btn"
@@ -913,20 +956,19 @@ onClick={()=>updateStatus(app._id,"Rejected")}
 <FaTimes/>
 
 </button>
-
 </>
 
 }
 
 
 
-
-
-
 {/* Shortlisted */}
+
 
 {
 app.status==="Shortlisted" &&
+
+<>
 
 <button
 
@@ -950,10 +992,9 @@ setInterviewDate("");
 
 </button>
 
+</>
+
 }
-
-
-
 
 
 

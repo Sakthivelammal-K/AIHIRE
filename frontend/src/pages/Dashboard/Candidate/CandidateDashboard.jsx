@@ -39,9 +39,9 @@ await API.get("/interviews/");
 
 
 setInterviews(
-Array.isArray(response.data)
+Array.isArray(response.data.scheduled)
 ?
-response.data
+response.data.scheduled
 :
 []
 );
@@ -58,6 +58,9 @@ console.log(error);
 const username =
 localStorage.getItem("username");
 
+console.log("Username:", username);
+console.log("Interviews:", interviews);
+
 const myApplications =
 applications.filter(
 (item)=>
@@ -71,9 +74,12 @@ item=>item.status==="Shortlisted"
 
 const myInterviews =
 (interviews || []).filter(
-item =>
-item.candidateName===username
-);
+item =>{
+    console.log(item.candidateName, username);
+return item.candidateName===username;
+});
+
+console.log("Filtered:", myInterviews);
 
 return (
 

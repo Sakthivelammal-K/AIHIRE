@@ -28,11 +28,13 @@ function CandidateProfile() {
     const [editing,setEditing] = useState(false);
     const [formData,setFormData] = useState({});
     const [profileImage, setProfileImage] = useState("");
+    const [activities, setActivities] = useState([]);
 
   const [user, setUser] = useState({});
 
   useEffect(() => {
     loadProfile();
+    loadActivities();
   }, []);
 
   useEffect(() => {
@@ -90,12 +92,12 @@ const profileCompletion =
     }
   };
 
-  const skills =
-    user.skills
-      ? user.skills.split(",")
-      : ["React", "JavaScript", "CSS"];
+ const skills =
+  user.skills
+    ? user.skills.split(",")
+    : [];
 
-      const handleChange = (e) => {
+  const handleChange = (e) => {
 
   setFormData({
     ...formData,
@@ -154,6 +156,29 @@ const handleImageUpload = async (e) => {
   // Later upload to backend
 };
 
+
+const loadActivities = async () => {
+
+    try{
+
+        const email = localStorage.getItem("email");
+
+        const response = await API.get(
+            `/users/activity?email=${email}`
+        );
+
+        setActivities(response.data);
+
+    }
+    catch(error){
+
+        console.log(error);
+
+    }
+
+};
+
+
   return (
 
     <DashboardLayout>
@@ -169,8 +194,8 @@ const handleImageUpload = async (e) => {
           </h1>
 
           <p>
-            {user.title || "Software Developer"}
-            {"."}
+            {user.headline || "Professional Headline Not Added"}
+            {" . "} 
             {user.location || "Location Not Added"}
           </p>
 
@@ -262,7 +287,15 @@ onClick={() => setEditing(true)}
           <div>
             <h3>Skills</h3>
             <h2>
-              {skills.length}
+              {skills.length > 0 ? (
+  skills.map((skill, index) => (
+    <span key={index} className="blue-badge">
+      {skill.trim()}
+    </span>
+  ))
+) : (
+  <p>No skills added.</p>
+)}
             </h2>
           </div>
 
@@ -276,7 +309,7 @@ onClick={() => setEditing(true)}
 
           <div>
             <h3>Resume Score</h3>
-            <h2>92%</h2>
+            <h2>{user.atsScore || 0}%</h2>
           </div>
 
         </div>
@@ -434,19 +467,21 @@ onClick={() => setEditing(true)}
         <div className="application-item">
 
           <div>
-
             <h3>
-              Resume.pdf
+              {user.resumeName || "No Resume Uploaded"}
             </h3>
 
             <p>
-              Last Updated: 25 Jun 2026
+              {user.resumeName
+              ? "Resume uploaded successfully"
+              : "Please upload your resume"}
             </p>
 
           </div>
 
           <span className="green-badge">
-            ATS Score 92%
+           ATS Score<br />
+            <center>{user.atsScore || 0}%</center>
           </span>
 
         </div>
@@ -461,20 +496,38 @@ onClick={() => setEditing(true)}
           Recent Activity
         </h2>
 
-        <div className="application-item">
-          <p>✅ Resume Uploaded</p>
-          <span>Today</span>
+{
+activities.length > 0 ? (
+
+    activities.map((activity,index)=>(
+
+        <div
+            key={index}
+            className="application-item"
+        >
+
+            <p>✅ {activity.title}</p>
+
+            <span>
+                {activity.date
+                    ? new Date(activity.date).toLocaleDateString()
+                    : ""}
+            </span>
+
         </div>
 
-        <div className="application-item">
-          <p>✅ Applied for Frontend Developer</p>
-          <span>Yesterday</span>
-        </div>
+    ))
 
-        <div className="application-item">
-          <p>✅ Completed AI Interview</p>
-          <span>2 Days Ago</span>
-        </div>
+) : (
+
+    <div className="application-item">
+
+        <p>No recent activity available.</p>
+
+    </div>
+
+)
+}
 
       </div>
 
@@ -906,12 +959,11 @@ activeTab==="resume" && (
 
 
 <h2>
-Resume.pdf
+{user.resumeName || "No Resume Uploaded"}
 </h2>
 
-
 <p>
-ATS Score : 92%
+ATS Score : {user.atsScore || 0}%
 </p>
 
 

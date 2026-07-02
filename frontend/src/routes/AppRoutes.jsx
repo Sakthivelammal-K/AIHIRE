@@ -34,6 +34,7 @@ import AIInterviewResults from "../pages/Dashboard/Recruiter/AIInterviewResults"
 import ResumeScreening from "../pages/Dashboard/Recruiter/ResumeScreening";
 import VideoInterview from "../pages/Dashboard/Candidate/VideoInterview";
 import OnlineAssessment from "../pages/Dashboard/Candidate/OnlineAssessment";
+import RankedCandidates from "../pages/Dashboard/Recruiter/RankedCandidates";
 
 
 
@@ -252,7 +253,7 @@ function AppRoutes() {
   />
 
   <Route
-  path="/resume-screening/:id"
+  path="/resume-screening/:jobId/:email"
   element={
   <ProtectedRoute>
     <ResumeScreening />
@@ -273,6 +274,15 @@ path="/online-assessment"
 element={
   <ProtectedRoute>
     <OnlineAssessment />
+  </ProtectedRoute>
+}
+/>
+
+<Route 
+path="/ranked-candidate/:jobId"
+element={
+  <ProtectedRoute>
+    <RankedCandidates />
   </ProtectedRoute>
 }
 />

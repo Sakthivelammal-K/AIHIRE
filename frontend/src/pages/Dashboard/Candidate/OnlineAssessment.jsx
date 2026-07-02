@@ -1,6 +1,7 @@
 import DashboardLayout from "../../../components/dashboard/DashboardLayout";
 import { useEffect, useState } from "react";
 import API from "../../../api/api";
+import { useNavigate } from "react-router-dom";
 
 import {
   FaCheckCircle,
@@ -17,7 +18,7 @@ const [answers,setAnswers]=useState([]);
 const [loading,setLoading]=useState(true);
 const [submitted,setSubmitted]=useState(false);
 const [score,setScore]=useState(null);
-
+const navigate = useNavigate();
 
 
 useEffect(()=>{
@@ -92,15 +93,14 @@ setAnswers(updated);
 };
 
 
-
 const submitAssessment = async () => {
 
-    if(!data){
+    if (!data) {
         alert("Assessment not loaded");
         return;
     }
 
-    try{
+    try {
 
         const res = await API.put(
             `/assessments/${data._id}/submit`,
@@ -109,287 +109,130 @@ const submitAssessment = async () => {
             }
         );
 
-        setScore(res.data.score);
-        setSubmitted(true);
+        alert(
+            `Assessment Completed!`
+        );
+
+        navigate("/interviews");
 
     }
-    catch(error){
+    catch (error) {
+
         console.log(error);
+
         alert("Submit failed");
     }
 };
 
 
-
-
-if(loading){
-
-
-return (
-
-<DashboardLayout>
-
-<div className="candidate-panel">
-
-<h2>
-Loading Assessment...
-</h2>
-
-</div>
-
-</DashboardLayout>
-
-);
-
-
+if (loading) {
+  return (
+    <DashboardLayout>
+      <div className="candidate-panel">
+        <h2>Loading Assessment...</h2>
+      </div>
+    </DashboardLayout>
+  );
 }
 
 
-
-
-
 return (
 
 <DashboardLayout>
-
 
 <div className="candidate-banner">
 
+  <div>
+    <h1>Online Assessment</h1>
+    <p>MCQ Technical Test</p>
+  </div>
 
-<div>
-
-<h1>
-Online Assessment
-</h1>
-
-
-<p>
-MCQ Technical Test
-</p>
-
+  <div className="banner-icon">
+    <FaList />
+  </div>
 
 </div>
-
-
-<div className="banner-icon">
-
-<FaList/>
-
-</div>
-
-
-</div>
-
-
-
-
 
 <div className="candidate-panel">
 
+  <>
+    {/* ======================= */}
+    {/* BEFORE SUBMIT VIEW */}
+    {/* ======================= */}
 
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between"
+      }}
+    >
+      <h2>Questions</h2>
 
-{
-submitted ?
+      <h3>
+        <FaClock />
+        &nbsp;20 min
+      </h3>
+    </div>
 
+    {data?.questions?.map((q, index) => (
 
-<>
+      <div
+        key={index}
+        className="application-item"
+      >
 
+        <h3>Question {index + 1}</h3>
 
-<h2>
-Assessment Completed
-</h2>
+        <p>{q.question}</p>
 
+        {q.options?.map((option, i) => (
 
-<div className="candidate-stat">
+          <label
+            key={i}
+            style={{
+              display: "block",
+              margin: "10px"
+            }}
+          >
 
+            <input
+              type="radio"
+              name={`question-${index}`}
+              value={option}
+              checked={answers[index] === option}
+              onChange={(e) =>
+                handleAnswer(index, e.target.value)
+              }
+            />
 
-<FaCheckCircle/>
+            &nbsp;
+            {option}
 
+          </label>
 
-<div>
+        ))}
 
-<h3>
-Score
-</h3>
+      </div>
 
+    ))}
 
-<h2>
-{score}%
-</h2>
+    <br />
+
+    <button
+      className="profile-save-btn"
+      onClick={submitAssessment}
+    >
+      Submit Assessment
+    </button>
+
+  </>
 
 
 </div>
-
-
-</div>
-
-
-</>
-
-
-
-:
-
-
-<>
-
-
-<div
-style={{
-display:"flex",
-justifyContent:"space-between"
-}}
->
-
-
-<h2>
-Questions
-</h2>
-
-
-<h3>
-
-<FaClock/>
-
-&nbsp;
-
-20 min
-
-</h3>
-
-
-</div>
-
-
-
-
-
-{
-data?.questions?.map(
-(q,index)=>(
-
-
-<div
-
-key={index}
-
-className="application-item"
-
->
-
-
-<h3>
-Question {index+1}
-</h3>
-
-
-<p>
-{q.question}
-</p>
-
-
-
-
-{
-q.options?.map(
-
-(option,i)=>(
-
-
-<label
-
-key={i}
-
-style={{
-display:"block",
-margin:"10px"
-}}
-
->
-
-
-<input
-
-type="radio"
-
-name={`question-${index}`}
-
-value={option}
-
-checked={
-answers[index]===option
-}
-
-onChange={
-(e)=>
-handleAnswer(
-index,
-e.target.value
-)
-}
-
-/>
-
-
-&nbsp;
-
-{option}
-
-
-</label>
-
-
-)
-
-)
-
-}
-
-
-
-
-</div>
-
-
-)
-
-)
-}
-
-
-
-<br/>
-
-
-<button
-
-className="profile-save-btn"
-
-onClick={submitAssessment}
-
->
-
-Submit Assessment
-
-</button>
-
-
-
-</>
-
-
-}
-
-
-
-</div>
-
-
 
 </DashboardLayout>
 
 );
-
 
 }
 

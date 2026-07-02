@@ -358,6 +358,21 @@ async def finish_interview(
 
     )
 
+    # Update scheduled interview status
+    db["interviews"].update_one(
+    {
+        "candidateName": interview.get("candidateName"),
+        "jobTitle": interview.get("jobTitle"),
+        "type": "Video Interview",
+        "status": "Scheduled"
+    },
+    {
+        "$set": {
+            "status": "Completed"
+        }
+    }
+)
+
 
     return {
 

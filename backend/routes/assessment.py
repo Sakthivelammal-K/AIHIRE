@@ -169,8 +169,7 @@ def submit_assessment(id: str, data: dict):
                         ""
                     )
 
-
-
+    print(assessment)
 
     assessments.update_one(
 
@@ -197,6 +196,25 @@ def submit_assessment(id: str, data: dict):
         }
 
     )
+
+# Update scheduled interview status
+    result = db["interviews"].update_one(
+    {
+        "candidateName": assessment["candidateName"],
+        "jobTitle": jobTitle,
+        "type": "Online Assessment"
+    },
+    {
+        "$set": {
+            "status": "Completed"
+        }
+    }
+)
+
+    print("Matched:", result.matched_count)
+    print("Modified:", result.modified_count)
+    print("Candidate:", assessment["candidateName"])
+    print("Job Title:", jobTitle)
 
 
     return {
@@ -240,6 +258,8 @@ def get_assessment(username: str):
         }
     )
 
+    print(application)
+
 
     jobTitle = ""
 
@@ -249,10 +269,11 @@ def get_assessment(username: str):
 
     if application:
 
-        jobId = application.get("jobId")
+        jobId = application.get("jobId") or application.get("job_id")
 
+        jobTitle = application.get("jobTitle", "")
 
-        if jobId:
+        if not jobTitle and jobId:
 
             job = db["jobs"].find_one(
                 {

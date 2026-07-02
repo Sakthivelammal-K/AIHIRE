@@ -176,132 +176,60 @@ def get_interviews():
 @router.get("/results")
 def get_results():
 
-
-    results=[]
-
-
-
-    # AI
-
-    for item in interviews.find(
-        {
-        "type":"AI Interview"
-        }
-    ):
-
-
-        item["_id"]=str(item["_id"])
-
-        results.append(item)
-
-
-
-
-    # VIDEO
-
-    videos=db["video_interviews"]
-
-
-    for item in videos.find(
-        {
-        "status":"Completed"
-        }
-    ):
-
-
-        item["_id"]=str(item["_id"])
-
-
-        results.append({
-
-            "_id":
-            item["_id"],
-
-
-            "candidateName":
-            item.get("candidateName","Unknown"),
-
-
-            "jobTitle":
-            item.get("jobTitle","-"),
-
-
-
-            "type":
-            "Video Interview",
-
-
-
-            "technical":
-            item.get("technical",0),
-
-
-            "communication":
-            item.get("communication",0),
-
-
-            "confidence":
-            item.get("confidence",0),
-
-
-            "overall":
-            item.get("overall",0),
-
-
-
-            "verdict":
-            item.get("verdict","Pending"),
-
-
-
-            "strengths":
-            item.get("strengths",[]),
-
-
-            "improvements":
-            item.get("improvements",[]),
-
-
-
-            "videoPath":
-            item.get("videoPath",""),
-
-
-
-            "applicationId":
-            item.get("applicationId"),
-
-
-
-            "answers":
-            item.get("answers",[]),
-
-
-
-            "violations":
-            item.get("violations",0),
-
-
-
-            "recruiterComment":
-            item.get("recruiterComment",""),
-
-
-            "recruiterRating":
-            item.get("recruiterRating",0),
-
-
-            "finalDecision":
-            item.get("finalDecision","")
-
+    results = []
+
+    # ==========================
+    # VIDEO INTERVIEW RESULTS
+    # ==========================
+    for item in db["video_interviews"].find({"status": "Completed"}):
+
+        interview = interviews.find_one({
+            "candidateName": item.get("candidateName"),
+            "jobTitle": item.get("jobTitle"),
+            "type": "Video Interview"
         })
 
+        results.append({
+            "_id": str(item["_id"]),
+            "candidateName": item.get("candidateName"),
+            "jobTitle": item.get("jobTitle"),
+            "type": "Video Interview",
+            "technical": item.get("technical", 0),
+            "communication": item.get("communication", 0),
+            "confidence": item.get("confidence", 0),
+            "overall": item.get("overall", 0),
+            "verdict": interview.get("finalDecision", "Pending") if interview else "Pending",
+            "strengths": item.get("strengths", []),
+            "improvements": item.get("improvements", []),
+            "videoPath": item.get("videoPath", ""),
+            "answers": item.get("answers", []),
+            "violations": item.get("violations", 0)
+        })
 
+    # ==========================
+    # ONLINE ASSESSMENT RESULTS
+    # ==========================
+    for assessment in db["assessments"].find({"status": "Completed"}):
+
+        interview = interviews.find_one({
+            "candidateName": assessment.get("candidateName"),
+            "jobTitle": assessment.get("jobTitle"),
+            "type": "Online Assessment"
+        })
+
+        results.append({
+            "_id": str(assessment["_id"]),
+            "candidateName": assessment.get("candidateName"),
+            "jobTitle": assessment.get("jobTitle"),
+            "type": "Online Assessment",
+            "overall": assessment.get("score", 0),
+            "score": assessment.get("score", 0),
+            "answers": assessment.get("answers", []),
+            "questions": assessment.get("questions", []),
+            "verdict": interview.get("finalDecision", "Pending") if interview else "Pending"
+        })
 
     return results
-
-
-
 
 
 

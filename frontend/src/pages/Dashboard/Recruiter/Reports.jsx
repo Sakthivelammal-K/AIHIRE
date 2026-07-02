@@ -161,27 +161,107 @@ function Reports() {
 
 <div className="report-profile">
 
-    <div className="report-avatar">
+    <div className="report-avatar-large">
 
-        <FaUser />
+        {selectedReport.candidateName?.charAt(0)}
 
     </div>
+
 
     <div className="profile-info">
 
         <h2>{selectedReport.candidateName}</h2>
 
-        <p>{selectedReport.jobTitle}</p>
+        <p>
+            <FaBriefcase />
+            {" "}
+            {selectedReport.jobTitle}
+        </p>
+
+        <p>
+            <FaUser />
+            {" "}
+            {selectedReport.email || "Email not available"}
+        </p>
 
     </div>
+
 
     <div className="overall-score-card">
 
         <span>Overall Score</span>
 
-        <h1>{selectedReport.overall}%</h1>
+        <h1>
+            {selectedReport.overall || selectedReport.score || 0}%
+        </h1>
 
-        <small>Excellent Candidate</small>
+        <small>
+
+            {
+                (selectedReport.overall || selectedReport.score || 0) >= 85
+
+                ? "Excellent Candidate"
+
+                : (selectedReport.overall || selectedReport.score || 0) >= 70
+
+                ? "Good Candidate"
+
+                : (selectedReport.overall || selectedReport.score || 0) >= 50
+
+                ? "Average Candidate"
+
+                : "Needs Improvement"
+
+            }
+
+        </small>
+
+    </div>
+
+</div>
+
+
+<div className="candidate-summary-grid">
+
+    <div className="summary-card">
+
+        <label>AI Recommendation</label>
+
+        <h3>{selectedReport.verdict || "Pending"}</h3>
+
+    </div>
+
+    <div className="summary-card">
+
+        <label>Recruiter Decision</label>
+
+        <h3>{selectedReport.finalDecision || "Pending"}</h3>
+
+    </div>
+
+    <div className="summary-card">
+
+        <label>Recruiter Rating</label>
+
+        <h3>
+
+            {selectedReport.recruiterRating || 0}
+
+            /5
+
+        </h3>
+
+    </div>
+
+    <div className="summary-card">
+
+        <label>Status</label>
+
+        <h3>
+
+            {selectedReport.finalDecision || "Under Review"}
+
+        </h3>
 
     </div>
 

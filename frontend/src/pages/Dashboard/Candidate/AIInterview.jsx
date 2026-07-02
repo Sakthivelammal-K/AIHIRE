@@ -345,9 +345,9 @@ return (
 <div>
 
 
-<h1>
+<h2>
 AI Interview Assistant
-</h1>
+</h2>
 
 
 <p>

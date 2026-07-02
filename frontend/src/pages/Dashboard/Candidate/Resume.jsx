@@ -44,185 +44,85 @@ loadResume();
 },[]);
 
 
+const loadResume = async () => {
 
+  try {
 
+    // Resume details
+    const resumeRes = await API.get(`/resumes/${email}`);
 
-const loadResume=async()=>{
+    if (resumeRes.data.resumeName) {
+      setResumeName(resumeRes.data.resumeName);
+    }
 
+    // ATS Screening report
+    const screeningRes = await API.get(`/resumes/screening/${email}`);
 
-try{
+    if (screeningRes.data && screeningRes.data.atsScore !== undefined) {
 
+      setAnalysis({
+        score: screeningRes.data.atsScore,
+        skills: screeningRes.data.candidateSkills || [],
+        experience: screeningRes.data.recommendation
+      });
 
-const response =
-await API.get(
-`/resumes/${email}`
-);
+    }
 
+  } catch (error) {
 
+    console.log(error);
 
-
-if(response.data.resumeName){
-
-
-setResumeName(
-response.data.resumeName
-);
-
-
-setAnalysis(
-response.data.analysis
-);
-
-
-}
-
-
-}
-
-catch(error){
-
-console.log(error);
-
-}
+  }
 
 };
 
 
+const handleUpload = async(e)=>{
 
+    console.log("handleUpload called");
 
+const file = e.target.files[0];
 
+console.log(file);
 
-
-
-const handleUpload=async(e)=>{
-
-
-const file =
-e.target.files[0];
-
-
-
-if(!file)
-return;
-
-
+if(!file) return;
 
 setUploading(true);
 
+const formData = new FormData();
 
-
-
-
-const aiAnalysis={
-
-
-skills:[
-
-"React",
-"JavaScript",
-"HTML",
-"CSS",
-"FastAPI"
-
-],
-
-
-experience:"2 Years",
-
-
-education:"B.Sc Computer Science",
-
-
-score:92
-
-
-};
-
-
-
-
-
-
-const resumeData={
-
-
-email,
-
-resumeName:file.name,
-
-analysis:aiAnalysis
-
-
-};
-
-
-
-
-
+formData.append("email", email);
+formData.append("file", file);
 
 try{
 
+console.log("Uploading...");
 
-await API.post(
+await API.post("/resumes/upload", formData);
 
-"/resumes/upload",
+console.log("Upload completed");
 
-resumeData
+setResumeName(file.name);
 
-);
+// setAnalysis(aiAnalysis);
 
-
-
-
-setResumeName(
-file.name
-);
-
-
-
-setAnalysis(
-aiAnalysis
-);
-
-
-
-
-alert(
-"Resume Uploaded Successfully"
-);
-
-
+alert("Resume Uploaded Successfully");
 
 }
-
 catch(error){
 
 console.log(error);
 
-
-alert(
-"Upload Failed"
-);
-
+alert("Upload Failed");
 
 }
-
 finally{
-
 
 setUploading(false);
 
-
 }
 
-
 };
-
-
-
-
-
-
 
 
 const handleDeleteResume = async()=>{
