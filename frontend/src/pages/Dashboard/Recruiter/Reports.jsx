@@ -62,7 +62,7 @@ function Reports() {
 
         <div>
 
-          <h1>AI Interview Reports</h1>
+          <h2>AI Interview Reports</h2>
 
           <p>
             AI generated evaluation reports for every interview.
@@ -147,7 +147,7 @@ function Reports() {
 
     <div>
 
-        <h2>Interview Report</h2>
+        <h3>Interview Report</h3>
 
         <p>
             AI generated candidate evaluation report
@@ -333,7 +333,7 @@ function Reports() {
                 Based on the interview performance,
                 the AI recommends this candidate for the
 
-                <strong> {selectedReport.verdict}</strong>
+                <strong> {selectedReport.verdict} </strong>
 
                 stage.
 
@@ -457,7 +457,7 @@ function Reports() {
 
             <h4>
 
-                {selectedReport.date || "27 Jun 2026"}
+                {selectedReport.date || ""}
 
             </h4>
 

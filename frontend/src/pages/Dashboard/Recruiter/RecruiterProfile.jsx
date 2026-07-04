@@ -713,6 +713,19 @@ onChange={handleChange}
 </div>
 
 
+<div className="form-group full-width">
+
+<label>
+Location
+</label>
+
+<input
+name="location"
+value={formData.location}
+onChange={handleChange}
+/>
+
+</div>
 
 
 

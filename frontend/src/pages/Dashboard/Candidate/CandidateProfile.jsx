@@ -40,12 +40,14 @@ function CandidateProfile() {
   useEffect(() => {
 
     setFormData({
-  firstName: user.firstName || "",
+  firstName: user.name || "",
   lastName: user.lastName || "",
   phone: user.phone || "",
   headline: user.headline || "",
   name: user.name || "",
-  skills: user.skills || "",
+  skills: Array.isArray(user.skills)
+  ? user.skills.join(", ")
+  : user.skills || "",
   education: user.education || "",
   experience: user.experience || "",
   location: user.location || "",
@@ -92,10 +94,11 @@ const profileCompletion =
     }
   };
 
- const skills =
-  user.skills
-    ? user.skills.split(",")
-    : [];
+const skills = Array.isArray(user.skills)
+  ? user.skills
+  : user.skills
+  ? user.skills.split(",")
+  : [];
 
   const handleChange = (e) => {
 
@@ -113,7 +116,7 @@ const saveProfile = async () => {
 
 await API.put("/users/profile", {
   email: user.email,
-  firstName: formData.firstName,
+  firstName: formData.name,
   lastName: formData.lastName,
   phone: formData.phone,
   headline: formData.headline,
@@ -223,7 +226,8 @@ const loadActivities = async () => {
                 style={{
                   width: `${profileCompletion}%`,
                   height: "100%",
-                  background: "#34d399"
+                  background: "#34d399",
+                  borderRadius:"10px"
                 }}
               />
 
@@ -284,20 +288,26 @@ onClick={() => setEditing(true)}
             <FaCode />
           </div>
 
-          <div>
-            <h3>Skills</h3>
-            <h2>
-              {skills.length > 0 ? (
-  skills.map((skill, index) => (
-    <span key={index} className="blue-badge">
-      {skill.trim()}
-    </span>
-  ))
-) : (
-  <p>No skills added.</p>
-)}
-            </h2>
-          </div>
+<div>
+
+    <h3
+        style={{
+            color: "#64748B",
+            marginTop: "5px"
+        }}
+    >Skills Detected
+    </h3>
+    <p
+        style={{
+            fontSize: "30px",
+            margin: "0",
+            color: "#090909"
+        }}
+    >
+        {skills.length}
+    </p>
+
+</div>
 
         </div>
 
@@ -669,7 +679,11 @@ activeTab === "profile" && (
 
   <div className="profile-avatar">
 
-    {(formData.name?.charAt(0) || username)}
+    {formData.name
+  ? formData.name.charAt(0).toUpperCase()
+  : user.name
+  ? user.name.charAt(0).toUpperCase()
+  : "U"}
 
     <input
   type="file"
@@ -717,7 +731,7 @@ activeTab === "profile" && (
 
     <input
       name="lastname"
-      value={formData.lastname || ""}
+      value={formData.lastName || ""}
       onChange={handleChange}
       placeholder="Last name"
     />

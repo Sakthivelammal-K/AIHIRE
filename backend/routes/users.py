@@ -11,60 +11,39 @@ router = APIRouter()
 # GET ALL USERS (ADMIN)
 # ==========================
 
-@router.get("/")
-def get_users():
-
-    result=[]
-
-    for user in users.find():
-
-        user["_id"]=str(user["_id"])
-
-        result.append(user)
-
-
-    return result
-
-
-
-
-
-# ==========================
-# GET USER PROFILE
-# ==========================
 @router.get("/profile")
 def get_profile(email: str):
 
-    user = users.find_one(
-        {
-            "email": email
-        }
-    )
+    user = users.find_one({"email": email})
+
+    resume = users.database["resumes"].find_one({
+    "email": email
+})
 
     if not user:
-        return {
-            "message": "User not found"
-        }
+        return {"message": "User not found"}
 
-    # Get candidate application
-    application = users.database["applications"].find_one(
-        {
-            "email": email
-        }
-    )
+    db = users.database
 
-    job_id = application.get("job_id") if application else None
+    # Resume
+    resume = db["resumes"].find_one({"email": email})
 
-    # Get ATS report
+    # Application
+    application = db["applications"].find_one({"email": email})
+
+    job_id = None
+
+    if application:
+        job_id = application.get("job_id") or application.get("jobId")
+
+    # ATS Score
     ats_score = 0
 
     if job_id:
-        report = users.database["resume_screening"].find_one(
-            {
-                "email": email,
-                "jobId": job_id
-            }
-        )
+        report = db["resume_screening"].find_one({
+            "email": email,
+            "jobId": job_id
+        })
 
         if report:
             ats_score = report.get("atsScore", 0)
@@ -77,7 +56,9 @@ def get_profile(email: str):
         "role": user.get("role"),
         "status": user.get("status", "Active"),
 
-        "skills": user.get("skills", ""),
+        "skills": resume.get("skills", []) if resume else [],
+        "resumeName": resume.get("resumeName", "") if resume else "",
+
         "experience": user.get("experience", ""),
         "location": user.get("location", ""),
         "github": user.get("github", ""),
@@ -149,45 +130,42 @@ def get_activity(email: str):
 
 
 @router.put("/profile")
-def update_profile(data:dict):
+def update_profile(data: dict):
 
-    email=data.get("email")
+    email = data.get("email")
 
+    update_data = {}
+
+    fields = [
+        "name",
+        "skills",
+        "experience",
+        "location",
+        "github",
+        "linkedin",
+        "portfolio",
+        "about",
+        "education",
+        "headline",
+        "phone",
+        "firstName",
+        "lastName"
+    ]
+
+    for field in fields:
+        value = data.get(field)
+
+        if value is not None and value != "":
+            update_data[field] = value
 
     users.update_one(
-
-        {
-            "email":email
-        },
-
-        {
-
-        "$set":{
-
-            "name":data.get("name"),
-            "skills":data.get("skills"),
-            "experience":data.get("experience"),
-            "location":data.get("location"),
-            "github":data.get("github"),
-            "portfolio":data.get("portfolio"),
-            "about":data.get("about")
-
-        }
-
-        }
-
+        {"email": email},
+        {"$set": update_data}
     )
 
-
     return {
-
-        "message":"Profile updated successfully"
-
+        "message": "Profile updated successfully"
     }
-
-
-
-
 
 
 

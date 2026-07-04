@@ -877,7 +877,7 @@ Experience
 <h2
 
 style={{
-fontSize:"18px"
+fontSize:"12px"
 }}
 
 >
