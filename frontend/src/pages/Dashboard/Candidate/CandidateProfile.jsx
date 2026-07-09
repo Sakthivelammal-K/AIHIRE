@@ -1,1060 +1,466 @@
 import DashboardLayout from "../../../components/dashboard/DashboardLayout";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import API from "../../../api/api";
 
 import {
-  FaUserCircle,
-  FaEnvelope,
-  FaUserTag,
-  FaCode,
-  FaBriefcase,
-  FaGraduationCap,
-  FaEdit,
-  FaFileAlt,
-  FaMapMarkerAlt,
-  FaLinkedin,
-  FaGlobe,
   FaUser,
-  FaLock,
-  FaTools,
+  FaEnvelope,
+  FaPhone,
+  FaMapMarkerAlt,
+  FaEdit,
+  FaUserTie,
+  FaCheckCircle,
+  FaBriefcase,
+  FaFileAlt,
+  FaLinkedin,
+  FaUserCheck,
   FaCamera,
-  FaTimes,
-  FaCheck
+  FaCrown,
+  FaShieldAlt,
+  FaDownload,
+  FaTrash,
+  FaGithub,
+  FaCode,
+  FaSave,
+  FaSpinner,
+  FaEye,
+  FaTimesCircle,
+  FaGraduationCap,
+  FaProjectDiagram,
+  FaCertificate,
+  FaLanguage,
+  FaGlobe,
+  FaCalendarAlt
 } from "react-icons/fa";
 
 function CandidateProfile() {
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [applications, setApplications] = useState([]);
+  const [interviews, setInterviews] = useState([]);
+  const [analysis, setAnalysis] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [resumeName, setResumeName] = useState("");
+  
+  // MODE SWITCH
+  const [isEditing, setIsEditing] = useState(false);
+  
+  // FORM STATES
+  const [editForm, setEditForm] = useState({ 
+    firstName: "", lastName: "", phone: "", location: "", 
+    city: "", state: "", country: "", dob: "", gender: "", bio: "" 
+  });
+  const [profileImage, setProfileImage] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
+  const fileInputRef = useRef(null);
 
-    const [activeTab,setActiveTab] = useState("profile");
-    const [editing,setEditing] = useState(false);
-    const [formData,setFormData] = useState({});
-    const [profileImage, setProfileImage] = useState("");
-    const [activities, setActivities] = useState([]);
-
-  const [user, setUser] = useState({});
+  const email = localStorage.getItem("email");
+  const username = localStorage.getItem("username") || "Candidate";
+  const role = localStorage.getItem("role") || "Candidate";
 
   useEffect(() => {
-    loadProfile();
-    loadActivities();
+    loadProfileData();
   }, []);
 
-  useEffect(() => {
-
-    setFormData({
-  firstName: user.name || "",
-  lastName: user.lastName || "",
-  phone: user.phone || "",
-  headline: user.headline || "",
-  name: user.name || "",
-  skills: Array.isArray(user.skills)
-  ? user.skills.join(", ")
-  : user.skills || "",
-  education: user.education || "",
-  experience: user.experience || "",
-  location: user.location || "",
-  linkedin: user.linkedin || "",
-  portfolio: user.portfolio || "",
-  about: user.about || ""
-});
-
-}, [user]);
-
-const profileFields = [
-  user.name,
-  user.skills,
-  user.experience,
-  user.location,
-  user.linkedin,
-  user.portfolio,
-  user.about
-];
-
-const completedFields =
-  profileFields.filter(Boolean).length;
-
-const profileCompletion =
-  Math.round(
-    (completedFields / profileFields.length) * 100
-  );
-
-  const loadProfile = async () => {
+  const loadProfileData = async () => {
+    setLoading(true);
+    setError(null);
     try {
+      // 1. Profile Data
+      const profileRes = await API.get(`/users/profile?email=${email}`);
+      const pData = profileRes.data || {};
+      setUser(pData);
+      setPreviewImage(pData?.profileImage || null);
+      
+      const fullName = (pData?.name || "").split(" ");
+      setEditForm({
+        firstName: fullName[0] || "",
+        lastName: fullName.slice(1).join(" ") || "",
+        phone: pData?.phone || "",
+        location: pData?.location || "",
+        city: pData?.city || "",
+        state: pData?.state || "",
+        country: pData?.country || "",
+        dob: pData?.dob || "",
+        gender: pData?.gender || "Male",
+        bio: pData?.bio || pData?.about || ""
+      });
 
-      const email =
-        localStorage.getItem("email");
+      // 2. Resume Data
+      try {
+        const resumeRes = await API.get(`/resumes/${email}`);
+        if (resumeRes.data.resumeName) setResumeName(resumeRes.data.resumeName);
+      } catch (e) { /* No resume */ }
 
-      const response =
-        await API.get(
-          `/users/profile?email=${email}`
-        );
+      // 3. ATS Analysis
+      try {
+        const screenRes = await API.get(`/resumes/screening/${email}`);
+        if (screenRes.data && screenRes.data.candidateSkills) setAnalysis(screenRes.data);
+      } catch (e) { /* No screening */ }
 
-      setUser(response.data);
+      // 4. Applications & Interviews
+      const appRes = await API.get("/applications/");
+      const apps = Array.isArray(appRes.data) ? appRes.data : appRes.data.applications || [];
+      setApplications(apps.filter(app => app.candidateName === username || app.email === email));
 
-    } catch (error) {
-      console.log(error);
+      const intRes = await API.get("/interviews/");
+      const allInts = Array.isArray(intRes.data.scheduled) ? intRes.data.scheduled : intRes.data || [];
+      setInterviews(allInts.filter(int => int.candidateName === username || int.email === email));
+
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load profile data.");
+    } finally {
+      setLoading(false);
     }
   };
 
-const skills = Array.isArray(user.skills)
-  ? user.skills
-  : user.skills
-  ? user.skills.split(",")
-  : [];
+  // --- HANDLERS ---
+  const triggerFileUpload = () => fileInputRef.current.click();
 
-  const handleChange = (e) => {
-
-  setFormData({
-    ...formData,
-    [e.target.name]: e.target.value
-  });
-
-};
-
-
-const saveProfile = async () => {
-
-  try {
-
-await API.put("/users/profile", {
-  email: user.email,
-  firstName: formData.name,
-  lastName: formData.lastName,
-  phone: formData.phone,
-  headline: formData.headline,
-  education: formData.education,
-  experience: formData.experience,
-  location: formData.location,
-  skills: formData.skills,
-  linkedin: formData.linkedin,
-  portfolio: formData.portfolio,
-  about: formData.about
-});
-
-    alert("Profile Updated");
-
-    setEditing(false);
-
-    loadProfile();
-
-  }
-  catch(error){
-
-    console.log(error);
-
-    alert("Update Failed");
-
-  }
-
-};
-
-const handleImageUpload = async (e) => {
-
-  const file = e.target.files[0];
-
-  if (!file) return;
-
-  const imageUrl = URL.createObjectURL(file);
-
-  setProfileImage(imageUrl);
-
-  // Later upload to backend
-};
-
-
-const loadActivities = async () => {
-
-    try{
-
-        const email = localStorage.getItem("email");
-
-        const response = await API.get(
-            `/users/activity?email=${email}`
-        );
-
-        setActivities(response.data);
-
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setPreviewImage(reader.result);
+      reader.readAsDataURL(file);
+      setProfileImage(file);
     }
-    catch(error){
+  };
 
-        console.log(error);
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditForm(prev => ({ ...prev, [name]: value }));
+  };
 
+  const saveProfile = async () => {
+    try {
+      const fullName = `${editForm.firstName} ${editForm.lastName}`.trim();
+      const formData = new FormData();
+      formData.append('email', email);
+      formData.append('name', fullName);
+      formData.append('phone', editForm.phone);
+      formData.append('location', editForm.location);
+      formData.append('bio', editForm.bio);
+      formData.append('dob', editForm.dob);
+      formData.append('gender', editForm.gender);
+      if (profileImage) formData.append('profileImage', profileImage);
+
+      await API.put("/users/profile", formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      alert("Profile Updated Successfully");
+      setIsEditing(false);
+      loadProfileData();
+    } catch (err) {
+      console.log(err);
+      alert("Update Failed");
     }
+  };
 
-};
+  const cancelEdit = () => {
+    const fullName = (user?.name || "").split(" ");
+    setEditForm({
+      firstName: fullName[0] || "", lastName: fullName.slice(1).join(" ") || "",
+      phone: user?.phone || "", location: user?.location || "",
+      city: "", state: "", country: "", dob: "", gender: "Male",
+      bio: user?.bio || user?.about || ""
+    });
+    setPreviewImage(user?.profileImage || null);
+    setProfileImage(null);
+    setIsEditing(false);
+  };
 
+  // --- STATS ---
+  const skills = analysis?.candidateSkills || [];
+  const atsScore = analysis?.atsScore || 0;
+  const totalApps = applications.length;
+  const scheduledInterviews = interviews.length;
+  const offers = applications.filter(a => a.status === "Offer" || a.status === "Selected").length;
+  const profileViews = totalApps * 3 + 50;
+  const completionPercent = Math.min(100, 20 + (resumeName ? 20 : 0) + (skills.length > 0 ? 20 : 0) + (user?.name ? 10 : 0) + (user?.bio ? 10 : 0) + (previewImage ? 10 : 0));
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="cand-full-page" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+          <FaSpinner className="spin" style={{ fontSize: '36px', color: '#e67e22' }} />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout>
+        <div className="cand-full-page" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+          <FaTimesCircle style={{ fontSize: '40px', color: '#ef4444', marginBottom: '15px' }} />
+          <p style={{ color: '#718096' }}>{error}</p>
+          <button onClick={loadProfileData} style={{ marginTop: '10px', padding: '8px 20px', background: '#e67e22', color: 'white', border: 'none', borderRadius: '6px' }}>Retry</button>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
-
     <DashboardLayout>
+      <div className="cand-full-page">
+        
+        {/* TOP HEADER */}
+        <div className="cand-full-header">
+          <div className="cand-full-left">
+            <h1>{isEditing ? "Edit Profile" : "My Profile"}</h1>
+            <p>{isEditing ? "Update your information and manage your professional profile." : "View and manage your profile."}</p>
+          </div>
+          <div className="cand-full-actions">
+            {isEditing && <button className="cand-full-btn-preview" onClick={cancelEdit}><FaEye /> Preview Profile</button>}
+            <button className="cand-full-btn-save" onClick={isEditing ? saveProfile : () => setIsEditing(true)}>
+              {isEditing ? <><FaSave /> Save Changes</> : <><FaEdit /> Edit Profile</>}
+            </button>
+          </div>
+        </div>
 
-      {/* HERO */}
+        {/* MAIN GRID */}
+        <div className="cand-full-grid">
+          
+          {/* LEFT COLUMN */}
+          <div className="cand-full-left-col">
+            
+            {/* HERO CARD */}
+            <div className="cand-full-card">
+              {!isEditing ? (
+                <div className="cand-full-hero">
+                  <div className="cand-full-avatar-box">
+                    {previewImage ? <img src={previewImage} alt="Profile" /> : <div className="cand-full-avatar-letter">{username.charAt(0).toUpperCase()}</div>}
+                    <div className="cand-full-avatar-edit" onClick={() => setIsEditing(true)}><FaCamera /></div>
+                  </div>
+                  <div className="cand-full-hero-info">
+                    <div className="cand-full-hero-top">
+                      <div className="cand-full-name">
+                        <h2>{user?.name || username} <FaCheckCircle /></h2>
+                        <p>{role}</p>
+                      </div>
+                      <button className="cand-full-card-header action-btn" onClick={() => setIsEditing(true)}><FaEdit /> Edit Profile</button>
+                    </div>
+                    <div className="cand-full-contact">
+                      <span><FaMapMarkerAlt /> {user?.location || 'Location not set'}</span>
+                      <span><FaEnvelope /> {user?.email || 'Email not set'}</span>
+                      <span><FaPhone /> {user?.phone || 'Phone not set'}</span>
+                    </div>
+                    <div className="cand-full-social">
+                      <a href="#"><FaLinkedin /> LinkedIn</a>
+                      <a href="#"><FaGithub /> GitHub</a>
+                    </div>
+                    <p className="cand-full-bio">{user?.bio || "Passionate candidate with experience in building responsive web applications."}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="cand-full-edit-hero">
+                  <div className="cand-full-edit-avatar-box">
+                    {previewImage ? <img src={previewImage} alt="Profile" /> : <div className="cand-full-edit-avatar-letter">{username.charAt(0).toUpperCase()}</div>}
+                    <div className="cand-full-edit-avatar-upload" onClick={triggerFileUpload}><FaCamera /></div>
+                    <input type="file" ref={fileInputRef} className="hidden-file-input" accept="image/*" onChange={handleImageChange} />
+                  </div>
+                  <div className="cand-full-edit-form">
+                    <div className="cand-full-row-2">
+                      <div className="cand-full-form-group"><label>First Name</label><input type="text" name="firstName" value={editForm.firstName} onChange={handleEditChange} /></div>
+                      <div className="cand-full-form-group"><label>Last Name</label><input type="text" name="lastName" value={editForm.lastName} onChange={handleEditChange} /></div>
+                    </div>
+                    <div className="cand-full-row-2">
+                      <div className="cand-full-form-group"><label>Professional Headline</label><input type="text" value={role} disabled style={{ background: '#f8f9fa' }} /></div>
+                      <div className="cand-full-form-group"><label>Email Address</label><input type="text" value={user?.email || ''} disabled style={{ background: '#f8f9fa' }} /></div>
+                    </div>
+                    <div className="cand-full-row-2">
+                      <div className="cand-full-form-group"><label>Phone Number</label><input type="text" name="phone" value={editForm.phone} onChange={handleEditChange} /></div>
+                      <div className="cand-full-form-group"><label>Location</label><input type="text" name="location" value={editForm.location} onChange={handleEditChange} /></div>
+                    </div>
+                    <div className="cand-full-row-2">
+                      <div className="cand-full-form-group"><label>Date of Birth</label><input type="date" name="dob" value={editForm.dob} onChange={handleEditChange} /></div>
+                      <div className="cand-full-form-group"><label>Gender</label><select name="gender" value={editForm.gender} onChange={handleEditChange}><option>Male</option><option>Female</option><option>Non-binary</option></select></div>
+                    </div>
+                    <div className="cand-full-form-group">
+                      <label>Professional Summary</label>
+                      <textarea className="cand-full-textarea" name="bio" value={editForm.bio} onChange={handleEditChange} placeholder="Write a short professional summary..." />
+                      <div className="cand-full-char-count">{editForm.bio.length} / 200</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
-      <div className="candidate-banner">
+            {/* RESUME CARD */}
+            <div className="cand-full-card">
+              <div className="cand-full-card-header">
+                <h3><FaFileAlt /> Resume</h3>
+                {isEditing && <button className="action-btn" onClick={triggerFileUpload}><FaEdit /> Replace</button>}
+              </div>
+              {resumeName ? (
+                <div>
+                  <div className="cand-full-resume-box">
+                    <FaFileAlt className="cand-full-resume-icon" />
+                    <div className="cand-full-resume-info">
+                      <h4>{resumeName}</h4>
+                      <p>Uploaded • {atsScore > 0 ? `${atsScore}% Match` : 'Not scored'}</p>
+                    </div>
+                    <span className="cand-full-resume-badge">AI Score: {atsScore}/100</span>
+                  </div>
+                  <div className="cand-full-resume-actions">
+                    <button><FaDownload /> Download</button>
+                    {isEditing && <button className="cand-full-resume-replace-btn" onClick={triggerFileUpload}><FaEdit /> Replace</button>}
+                    {isEditing && <button style={{ color: '#ef4444' }}><FaTrash /> Delete</button>}
+                  </div>
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '20px 0', color: '#718096' }}>
+                  <p>No resume uploaded yet.</p>
+                  {isEditing && <button onClick={triggerFileUpload} style={{ marginTop: '10px', background: '#e67e22', color: 'white', border: 'none', padding: '8px 20px', borderRadius: '6px', cursor: 'pointer' }}>Upload Resume</button>}
+                </div>
+              )}
+            </div>
 
-        <div>
+            {/* SKILLS CARD */}
+            <div className="cand-full-card">
+              <div className="cand-full-card-header">
+                <h3><FaCode /> Skills</h3>
+                {isEditing && <button className="action-btn" onClick={() => navigate('/candidate/resume')}><FaEdit /> Add Skill</button>}
+              </div>
+              <div className="cand-full-tags">
+                {skills.length > 0 ? skills.map((s, i) => <span key={i} className="cand-full-chip">{s}</span>) : <p style={{ color: '#718096', fontSize: '13px' }}>Upload a resume to detect your skills.</p>}
+              </div>
+            </div>
 
-          <h1>
-            {user.name || "Candidate"}
-          </h1>
+            {/* EXPERIENCE CARD */}
+            <div className="cand-full-card">
+              <div className="cand-full-card-header">
+                <h3><FaBriefcase /> Experience</h3>
+                {isEditing && <button className="action-btn" onClick={() => navigate('/candidate/resume')}><FaEdit /> Add Experience</button>}
+              </div>
+              {applications.length > 0 ? applications.slice(0, 2).map((app, i) => (
+                <div key={i} className="cand-full-timeline">
+                  <div className="cand-full-tl-logo" style={{ background: '#fef3c7', color: '#eab308' }}>{app.company?.charAt(0) || 'C'}</div>
+                  <div className="cand-full-tl-content">
+                    <h4>{app.jobTitle}</h4>
+                    <p>{app.company || 'Company'} • {app.appliedDate ? new Date(app.appliedDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Recent'}</p>
+                    <ul><li>Working on full-stack development using modern frameworks.</li></ul>
+                  </div>
+                </div>
+              )) : <p style={{ color: '#718096', fontSize: '13px', padding: '10px 0' }}>No experience recorded yet.</p>}
+            </div>
 
-          <p>
-            {user.headline || "Professional Headline Not Added"}
-            {" . "} 
-            {user.location || "Location Not Added"}
-          </p>
+            {/* EXACT UI COPY: PROJECTS (MOCK) */}
+            <div className="cand-full-card">
+              <div className="cand-full-card-header"><h3><FaProjectDiagram /> Projects</h3>{isEditing && <button className="action-btn"><FaEdit /> Add Project</button>}</div>
+              <div className="cand-full-timeline">
+                <div className="cand-full-tl-logo" style={{ background: '#eef4ff', color: '#0d6efd' }}><FaCode /></div>
+                <div className="cand-full-tl-content">
+                  <h4>AIHIRE - AI Powered Recruitment Platform</h4>
+                  <p>A full-stack recruitment platform with AI resume screening and interview scheduling.</p>
+                  <div className="cand-full-tags" style={{ marginTop: '6px' }}><span className="cand-full-chip" style={{ background: '#eef4ff', color: '#0d6efd' }}>React</span><span className="cand-full-chip" style={{ background: '#eef4ff', color: '#0d6efd' }}>FastAPI</span></div>
+                </div>
+              </div>
+            </div>
 
-          <div
-            style={{
-              marginTop: "15px"
-            }}
-          >
+            {/* EXACT UI COPY: EDUCATION (MOCK) */}
+            <div className="cand-full-card">
+              <div className="cand-full-card-header"><h3><FaGraduationCap /> Education</h3>{isEditing && <button className="action-btn"><FaEdit /> Add Education</button>}</div>
+              <div className="cand-full-timeline">
+                <div className="cand-full-tl-logo" style={{ background: '#f3e8ff', color: '#8b5cf6' }}><FaGraduationCap /></div>
+                <div className="cand-full-tl-content">
+                  <h4>B.Tech in Computer Science</h4>
+                  <p>Anna University, Chennai • 2019 - 2023 • CGPA: 8.7 / 10.0</p>
+                </div>
+              </div>
+            </div>
 
-            <p>
-              Profile Completion: {profileCompletion}%
-            </p>
-
-            <div
-              style={{
-                width: "250px",
-                height: "8px",
-                background: "rgba(255,255,255,.2)",
-                borderRadius: "10px",
-                overflow: "hidden"
-              }}
-            >
-
-              <div
-                style={{
-                  width: `${profileCompletion}%`,
-                  height: "100%",
-                  background: "#34d399",
-                  borderRadius:"10px"
-                }}
-              />
-
+            {/* EXACT UI COPY: CERTIFICATIONS (MOCK) */}
+            <div className="cand-full-card">
+              <div className="cand-full-card-header"><h3><FaCertificate /> Certifications</h3>{isEditing && <button className="action-btn"><FaEdit /> Add Certification</button>}</div>
+              <div className="cand-full-timeline">
+                <div className="cand-full-tl-logo" style={{ background: '#fdf2e9', color: '#e67e22' }}><FaCrown /></div>
+                <div className="cand-full-tl-content">
+                  <h4>AWS Cloud Practitioner</h4>
+                  <p>Amazon Web Services • Issued Feb 2024 • <a href="#" style={{ color: '#e67e22' }}>View Credential</a></p>
+                </div>
+              </div>
             </div>
 
           </div>
 
-        </div>
-
-        <div
-          style={{
-            textAlign: "center"
-          }}
-        >
-
-          <FaUserCircle
-            style={{
-              fontSize: "90px"
-            }}
-          />
-
-          <br />
-
-<button
-className="profile-edit-btn"
-onClick={() => setEditing(true)}
->
-  <FaEdit />
-  Edit Profile
-</button>
-
-        </div>
-
-      </div>
-
-      {/* STATS */}
-
-      <div className="candidate-stats">
-
-        <div className="candidate-stat">
-
-          <div className="stat-icon blue">
-            <FaBriefcase />
-          </div>
-
-          <div>
-            <h3>Experience</h3>
-            <h2>
-              {user.experience || "0"}Y
-            </h2>
-          </div>
-
-        </div>
-
-        <div className="candidate-stat">
-
-          <div className="stat-icon green">
-            <FaCode />
-          </div>
-
-<div>
-
-    <h3
-        style={{
-            color: "#64748B",
-            marginTop: "5px"
-        }}
-    >Skills Detected
-    </h3>
-    <p
-        style={{
-            fontSize: "30px",
-            margin: "0",
-            color: "#090909"
-        }}
-    >
-        {skills.length}
-    </p>
-
-</div>
-
-        </div>
-
-        <div className="candidate-stat">
-
-          <div className="stat-icon purple">
-            <FaFileAlt />
-          </div>
-
-          <div>
-            <h3>Resume Score</h3>
-            <h2>{user.atsScore || 0}%</h2>
-          </div>
-
-        </div>
-
-        <div className="candidate-stat">
-
-          <div className="stat-icon orange">
-            <FaGraduationCap />
-          </div>
-
-          <div>
-            <h3>Education</h3>
-            <h2>{user.education || "N/A"}</h2>
-          </div>
-
-        </div>
-
-      </div>
-
-      {/* ABOUT */}
-
-      <div className="candidate-panel">
-
-        <h2>
-          About Me
-        </h2>
-
-        <p
-          style={{
-            color: "#94A3B8",
-            lineHeight: "1.8"
-          }}
-        >
-            {user.about || "Tell recruiters about yourself by updating your profile."}
-        </p>
-
-      </div>
-
-      {/* SKILLS */}
-
-      <div className="candidate-panel">
-
-        <h2>
-          Skills
-        </h2>
-
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "12px",
-            marginTop: "20px"
-          }}
-        >
-
-          {skills.map((skill, index) => (
-
-            <span
-              key={index}
-              className="blue-badge"
-            >
-              {skill.trim()}
-            </span>
-
-          ))}
-
-        </div>
-
-      </div>
-
-      {/* PROFESSIONAL INFO */}
-
-      <div className="candidate-panel">
-
-        <h2>
-          Professional Information
-        </h2>
-
-        <table className="recruiter-table">
-
-          <tbody>
-
-            <tr>
-              <td>
-                <FaEnvelope />
-                {" "}
-                Email
-              </td>
-
-              <td>
-                {user.email}
-              </td>
-            </tr>
-
-            <tr>
-              <td>
-                <FaUserTag />
-                {" "}
-                Role
-              </td>
-
-              <td>
-                {user.role || "Candidate"}
-              </td>
-            </tr>
-
-            <tr>
-              <td>
-                <FaMapMarkerAlt />
-                {" "}
-                Location
-              </td>
-
-              <td>
-                {user.location || "Not Added"}
-              </td>
-            </tr>
-
-            <tr>
-              <td>
-                <FaLinkedin /> LinkedIn
-              </td>
-
-              <td>
-                {user.linkedin || "Not Added"}
-              </td>
-            </tr>
-
-            <tr>
-              <td>
-                <FaGlobe />
-                {" "}
-                Portfolio
-              </td>
-
-              <td>
-                {user.portfolio || "Not Added"}
-              </td>
-            </tr>
-
-          </tbody>
-
-        </table>
-
-      </div>
-
-      {/* RESUME */}
-
-      <div className="candidate-panel">
-
-        <h2>
-          Resume
-        </h2>
-
-        <div className="application-item">
-
-          <div>
-            <h3>
-              {user.resumeName || "No Resume Uploaded"}
-            </h3>
-
-            <p>
-              {user.resumeName
-              ? "Resume uploaded successfully"
-              : "Please upload your resume"}
-            </p>
+          {/* RIGHT COLUMN */}
+          <div className="cand-full-right-col">
+            
+            {/* PROFILE COMPLETION */}
+            <div className="cand-full-card">
+              <div className="cand-full-card-header"><h3>Profile Completion</h3></div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                <div className="cand-full-avatar-box" style={{ width: '85px', height: '85px', position: 'relative' }}>
+                  <svg width="85" height="85" viewBox="0 0 85 85" style={{ transform: 'rotate(-90deg)' }}>
+                    <circle cx="42.5" cy="42.5" r="36" fill="none" stroke="#eef2f6" strokeWidth="7" />
+                    <circle cx="42.5" cy="42.5" r="36" fill="none" stroke="#e67e22" strokeWidth="7" strokeDasharray="226.19" strokeDashoffset={226.19 - (226.19 * completionPercent / 100)} strokeLinecap="round" />
+                  </svg>
+                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                    <span style={{ display: 'block', fontSize: '18px', fontWeight: '700', color: '#1a202c' }}>{completionPercent}%</span>
+                    <span style={{ display: 'block', fontSize: '10px', color: '#718096' }}>Complete</span>
+                  </div>
+                </div>
+                <p style={{ fontSize: '13px', color: '#718096', textAlign: 'center', margin: 0 }}><strong>Great!</strong> Your profile is almost complete.</p>
+              </div>
+            </div>
+
+            {/* APPLICATION STATISTICS */}
+            <div className="cand-full-card">
+              <div className="cand-full-card-header"><h3><FaFileAlt /> Application Statistics</h3></div>
+              <div className="cand-full-stat-item"><div className="cand-full-stat-icon"><FaBriefcase /></div><span className="cand-full-stat-text">Jobs Applied</span><span className="cand-full-stat-val">{totalApps}</span></div>
+              <div className="cand-full-stat-item"><div className="cand-full-stat-icon"><FaCalendarAlt /></div><span className="cand-full-stat-text">Saved Jobs</span><span className="cand-full-stat-val">18</span></div>
+              <div className="cand-full-stat-item"><div className="cand-full-stat-icon"><FaUserCheck /></div><span className="cand-full-stat-text">Interviews</span><span className="cand-full-stat-val">{scheduledInterviews}</span></div>
+              <div className="cand-full-stat-item" style={{ borderBottom: 'none' }}><div className="cand-full-stat-icon"><FaEye /></div><span className="cand-full-stat-text">Profile Views</span><span className="cand-full-stat-val">{profileViews}</span></div>
+            </div>
+
+            {/* AI INSIGHTS */}
+            <div className="cand-full-card">
+              <div className="cand-full-card-header"><h3><FaUserTie /> AI Insights</h3></div>
+              <div className="cand-full-progress-wrap">
+                <div className="cand-full-progress-row"><span>Resume Match Score</span><span>{atsScore}%</span></div>
+                <div className="cand-full-progress-bar"><div className="cand-full-progress-fill" style={{ width: `${atsScore}%` }}></div></div>
+              </div>
+              <div className="cand-full-progress-wrap">
+                <div className="cand-full-progress-row"><span>Interview Readiness</span><span>78%</span></div>
+                <div className="cand-full-progress-bar"><div className="cand-full-progress-fill" style={{ width: '78%' }}></div></div>
+              </div>
+            </div>
+
+            {/* JOB PREFERENCES */}
+            <div className="cand-full-card">
+              <div className="cand-full-card-header"><h3><FaCrown /> Job Preferences</h3>{isEditing && <button className="action-btn"><FaEdit /> Edit</button>}</div>
+              <div style={{ fontSize: '14px', color: '#4a5568', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div><strong>Preferred Role:</strong> Full Stack Developer</div>
+                <div><strong>Work Mode:</strong> Remote / Hybrid</div>
+                <div><strong>Employment Type:</strong> Full Time</div>
+              </div>
+            </div>
+
+            {/* ACCOUNT SETTINGS */}
+            <div className="cand-full-card">
+              <div className="cand-full-card-header"><h3><FaShieldAlt /> Account & Settings</h3></div>
+              <div className="cand-full-toggle-row"><span>Email Notifications</span><div className="cand-full-toggle on"></div></div>
+              <div className="cand-full-toggle-row"><span>Open to Work</span><div className="cand-full-toggle on"></div></div>
+              <div className="cand-full-toggle-row" style={{ borderBottom: 'none' }}><span>Profile Visibility</span><span style={{ fontSize: '13px', color: '#718096' }}>Public</span></div>
+              <button className="cand-full-resume-replace-btn" style={{ width: '100%', marginTop: '15px', justifyContent: 'center', display: 'flex' }}>Change Password</button>
+            </div>
 
           </div>
-
-          <span className="green-badge">
-           ATS Score<br />
-            <center>{user.atsScore || 0}%</center>
-          </span>
-
         </div>
 
-      </div>
-
-      {/* ACTIVITY */}
-
-      <div className="candidate-panel">
-
-        <h2>
-          Recent Activity
-        </h2>
-
-{
-activities.length > 0 ? (
-
-    activities.map((activity,index)=>(
-
-        <div
-            key={index}
-            className="application-item"
-        >
-
-            <p>✅ {activity.title}</p>
-
-            <span>
-                {activity.date
-                    ? new Date(activity.date).toLocaleDateString()
-                    : ""}
-            </span>
-
-        </div>
-
-    ))
-
-) : (
-
-    <div className="application-item">
-
-        <p>No recent activity available.</p>
-
-    </div>
-
-)
-}
+        {/* FLOATING SAVE BAR */}
+        {isEditing && (
+          <div className="cand-full-save-bar">
+            <span>⚠️ Don't forget to save your changes</span>
+            <div><button className="fb-cancel" onClick={cancelEdit}>Cancel</button><button className="fb-save" onClick={saveProfile} style={{ marginLeft: '10px' }}>Save Changes</button></div>
+          </div>
+        )}
 
       </div>
-
-{
-editing && (
-
-<div className="profile-settings-overlay">
-
-  <div className="profile-settings-container">
-
-    {/* LEFT SIDEBAR */}
-
-<div className="profile-sidebar">
-
-  <span className="sidebar-role">
-    CANDIDATE
-  </span>
-
-  <h2>My Profile</h2>
-
-  <div className="sidebar-section">
-    PERSONAL
-  </div>
-
-<div
-className={`sidebar-menu ${activeTab==="profile"?"active":""}`}
-onClick={()=>setActiveTab("profile")}
->
-<FaUser />
-<span>Profile</span>
-</div>
-
-
-<div
-className={`sidebar-menu ${activeTab==="resume"?"active":""}`}
-onClick={()=>setActiveTab("resume")}
->
-<FaFileAlt />
-<span>Resume</span>
-</div>
-
-
-<div
-className={`sidebar-menu ${activeTab==="account"?"active":""}`}
-onClick={()=>setActiveTab("account")}
->
-<FaLock />
-<span>Account</span>
-</div>
-
-
-
-<div className="sidebar-section">
-PROFESSIONAL
-</div>
-
-
-<div
-className={`sidebar-menu ${activeTab==="education"?"active":""}`}
-onClick={()=>setActiveTab("education")}
->
-<FaGraduationCap />
-<span>Education</span>
-</div>
-
-
-<div
-className={`sidebar-menu ${activeTab==="experience"?"active":""}`}
-onClick={()=>setActiveTab("experience")}
->
-<FaBriefcase />
-<span>Experience</span>
-</div>
-
-
-<div
-className={`sidebar-menu ${activeTab==="skills"?"active":""}`}
-onClick={()=>setActiveTab("skills")}
->
-<FaTools />
-<span>Skills</span>
-</div>
-<div className="sidebar-footer">
-
-  <p>
-    Profile Completion
-    <strong>{profileCompletion}%</strong>
-  </p>
-
-  <div className="completion-bar">
-    <div
-      className="completion-fill"
-      style={{
-        width: `${profileCompletion}%`
-      }}
-    />
-  </div>
-
-</div>
-
-</div>
-
-    {/* RIGHT CONTENT */}
-
-    <div className="profile-content">
-
-      <button
-        className="profile-close-btn"
-        onClick={() => setEditing(false)}
-      >
-        ✕
-      </button>
-<div className="profile-header">
-
-  <div className="profile-breadcrumb">
-    PERSONAL SETTINGS &gt; PROFILE
-  </div>
-
-  <button
-    className="profile-close-btn"
-    onClick={() => setEditing(false)}
-  >
-    <FaTimes />
-  </button>
-
-</div>
-
-<h1 className="profile-title">
-  Profile
-</h1>
-
-<p className="profile-subtitle">
-  Manage your personal information and professional details.
-</p>
-{
-activeTab === "profile" && (
-    <>
-<div className="profile-avatar-section">
-
-  <div className="profile-avatar">
-
-    {formData.name
-  ? formData.name.charAt(0).toUpperCase()
-  : user.name
-  ? user.name.charAt(0).toUpperCase()
-  : "U"}
-
-    <input
-  type="file"
-  id="profileImage"
-  accept="image/*"
-  style={{ display: "none" }}
-  onChange={handleImageUpload}
-/>
-
-  <button
-    className="avatar-upload-btn"
-    onClick={() =>
-      document
-        .getElementById("profileImage")
-        .click()
-    }
-  >
-    <FaCamera />
-  </button>
-
-</div>
-</div>
-
-<h3 className="section-title">
-  PERSONAL INFORMATION
-</h3>
-
-<div className="profile-form">
-
-  {/* ROW 1 */}
-
-  <div className="form-group">
-    <label>First Name</label>
-
-    <input
-      name="name"
-      value={formData.name}
-      onChange={handleChange}
-      placeholder="First name"
-    />
-  </div>
-
-  <div className="form-group">
-    <label>Last Name</label>
-
-    <input
-      name="lastname"
-      value={formData.lastName || ""}
-      onChange={handleChange}
-      placeholder="Last name"
-    />
-  </div>
-
-  {/* EMAIL */}
-
-  <div className="form-group full-width">
-    <label>Email Address</label>
-
-    <input
-      value={user.email || ""}
-      disabled
-    />
-  </div>
-
-  {/* PHONE */}
-
-  <div className="form-group full-width">
-    <label>Phone Number</label>
-
-    <input
-      name="phone"
-      value={formData.phone || ""}
-      onChange={handleChange}
-      placeholder="Your phone number"
-    />
-  </div>
-
-  {/* HEADLINE */}
-
-  <div className="form-group full-width">
-    <label>Professional Headline</label>
-
-    <input
-      name="headline"
-      value={formData.headline || ""}
-      onChange={handleChange}
-      placeholder="e.g. Senior Software Engineer"
-    />
-  </div>
-
-  {/* LOCATION */}
-
-  <div className="form-group full-width">
-    <label>Location</label>
-
-    <input
-      name="location"
-      value={formData.location}
-      onChange={handleChange}
-      placeholder="Chennai, India"
-    />
-  </div>
-
-  {/* LINKEDIN */}
-
-  <div className="form-group full-width">
-    <label>LinkedIn Profile</label>
-
-    <input
-      name="linkedin"
-      value={formData.linkedin}
-      onChange={handleChange}
-      placeholder="https://linkedin.com/in/username"
-    />
-  </div>
-
-  {/* PORTFOLIO */}
-
-  <div className="form-group full-width">
-    <label>Portfolio Website</label>
-
-    <input
-      name="portfolio"
-      value={formData.portfolio}
-      onChange={handleChange}
-      placeholder="https://yourportfolio.com"
-    />
-  </div>
-
-    {/* SUMMARY */}
-
-  <div className="form-group full-width">
-    <label>Professional Summary</label>
-
-    <textarea
-      rows="6"
-      name="about"
-      value={formData.about}
-      onChange={handleChange}
-      placeholder="Tell us about your professional background..."
-    />
-  </div>
-
-</div>
-</>
-)
-}
-{
-activeTab==="education" && (
-
-<div className="profile-form">
-
-
-<div className="form-group full-width">
-
-<label>Highest Qualification</label>
-
-<input
-name="education"
-value={formData.education}
-onChange={handleChange}
-placeholder="B.Sc Computer Science"
-/>
-
-</div>
-
-
-<div className="form-group">
-
-<label>College / University</label>
-
-<input
-name="college"
-value={formData.college || ""}
-onChange={handleChange}
-/>
-
-</div>
-
-
-<div className="form-group">
-
-<label>Graduation Year</label>
-
-<input
-name="graduationYear"
-value={formData.graduationYear || ""}
-onChange={handleChange}
-/>
-
-</div>
-
-
-</div>
-
-)
-}
-
-{
-activeTab==="experience" && (
-
-<div className="profile-form">
-
-
-<div className="form-group">
-
-<label>Total Experience</label>
-
-<input
-name="experience"
-value={formData.experience}
-onChange={handleChange}
-placeholder="2 Years"
-/>
-
-</div>
-
-
-<div className="form-group">
-
-<label>Current Position</label>
-
-<input
-name="headline"
-value={formData.headline}
-onChange={handleChange}
-/>
-
-</div>
-
-
-<div className="form-group full-width">
-
-<label>Company</label>
-
-<input
-name="company"
-value={formData.company || ""}
-onChange={handleChange}
-/>
-
-</div>
-
-
-</div>
-
-)
-}
-
-{
-activeTab==="skills" && (
-
-<div className="profile-form">
-
-
-<div className="form-group full-width">
-
-<label>Your Skills</label>
-
-<textarea
-
-name="skills"
-
-value={formData.skills}
-
-onChange={handleChange}
-
-placeholder="React, JavaScript, FastAPI, MongoDB"
-
-/>
-
-</div>
-
-
-</div>
-
-)
-}
-
-{
-activeTab==="resume" && (
-
-<div className="resume-box">
-
-
-<FaFileAlt size={50}/>
-
-
-<h2>
-{user.resumeName || "No Resume Uploaded"}
-</h2>
-
-<p>
-ATS Score : {user.atsScore || 0}%
-</p>
-
-
-<button className="profile-save-btn">
-Upload Resume
-</button>
-
-
-</div>
-
-)
-}
-
-{
-activeTab==="account" && (
-
-<div className="profile-form">
-
-
-<div className="form-group full-width">
-
-<label>Password</label>
-
-<input
-type="password"
-placeholder="Change password"
-/>
-
-</div>
-
-
-
-<div className="form-group full-width">
-
-<label>Confirm Password</label>
-
-<input
-type="password"
-/>
-
-</div>
-
-
-</div>
-
-)
-}
-
-      <div className="profile-modal-actions">
-
-        <button
-          className="profile-cancel-btn"
-          onClick={() => setEditing(false)}
-        >
-          Cancel
-        </button>
-
-        <button
-          className="profile-save-btn"
-          onClick={saveProfile}
-        >
-          <FaCheck />
-          Save Changes
-        </button>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</div>
-
-)
-}
     </DashboardLayout>
-
   );
 }
 
