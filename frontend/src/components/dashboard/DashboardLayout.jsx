@@ -5,7 +5,7 @@ import Header from "./Header";
 import "../../styles/dashboard.css";
 import API from "../../api/api";
 
-function DashboardLayout({ children }) {
+function DashboardLayout({ children, customTitle, customSubtitle }) {
   const [user, setUser] = useState(null);
   const location = useLocation();
 
@@ -23,37 +23,64 @@ function DashboardLayout({ children }) {
     }
   };
 
-  // Get current page name from location
   const getCurrentPage = () => {
     const path = location.pathname;
+
     const pageMap = {
-      "/recruiter-dashboard": "Dashboard",
-      "/jobs": "Jobs",
-      "/candidates": "Candidates",
-      "/recruiter-interviews": "Interviews",
-      "/assessments": "Assessments",
-      "/ai-interview-results": "AI Interviews",
-      "/reports": "Reports",
-      "/messages": "Messages",
-      "/notifications": "Notifications",
-      "/templates": "Templates",
-      "/settings": "Settings",
-      "/admin-dashboard": "Dashboard",
-      "/candidate-dashboard": "Dashboard"
+      // Recruiter
+      "/recruiter/dashboard": "Dashboard",
+      "/recruiter/jobs": "Jobs",
+      "/recruiter/candidates": "Candidates",
+      "/recruiter/interviews": "Interviews",
+      "/recruiter/assessments": "Assessments",
+      "/recruiter/ai-interview-results": "AI Interviews",
+      "/recruiter/reports": "Reports",
+      "/recruiter/messages": "Messages",
+      "/recruiter/activity": "Activities",
+      "/recruiter/notifications": "Notifications",
+      "/recruiter/templates": "Templates",
+      "/recruiter/settings": "Settings",
+      "/recruiter/profile": "Profile",
+
+      // Admin
+      "/admin/dashboard": "Dashboard",
+      "/admin/organizations": "Organizations",
+      "/admin/users": "Users",
+      "/admin/roles": "Permissions",
+      "/admin/analytics": "Analytics",
+      "/admin/settings": "Settings",
+
+      // Candidate
+      "/candidate/dashboard": "Dashboard",
+      "/candidate/jobs": "Jobs",
+      "/candidate/applications": "Applications",
+      "/candidate/interviews": "Interviews",
+      "/candidate/resume": "Resume",
+      "/candidate/profile": "Profile",
+      "/candidate/saved-jobs": "Saved Jobs",        // NEW
+      "/candidate/activity": "My Activity",         // NEW
+      "/candidate/messages": "Messages"             // NEW
     };
+
     return pageMap[path] || "Dashboard";
   };
 
   return (
     <div className="dashboard-container">
       <Sidebar />
+
       <div className="dashboard-main">
         <Header
           userName={user?.name || "User"}
           role={user?.role || "candidate"}
           currentPage={getCurrentPage()}
+          customTitle={customTitle}
+          customSubtitle={customSubtitle}
         />
-        <main className="dashboard-content">{children}</main>
+
+        <main className="dashboard-content">
+          {children}
+        </main>
       </div>
     </div>
   );

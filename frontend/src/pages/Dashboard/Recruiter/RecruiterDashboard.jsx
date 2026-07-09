@@ -1,6 +1,7 @@
 import DashboardLayout from "../../../components/dashboard/DashboardLayout";
 import API from "../../../api/api";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import {
   FaUsers,
@@ -23,12 +24,15 @@ import {
   FaRocket,
   FaMagic,
   FaLightbulb,
-  FaCogs
+  FaCogs,
+  FaArrowUp,
+  FaEye
 } from "react-icons/fa";
 
 import { MdPsychology, MdAutoAwesome, MdOutlineLightbulb, MdOutlineSmartToy } from "react-icons/md";
 
 function RecruiterDashboard() {
+  const navigate = useNavigate();
   const [applications, setApplications] = useState([]);
   const [interviews, setInterviews] = useState([]);
   const [jobs, setJobs] = useState([]);
@@ -80,7 +84,7 @@ function RecruiterDashboard() {
     return Math.round((count / totalApplications) * 100);
   };
 
-  // Calculate trend percentages (mock - you can replace with actual trend data from API)
+  // Calculate trend percentages (mock - replace with actual trend data from API)
   const getTrend = (index) => {
     const trends = [64.6, 59.3, 67.7, 43.1, 25, 71.4];
     return trends[index % trends.length];
@@ -108,16 +112,7 @@ function RecruiterDashboard() {
     { 
       label: 'AI Interview', 
       count: aiInterview, 
-      // AI Icon Options - Choose one by uncommenting:
-      //icon: FaBrain,        // Option 1: Brain icon (Recommended)
-      icon: MdPsychology,   // Option 2: Psychology/Brain (Material Design)
-      //icon: FaMicrochip,    // Option 3: Microchip/AI processing
-      // icon: FaRocket,       // Option 4: Rocket/AI innovation
-      //icon: FaMagic,        // Option 5: Magic/AI automation
-      // icon: FaLightbulb,    // Option 6: Lightbulb/AI insights
-      //icon: MdAutoAwesome,  // Option 7: Auto awesome/sparkle
-      // icon: FaCogs,         // Option 8: Cogs/AI automation
-      // icon: MdOutlineSmartToy, // Option 9: Smart toy (robot)
+      icon: MdPsychology,
       color: '#10B981',
       hasTrend: true,
       trend: getTrend(1),
@@ -161,13 +156,13 @@ function RecruiterDashboard() {
     },
   ];
 
-  // Quick stats data
-  const quickStats = [
-    { label: 'Active Jobs', value: jobs.length, icon: FaBriefcase, color: '#3B82F6', bg: '#EFF6FF' },
-    { label: 'Total Candidates', value: totalApplications, icon: FaUsers, color: '#10B981', bg: '#ECFDF5' },
-    { label: 'Shortlisted', value: shortlisted, icon: FaUserCheck, color: '#8B5CF6', bg: '#EDE9FE' },
-    { label: 'Upcoming Interviews', value: interviews.length, icon: FaCalendarAlt, color: '#F59E0B', bg: '#FEF3C7' },
-  ];
+  // Quick stats data with navigation
+const quickStats = [
+  { label: 'Active Jobs', value: jobs.length, icon: FaBriefcase, color: '#3B82F6', bg: '#EFF6FF', path: '/recruiter/jobs' },
+  { label: 'Total Candidates', value: totalApplications, icon: FaUsers, color: '#10B981', bg: '#ECFDF5', path: '/recruiter/candidates' },
+  { label: 'Shortlisted', value: shortlisted, icon: FaUserCheck, color: '#8B5CF6', bg: '#EDE9FE', path: '/recruiter/candidates' },
+  { label: 'Upcoming Interviews', value: interviews.length, icon: FaCalendarAlt, color: '#F59E0B', bg: '#FEF3C7', path: '/recruiter/interviews' },
+];
 
   // Recent applications
   const recentApplications = applications.slice(0, 5);
@@ -188,6 +183,36 @@ function RecruiterDashboard() {
     } catch {
       return dateString;
     }
+  };
+
+  // Navigate to candidate detail
+const handleViewCandidate = (appId) => {
+  navigate(`/recruiter/candidates/${appId}`);
+};
+
+  // Navigate to jobs page
+  const handleViewAllJobs = () => {
+    navigate('/recruiter/jobs');
+  };
+
+  // Navigate to candidates page
+  const handleViewAllCandidates = () => {
+    navigate('/recruiter/candidates');
+  };
+
+  // Navigate to interviews page
+  const handleViewAllInterviews = () => {
+    navigate('/recruiter/interviews');
+  };
+
+  // Navigate to schedule interview
+  const handleScheduleInterview = () => {
+    navigate('/recruiter/interviews');
+  };
+
+  // Navigate to AI recommendations
+  const handleViewRecommendations = () => {
+    navigate('/recruiter/candidates');
   };
 
   // Loading state
@@ -222,7 +247,12 @@ function RecruiterDashboard() {
           {quickStats.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <div className="stat-card-final" key={index}>
+              <div 
+                className="stat-card-final clickable" 
+                key={index}
+                onClick={() => navigate(stat.path)}
+                style={{ cursor: 'pointer' }}
+              >
                 <div className="stat-icon-final" style={{ background: stat.bg, color: stat.color }}>
                   <Icon />
                 </div>
@@ -275,13 +305,7 @@ function RecruiterDashboard() {
         {/* AI HIRING ASSISTANT */}
         <div className="ai-assistant-final">
           <div className="ai-icon-final">
-            {/* AI Assistant Icon - Choose one */}
-            {/* <FaBrain />        Option 1: Brain */}
-            {/* <MdPsychology />   Option 2: Psychology */}
-            {/* <FaMicrochip />    Option 3: Microchip */}
-             <FaRocket />       {/*Option 4: Rocket */}
-            {/* <FaMagic />       Option 5: Magic */}
-            {/* <FaLightbulb />    Option 6: Lightbulb */}
+            <FaRocket />
           </div>
           <div className="ai-content-final">
             <h3>AI Hiring Assistant</h3>
@@ -291,10 +315,24 @@ function RecruiterDashboard() {
                 : 'No candidates currently shortlisted. AI will analyze new applications as they come in.'}
             </p>
             <div className="ai-tags-final">
-              {shortlisted > 0 && <span className="ai-tag-final">{shortlisted} new matches</span>}
-              {interviews.length > 0 && <span className="ai-tag-final">{interviews.length} upcoming interviews</span>}
-              {screening > 0 && <span className="ai-tag-final">{screening} pending review</span>}
-              <span className="ai-tag-final primary">View recommendations</span>
+              {shortlisted > 0 && (
+                <span className="ai-tag-final" onClick={handleViewAllCandidates}>
+                  {shortlisted} new matches
+                </span>
+              )}
+              {interviews.length > 0 && (
+                <span className="ai-tag-final" onClick={handleViewAllInterviews}>
+                  {interviews.length} upcoming interviews
+                </span>
+              )}
+              {screening > 0 && (
+                <span className="ai-tag-final" onClick={handleViewAllCandidates}>
+                  {screening} pending review
+                </span>
+              )}
+              <span className="ai-tag-final primary" onClick={handleViewRecommendations}>
+                View recommendations
+              </span>
             </div>
           </div>
         </div>
@@ -304,7 +342,9 @@ function RecruiterDashboard() {
           <div className="table-card-final">
             <div className="table-header-final">
               <h3>Recent Applications</h3>
-              <button className="view-btn-final">View All</button>
+              <button className="view-btn-final" onClick={handleViewAllCandidates}>
+                View All
+              </button>
             </div>
             <table className="recruiter-table-final">
               <thead>
@@ -318,7 +358,12 @@ function RecruiterDashboard() {
               <tbody>
                 {recentApplications.length > 0 ? (
                   recentApplications.map((app, index) => (
-                    <tr key={app._id || index}>
+                    <tr 
+                      key={app._id || index} 
+                      onClick={() => handleViewCandidate(app._id)}
+                      style={{ cursor: 'pointer' }}
+                      className="clickable-row"
+                    >
                       <td>
                         <div className="candidate-final">
                           <div className="avatar-final">
@@ -348,7 +393,9 @@ function RecruiterDashboard() {
           <div className="table-card-final">
             <div className="table-header-final">
               <h3>Upcoming Interviews</h3>
-              <button className="view-btn-final">Schedule</button>
+              <button className="view-btn-final" onClick={handleScheduleInterview}>
+                Schedule
+              </button>
             </div>
             <table className="recruiter-table-final">
               <thead>
@@ -362,7 +409,12 @@ function RecruiterDashboard() {
               <tbody>
                 {upcomingInterviews.length > 0 ? (
                   upcomingInterviews.map((interview, index) => (
-                    <tr key={interview._id || index}>
+                    <tr 
+                      key={interview._id || index}
+                      onClick={() => handleViewAllInterviews()}
+                      style={{ cursor: 'pointer' }}
+                      className="clickable-row"
+                    >
                       <td>
                         <div className="candidate-final">
                           <div className="avatar-final">

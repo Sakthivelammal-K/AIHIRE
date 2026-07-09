@@ -29,6 +29,7 @@ function ResumeScreening() {
   const [candidate, setCandidate] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [generatingReport, setGeneratingReport] = useState(false);
 
   useEffect(() => {
     loadAnalysis();
@@ -40,14 +41,99 @@ function ResumeScreening() {
     try {
       const res = await API.get(`/resumes/report/${jobId}/${email}`);
       console.log("Resume Report :", res.data);
-      setCandidate(res.data);
+      
+      if (res.data && res.data.message) {
+        console.warn("Backend says:", res.data.message);
+        await generateAndFetchReport();
+      } else {
+        setCandidate(res.data);
+        setLoading(false);
+      }
     } catch (error) {
-      console.log(error);
-      setError("Failed to load resume analysis. Please try again.");
-      setCandidate(null);
+      console.log("Initial fetch error:", error);
+      await generateAndFetchReport();
+    }
+  };
+
+  const generateAndFetchReport = async () => {
+    setGeneratingReport(true);
+    setError(null);
+    try {
+      console.log("Triggering /resumes/screen to generate report...");
+      
+      const screenRes = await API.post("/resumes/screen", {
+        email: email,
+        jobId: jobId
+      });
+      
+      if (screenRes.data && screenRes.data.message) {
+        setError(screenRes.data.message);
+        setGeneratingReport(false);
+        setLoading(false);
+        return;
+      }
+
+      console.log("Screening triggered successfully. Waiting 2s for DB...");
+      await new Promise(r => setTimeout(r, 2000));
+      
+      const retryRes = await API.get(`/resumes/report/${jobId}/${email}`);
+      
+      if (retryRes.data && !retryRes.data.message) {
+        setCandidate(retryRes.data);
+      } else {
+        setError("Report still generating. Please refresh the page in a few seconds.");
+      }
+    } catch (genError) {
+      console.error("Error generating report:", genError);
+      setError("Could not generate report. The candidate may not have uploaded a resume.");
     } finally {
+      setGeneratingReport(false);
       setLoading(false);
     }
+  };
+
+  // --- DOWNLOAD FUNCTION ---
+  const handleDownloadReport = async () => {
+    if (!candidate) return;
+    
+    try {
+      const res = await API.get(`/resumes/report/${jobId}/${email}`);
+      const reportData = res.data;
+
+      const jsonString = JSON.stringify(reportData, null, 2);
+      const blob = new Blob([jsonString], { type: "application/json" });
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `Resume_Report_${candidate.candidateName || email}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error downloading report:", error);
+      alert("Failed to download report. Please try again.");
+    }
+  };
+
+  // --- ULTRA-CLEAN SKILLS PARSER ---
+  // This handles ANY weird format your backend throws at it.
+  const parseSkillData = (data) => {
+    if (!data) return [];
+    
+    // If it's already a real array, return it as is
+    if (Array.isArray(data)) return data;
+
+    // If it's a string, nuke brackets, quotes, and whitespace
+    if (typeof data === 'string') {
+      // Replace all brackets, square brackets, and single/double quotes
+      let cleaned = data.replace(/[\[\]'"“”]/g, '').trim();
+      // Split by comma and clean up each part
+      return cleaned.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    }
+    
+    return [];
   };
 
   const getScoreColor = (score) => {
@@ -76,30 +162,28 @@ function ResumeScreening() {
     return <FaThumbsDown />;
   };
 
-  // Loading state
-  if (loading) {
+  if (loading || generatingReport) {
     return (
       <DashboardLayout>
         <div className="resume-loading-container">
           <FaSpinner className="loading-spinner" />
-          <p>Analyzing resume with AI...</p>
+          <p>{generatingReport ? "Generating AI screening report..." : "Analyzing resume with AI..."}</p>
           <span className="loading-subtitle">This may take a few moments</span>
         </div>
       </DashboardLayout>
     );
   }
 
-  // Error state
-  if (error || !candidate || candidate.message) {
+  if (error || !candidate) {
     return (
       <DashboardLayout>
         <div className="resume-error-container">
           <div className="resume-error-icon">
             <FaExclamationTriangle />
           </div>
-          <h3>Resume Report Not Found</h3>
-          <p>{error || candidate?.message || "We couldn't find the resume analysis for this candidate."}</p>
-          <button className="back-to-candidates-btn" onClick={() => navigate("/candidates")}>
+          <h3>Resume Report Unavailable</h3>
+          <p>{error || "We couldn't generate the resume analysis for this candidate."}</p>
+          <button className="back-to-candidates-btn" onClick={() => navigate("/recruiter/candidates")}>
             <FaArrowLeft />
             Back to Candidates
           </button>
@@ -111,29 +195,33 @@ function ResumeScreening() {
   return (
     <DashboardLayout>
       <div className="resume-screening-page">
-        {/* BACK BUTTON */}
-        <button className="back-btn" onClick={() => navigate("/candidates")}>
-          <FaArrowLeft />
-          <span>Back to Candidates</span>
-        </button>
+        {/* TOP ACTIONS */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <button className="back-btn" onClick={() => navigate("/recruiter/candidates")} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: '#4a5568' }}>
+            <FaArrowLeft />
+            <span>Back to Candidates</span>
+          </button>
 
-        {/* HEADER */}
-        <div className="resume-header">
-          <div className="resume-header-left">
-            <div className="resume-header-icon">
-              <FaBrain />
-            </div>
-            <div>
-              <h1>AI Resume Screening</h1>
-              <p className="resume-subtitle">AI-powered resume analysis and candidate evaluation</p>
-            </div>
-          </div>
-          <div className="resume-header-right">
-            <button className="download-report-btn">
-              <FaFileAlt />
-              Download Report
-            </button>
-          </div>
+          <button 
+            className="download-report-btn" 
+            onClick={handleDownloadReport}
+            style={{ 
+              padding: '10px 20px', 
+              background: '#e67e22', 
+              color: 'white', 
+              border: 'none', 
+              borderRadius: '6px', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px', 
+              fontSize: '14px', 
+              fontWeight: '500',
+              cursor: 'pointer'
+            }}
+          >
+            <FaFileAlt />
+            Download Report
+          </button>
         </div>
 
         {/* CANDIDATE PROFILE */}
@@ -169,7 +257,6 @@ function ResumeScreening() {
           </div>
         </div>
 
-        {/* SCORE PROGRESS */}
         <div className="resume-score-section">
           <div className="score-section-header">
             <h3>
@@ -179,13 +266,7 @@ function ResumeScreening() {
             <span className="score-percentage">{candidate.atsScore || 0}%</span>
           </div>
           <div className="score-progress-bar">
-            <div 
-              className="score-progress-fill" 
-              style={{ 
-                width: `${candidate.atsScore || 0}%`,
-                background: getScoreColor(candidate.atsScore)
-              }}
-            />
+            <div className="score-progress-fill" style={{ width: `${candidate.atsScore || 0}%`, background: getScoreColor(candidate.atsScore) }} />
           </div>
           <p className="score-description">
             {candidate.atsScore >= 80 
@@ -200,19 +281,16 @@ function ResumeScreening() {
 
         {/* SKILLS GRID */}
         <div className="resume-skills-grid">
-          {/* Matched Skills */}
           <div className="skill-card-enhanced">
             <div className="skill-card-header success">
               <FaCheckCircle />
               <h3>Matched Skills</h3>
-              <span className="skill-count">{candidate.matchedSkills?.length || 0}</span>
+              <span className="skill-count">{parseSkillData(candidate.matchedSkills).length}</span>
             </div>
             <div className="skill-chips">
-              {candidate.matchedSkills?.length > 0 ? (
-                candidate.matchedSkills.map((skill, index) => (
-                  <span key={index} className="skill-chip success-chip-enhanced">
-                    {skill}
-                  </span>
+              {parseSkillData(candidate.matchedSkills).length > 0 ? (
+                parseSkillData(candidate.matchedSkills).map((skill, index) => (
+                  <span key={index} className="skill-chip success-chip-enhanced">{skill}</span>
                 ))
               ) : (
                 <p className="no-skills">No matched skills found</p>
@@ -220,19 +298,16 @@ function ResumeScreening() {
             </div>
           </div>
 
-          {/* Missing Skills */}
           <div className="skill-card-enhanced">
             <div className="skill-card-header danger">
               <FaExclamationTriangle />
               <h3>Missing Skills</h3>
-              <span className="skill-count">{candidate.missingSkills?.length || 0}</span>
+              <span className="skill-count">{parseSkillData(candidate.missingSkills).length}</span>
             </div>
             <div className="skill-chips">
-              {candidate.missingSkills?.length > 0 ? (
-                candidate.missingSkills.map((skill, index) => (
-                  <span key={index} className="skill-chip warning-chip-enhanced">
-                    {skill}
-                  </span>
+              {parseSkillData(candidate.missingSkills).length > 0 ? (
+                parseSkillData(candidate.missingSkills).map((skill, index) => (
+                  <span key={index} className="skill-chip warning-chip-enhanced">{skill}</span>
                 ))
               ) : (
                 <p className="no-skills success-text">No missing skills - Great match!</p>
@@ -241,19 +316,13 @@ function ResumeScreening() {
           </div>
         </div>
 
-        {/* SKILLS DETAIL */}
         <div className="resume-details-grid">
           <div className="detail-card-enhanced">
-            <h3>
-              <FaUser className="section-icon" />
-              Candidate Skills
-            </h3>
+            <h3><FaUser className="section-icon" /> Candidate Skills</h3>
             <div className="skills-list">
-              {candidate.candidateSkills?.length > 0 ? (
-                candidate.candidateSkills.map((skill, index) => (
-                  <span key={index} className="skill-tag candidate-skill">
-                    {skill}
-                  </span>
+              {parseSkillData(candidate.candidateSkills).length > 0 ? (
+                parseSkillData(candidate.candidateSkills).map((skill, index) => (
+                  <span key={index} className="skill-tag candidate-skill">{skill}</span>
                 ))
               ) : (
                 <p className="no-skills">No candidate skills listed</p>
@@ -262,16 +331,11 @@ function ResumeScreening() {
           </div>
 
           <div className="detail-card-enhanced">
-            <h3>
-              <FaBriefcase className="section-icon" />
-              Required Skills
-            </h3>
+            <h3><FaBriefcase className="section-icon" /> Required Skills</h3>
             <div className="skills-list">
-              {candidate.requiredSkills?.length > 0 ? (
-                candidate.requiredSkills.map((skill, index) => (
-                  <span key={index} className="skill-tag required-skill">
-                    {skill}
-                  </span>
+              {parseSkillData(candidate.requiredSkills).length > 0 ? (
+                parseSkillData(candidate.requiredSkills).map((skill, index) => (
+                  <span key={index} className="skill-tag required-skill">{skill}</span>
                 ))
               ) : (
                 <p className="no-skills">No required skills listed</p>
@@ -280,41 +344,19 @@ function ResumeScreening() {
           </div>
         </div>
 
-        {/* AI RECOMMENDATION */}
-        <div className="resume-recommendation" style={{ 
-          borderColor: getRecommendationColor(candidate.recommendation),
-          background: `${getRecommendationColor(candidate.recommendation)}10`
-        }}>
-          <div className="recommendation-icon" style={{ 
-            background: getRecommendationColor(candidate.recommendation),
-            color: 'white'
-          }}>
+        <div className="resume-recommendation" style={{ borderColor: getRecommendationColor(candidate.recommendation), background: `${getRecommendationColor(candidate.recommendation)}10` }}>
+          <div className="recommendation-icon" style={{ background: getRecommendationColor(candidate.recommendation), color: 'white' }}>
             {getRecommendationIcon(candidate.recommendation)}
           </div>
           <div className="recommendation-content">
-            <h3>
-              <FaLightbulb className="recommendation-icon-small" />
-              AI Recommendation
-            </h3>
+            <h3><FaLightbulb className="recommendation-icon-small" /> AI Recommendation</h3>
             <p className="recommendation-text">{candidate.recommendation || 'No recommendation available'}</p>
           </div>
         </div>
 
-        {/* ACTION BUTTONS */}
         <div className="resume-actions">
-          <button 
-            className="action-btn-primary"
-            onClick={() => navigate("/candidates")}
-          >
-            <FaUserCheck />
-            Back to Candidates
-          </button>
-          <button 
-            className="action-btn-secondary"
-            onClick={() => window.print()}
-          >
-            <FaFileAlt />
-            Print Report
+          <button className="action-btn-primary" onClick={() => navigate("/recruiter/candidates")}>
+            <FaUserCheck /> Back to Candidates
           </button>
         </div>
       </div>

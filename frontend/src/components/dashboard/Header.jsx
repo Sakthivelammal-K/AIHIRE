@@ -1,75 +1,304 @@
 import { useNavigate } from "react-router-dom";
 import { FaCalendarAlt } from "react-icons/fa";
 
-function Header({ userName, role, currentPage }) {
+function Header({ userName, role, customTitle, customSubtitle }) {
   const navigate = useNavigate();
 
   const handleProfileClick = () => {
     if (role === "recruiter") {
-      navigate("/recruiter-profile");
+      navigate("/recruiter/profile");
+    } else if (role === "admin") {
+      navigate("/admin/settings");
     } else {
-      navigate("/profile");
+      navigate("/candidate/profile");
     }
-  };
-
-  // Get greeting based on time
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good Morning";
-    if (hour < 17) return "Good Afternoon";
-    return "Good Evening";
   };
 
   // Get page title based on current route
   const getPageTitle = () => {
+    // If custom title is provided, use it
+    if (customTitle) return customTitle;
+
     const path = window.location.pathname;
-    if (path.includes("recruiter-dashboard")) return "Recruiter Dashboard";
-    if (path.includes("jobs")) return "Jobs";
-    if (path.includes("candidates")) return "Candidates";
-    if (path.includes("interviews")) return "Interviews";
-    if (path.includes("assessments")) return "Assessments";
-    if (path.includes("ai-interview-results")) return "AI Interviews";
-    if (path.includes("reports")) return "Reports";
-    if (path.includes("messages")) return "Messages";
-    if (path.includes("notifications")) return "Notifications";
-    if (path.includes("templates")) return "Templates";
-    if (path.includes("settings")) return "Settings";
-    if (path.includes("recruiter-profile")) return "My Profile";
-    if (path.includes("admin-dashboard")) return "Admin Dashboard";
-    if (path.includes("candidate-dashboard")) return "Candidate Dashboard";
-    if (path.includes("candidate-profile")) return "My Profile";
+
+    // Dashboard
+    if (path === "/recruiter/dashboard" || path === "/recruiter/dashboard/")
+      return "Recruiter Dashboard";
+
+    if (path === "/admin/dashboard" || path === "/admin/dashboard/")
+      return "Admin Dashboard";
+
+    if (path === "/candidate/dashboard" || path === "/candidate/dashboard/")
+      return "Candidate Dashboard";
+
+    // Recruiter Jobs
+    if (path === "/recruiter/jobs" || path === "/recruiter/jobs/")
+      return "Jobs";
+
+    if (path.includes("/recruiter/jobs/create"))
+      return "Create New Job";
+
+    if (path.includes("/recruiter/jobs/edit"))
+      return "Edit Job";
+
+    if (path.includes("/recruiter/jobs/"))
+      return "Job Details";
+
+    // Recruiter Candidates
+    if (path === "/recruiter/candidates" || path === "/recruiter/candidates/")
+      return "Candidates";
+
+    if (
+      path.startsWith("/recruiter/candidates/") &&
+      path !== "/recruiter/candidates"
+    )
+      return "Candidate Profile";
+
+    if (path.includes("/recruiter/resume-screening"))
+      return "Resume Screening";
+
+    // Interviews
+    if (
+      path === "/recruiter/interviews" ||
+      path === "/recruiter/interviews/"
+    )
+      return "Interview Calendar";
+
+    if (
+      path === "/candidate/interviews" ||
+      path === "/candidate/interviews/"
+    )
+      return "Interviews";
+
+    // Other Recruiter Pages
+    if (
+      path === "/recruiter/assessments" ||
+      path === "/recruiter/assessments/"
+    )
+      return "Assessments";
+
+    if (
+      path === "/recruiter/ai-interview-results" ||
+      path === "/recruiter/ai-interview-results/"
+    )
+      return "AI Interviews";
+
+    if (path === "/recruiter/reports" || path === "/recruiter/reports/")
+      return "Reports";
+
+    if (path === "/recruiter/messages" || path === "/recruiter/messages/")
+      return "Messages";
+
+    if (path === "/recruiter/activity" || path === "/recruiter/activity/")
+      return "Activities";
+
+    if (
+      path === "/recruiter/notifications" ||
+      path === "/recruiter/notifications/"
+    )
+      return "Notifications";
+
+    if (path === "/recruiter/templates" || path === "/recruiter/templates/")
+      return "Templates";
+
+    if (path === "/recruiter/settings" || path === "/recruiter/settings/")
+      return "Settings";
+
+    if (path === "/recruiter/profile" || path === "/recruiter/profile/")
+      return "My Profile";
+
+    // Candidate Pages
+    if (path === "/candidate/profile" || path === "/candidate/profile/")
+      return "My Profile";
+
+    if (
+      path === "/candidate/applications" ||
+      path === "/candidate/applications/"
+    )
+      return "My Applications";
+
+    if (path === "/candidate/jobs" || path === "/candidate/jobs/")
+      return "Available Jobs";
+
+    if (path === "/candidate/saved-jobs" || path === "/candidate/saved-jobs/")
+      return "Saved Jobs";
+
+    if (path === "/candidate/resume" || path === "/candidate/resume/")
+      return "Resume";
+
+    if (path === "/candidate/messages" || path === "/candidate/messages/")
+      return "Messages";
+
+    if (path === "/candidate/activity" || path === "/candidate/activity/")
+      return "My Activity";
+
     return "Dashboard";
   };
 
   // Get subtitle based on role and page
   const getSubtitle = () => {
+    if (customSubtitle) return customSubtitle;
+
     const path = window.location.pathname;
-    
+
     if (role === "recruiter") {
-      if (path.includes("recruiter-dashboard")) {
+      if (path === "/recruiter/dashboard" || path === "/recruiter/dashboard/") {
         return `Welcome back, ${userName}! Here's what's happening with your jobs today.`;
       }
-      if (path.includes("jobs")) return "Manage your job postings and requirements.";
-      if (path.includes("candidates")) return "View and manage all candidate applications.";
-      if (path.includes("interviews")) return "Schedule and manage interview calendar.";
-      if (path.includes("assessments")) return "Create and manage candidate assessments.";
-      if (path.includes("ai-interview-results")) return "Review AI-powered interview results.";
-      if (path.includes("reports")) return "View hiring analytics and reports.";
-      if (path.includes("messages")) return "Communicate with candidates and team.";
-      if (path.includes("notifications")) return "Stay updated with latest activities.";
-      if (path.includes("templates")) return "Manage email and assessment templates.";
-      if (path.includes("settings")) return "Configure your account and preferences.";
+
+      if (path === "/recruiter/jobs" || path === "/recruiter/jobs/") {
+        return "Manage your job postings and requirements.";
+      }
+
+      if (path.includes("/recruiter/jobs/create")) {
+        return "Jobs > Create New Job";
+      }
+
+      if (path.includes("/recruiter/jobs/edit")) {
+        return "Jobs > Edit Job";
+      }
+
+      if (path.includes("/recruiter/jobs/")) {
+        return "Jobs > Job Details";
+      }
+
+      if (
+        path === "/recruiter/candidates" ||
+        path === "/recruiter/candidates/"
+      ) {
+        return "Manage all candidates and their applications";
+      }
+
+      if (
+        path.startsWith("/recruiter/candidates/") &&
+        path !== "/recruiter/candidates"
+      ) {
+        return "Candidates > Candidate Profile";
+      }
+
+      if (path.includes("/recruiter/resume-screening")) {
+        return "AI powered resume analysis and candidate evaluation";
+      }
+
+      if (
+        path === "/recruiter/interviews" ||
+        path === "/recruiter/interviews/"
+      ) {
+        return "Schedule and manage candidate interviews";
+      }
+
+      if (
+        path === "/recruiter/assessments" ||
+        path === "/recruiter/assessments/"
+      ) {
+        return "Create and manage candidate assessments";
+      }
+
+      if (
+        path === "/recruiter/ai-interview-results" ||
+        path === "/recruiter/ai-interview-results/"
+      ) {
+        return "Review AI-powered interview results";
+      }
+
+      if (path === "/recruiter/reports" || path === "/recruiter/reports/") {
+        return "View hiring analytics and reports";
+      }
+
+      if (path === "/recruiter/messages" || path === "/recruiter/messages/") {
+        return "Communicate with candidates and team";
+      }
+
+      if (path === "/recruiter/activity" || path === "/recruiter/activity/") {
+        return "Track your recent hiring activities and updates";
+      }
+
+      if (
+        path === "/recruiter/notifications" ||
+        path === "/recruiter/notifications/"
+      ) {
+        return "Stay updated with latest activities";
+      }
+
+      if (path === "/recruiter/templates" || path === "/recruiter/templates/") {
+        return "Manage email and assessment templates";
+      }
+
+      if (path === "/recruiter/settings" || path === "/recruiter/settings/") {
+        return "Configure your account and preferences";
+      }
+
+      if (path === "/recruiter/profile" || path === "/recruiter/profile/") {
+        return "View and manage your profile";
+      }
+
       return `Welcome back, ${userName}!`;
     }
-    
+
     if (role === "admin") {
-      return `Welcome back, ${userName}! Manage your organization and users.`;
+      if (path === "/admin/dashboard" || path === "/admin/dashboard/") {
+        return `Welcome back, ${userName}! Manage your organization and users.`;
+      }
+
+      if (path === "/admin/organizations") {
+        return "Manage all organizations";
+      }
+
+      if (path === "/admin/users") {
+        return "Manage all users";
+      }
+
+      if (path === "/admin/roles") {
+        return "Manage permissions and roles";
+      }
+
+      if (path === "/admin/analytics") {
+        return "View platform analytics";
+      }
+
+      return `Welcome back, ${userName}!`;
     }
-    
+
     if (role === "candidate") {
-      return `Welcome back, ${userName}! Track your applications and interviews.`;
+      if (path === "/candidate/dashboard") {
+        return `Welcome back, ${userName}! Track your applications and interviews.`;
+      }
+
+      if (path === "/candidate/applications") {
+        return "Track the status of jobs you've applied for";
+      }
+
+      if (path === "/candidate/jobs") {
+        return "Browse and apply for available positions";
+      }
+
+      if (path === "/candidate/saved-jobs") {
+        return "Manage your saved job listings";
+      }
+
+      if (path === "/candidate/interviews") {
+        return "View your scheduled interviews";
+      }
+
+      if (path === "/candidate/resume") {
+        return "Manage your resume";
+      }
+
+      if (path === "/candidate/profile") {
+        return "View and manage your profile";
+      }
+
+      if (path === "/candidate/messages") {
+        return "Communicate with recruiters";
+      }
+
+      if (path === "/candidate/activity") {
+        return "Track your application journey and interview progress";
+      }
+
+      return `Welcome back, ${userName}!`;
     }
-    
+
     return `Welcome back, ${userName}!`;
   };
 
@@ -79,6 +308,7 @@ function Header({ userName, role, currentPage }) {
         <h2 className="header-greeting">
           {getPageTitle()}
         </h2>
+
         <p className="header-subtitle-new">
           {getSubtitle()}
         </p>
@@ -88,18 +318,22 @@ function Header({ userName, role, currentPage }) {
         <div className="date-badge">
           <FaCalendarAlt />
           <span>
-            {new Date().toLocaleDateString('en-US', { 
-              weekday: 'short', 
-              month: 'short', 
-              day: 'numeric' 
+            {new Date().toLocaleDateString("en-US", {
+              weekday: "short",
+              month: "short",
+              day: "numeric",
             })}
           </span>
         </div>
-        
-        <div className="profile-card-new" onClick={handleProfileClick}>
+
+        <div
+          className="profile-card-new"
+          onClick={handleProfileClick}
+        >
           <div className="avatar-new">
             {userName?.charAt(0)?.toUpperCase() || "U"}
           </div>
+
           <div className="profile-info-new">
             <h4>{userName || "User"}</h4>
             <p>{role || "User"}</p>

@@ -72,21 +72,21 @@ alert("Login Successful");
 
 
 
-if(response.data.role==="admin"){
+if (response.data.role === "admin") {
 
-navigate("/admin-dashboard");
-
-}
-
-else if(response.data.role==="recruiter"){
-
-navigate("/recruiter-dashboard");
+  navigate("/admin/dashboard");
 
 }
 
-else if(response.data.role==="candidate"){
+else if (response.data.role === "recruiter") {
 
-navigate("/candidate-dashboard");
+  navigate("/recruiter/dashboard");
+
+}
+
+else if (response.data.role === "candidate") {
+
+  navigate("/candidate/dashboard");
 
 }
 

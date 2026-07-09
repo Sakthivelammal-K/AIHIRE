@@ -756,7 +756,7 @@ result ? (
 
 <button
 className="premium-btn"
-onClick={()=>window.location.href="/interviews"}
+onClick={()=>window.location.href="/candidate/interviews"}
 >
 
 Back to Interviews

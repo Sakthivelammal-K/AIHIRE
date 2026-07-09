@@ -11,6 +11,8 @@ from routes.organizations import router as organization_router
 from routes.ai_interview import router as ai_router
 from routes.video_interview import router as videoInterview_router
 from routes.assessment import router as assessment_router
+from routes.messages import router as message_router
+from routes.settings import router as setting_router
 
 from fastapi.staticfiles import StaticFiles
 
@@ -121,7 +123,15 @@ app.include_router(
     assessment_router
 )
 
+app.include_router(
+    message_router,
+    prefix="/messages",
+    tags=["Messages"]
+)
 
+app.include_router(
+    setting_router
+)
 
 
 

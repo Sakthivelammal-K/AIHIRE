@@ -113,7 +113,7 @@ const submitAssessment = async () => {
             `Assessment Completed!`
         );
 
-        navigate("/interviews");
+        navigate("/candidate/interviews");
 
     }
     catch (error) {

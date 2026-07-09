@@ -524,7 +524,7 @@ await document.exitFullscreen();
 
 
 
-    window.location.href="/interviews";
+    window.location.href="/candidate/interviews";
 
 
 
