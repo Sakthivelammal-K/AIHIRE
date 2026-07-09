@@ -136,30 +136,45 @@ app.include_router(
 
 
 # ==========================
-# STATIC FILES
+# STATIC & UPLOADS FILES
 # ==========================
+import os
+from fastapi.responses import FileResponse
+
+# Ensure uploads directory exists
+if not os.path.exists("uploads"):
+    os.makedirs("uploads")
 
 app.mount(
-
     "/uploads",
-
-    StaticFiles(
-        directory="uploads"
-    ),
-
+    StaticFiles(directory="uploads"),
     name="uploads"
-
 )
 
+# Serve React static files if static directory exists
+if os.path.exists("static"):
+    app.mount(
+        "/assets",
+        StaticFiles(directory=os.path.join("static", "assets")),
+        name="assets"
+    )
 
-
-
-
-@app.get("/")
-def home():
-
-    return {
-
-        "message":"Backend working"
-
-    }
+    @app.get("/{fallback_path:path}")
+    async def serve_spa(fallback_path: str):
+        # Allow API routes, docs, and uploads to pass through without catching them
+        if fallback_path.startswith(("auth", "users", "jobs", "applications", "interviews", "resumes", "organizations", "messages", "uploads", "docs", "redoc", "openapi.json")):
+            return None
+        
+        # Check if requested file exists in static folder
+        file_path = os.path.join("static", fallback_path)
+        if os.path.isfile(file_path):
+            return FileResponse(file_path)
+            
+        # Default to index.html for SPA routing
+        return FileResponse(os.path.join("static", "index.html"))
+else:
+    @app.get("/")
+    def home():
+        return {
+            "message": "Backend working"
+        }
