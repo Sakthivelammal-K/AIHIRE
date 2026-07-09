@@ -30,6 +30,39 @@ jobs:
           npm ci
           npm run build
 
+      - name: Add Node.js server for Azure App Service static hosting
+        run: |
+          cat << 'EOF' > frontend/dist/package.json
+          {
+            "name": "aihire-frontend-server",
+            "version": "1.0.0",
+            "main": "server.js",
+            "scripts": {
+              "start": "node server.js"
+            },
+            "dependencies": {
+              "express": "^4.19.2"
+            }
+          }
+          EOF
+          
+          cat << 'EOF' > frontend/dist/server.js
+          const express = require('express');
+          const path = require('path');
+          const app = express();
+          const port = process.env.PORT || 8080;
+
+          app.use(express.static(__dirname));
+
+          app.get('*', (req, res) => {
+            res.sendFile(path.join(__dirname, 'index.html'));
+          });
+
+          app.listen(port, () => {
+            console.log(`Server running on port ${port}`);
+          });
+          EOF
+
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
