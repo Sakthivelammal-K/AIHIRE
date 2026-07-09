@@ -63,6 +63,9 @@ jobs:
           });
           EOF
 
+          cd frontend/dist
+          npm install --omit=dev
+
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
