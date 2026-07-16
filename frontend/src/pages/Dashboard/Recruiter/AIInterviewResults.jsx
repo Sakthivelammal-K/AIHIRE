@@ -29,7 +29,26 @@ import {
   FaUserTie,
   FaBriefcase,
   FaArrowLeft,
-  FaEdit
+  FaEdit,
+  FaDownload,
+  FaSearch,
+  FaFilter,
+  FaSortAmountDown,
+  FaUsers,
+  FaMicrophone,
+  FaCode,
+  FaGraduationCap,
+  FaTools,
+  FaTasks,
+  FaCheck,
+  FaTimes,
+  FaInfoCircle,
+  FaTrash,
+  FaEllipsisV,
+  FaRedo,
+  FaUndo,
+  FaFileAlt,
+  FaCrown
 } from "react-icons/fa";
 
 function AIInterviewResults() {
@@ -45,6 +64,14 @@ function AIInterviewResults() {
   const [finalDecision, setFinalDecision] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
   const [candidateDetails, setCandidateDetails] = useState(null);
+
+  // Search, Filter & Sort states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState("all");
+  const [filterDecision, setFilterDecision] = useState("all");
+  const [filterDate, setFilterDate] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [sortBy, setSortBy] = useState("date-desc");
 
   useEffect(() => {
     loadResults();
@@ -123,6 +150,7 @@ function AIInterviewResults() {
         if (finalDecision === "Selected") status = "Selected";
         else if (finalDecision === "Rejected") status = "Rejected";
         else if (finalDecision === "Hold") status = "Hold";
+        else if (finalDecision === "Next Round") status = "Next Round";
         if (status) {
           await API.put(`/candidate/applications/${selected.applicationId}`, { status }).catch(() => {});
         }
@@ -169,12 +197,108 @@ function AIInterviewResults() {
     setActiveTab("overview");
   };
 
-  const hired = results.filter(r => r.finalDecision === "Selected" || r.finalDecision === "Hired").length;
-  const rejected = results.filter(r => r.finalDecision === "Rejected").length;
+  // ----- STATS COMPUTATION -----
   const total = results.length;
-  const pending = results.filter(r => !r.finalDecision || r.finalDecision === "Pending").length;
+  const completed = results.filter(r => r.status === "Completed" || r.finalDecision).length;
+  const pendingReview = results.filter(r => !r.finalDecision || r.finalDecision === "Pending").length;
+  const hired = results.filter(r => r.finalDecision === "Selected").length;
+  const rejected = results.filter(r => r.finalDecision === "Rejected").length;
+  const avgScore = total > 0 
+    ? Math.round(results.reduce((sum, r) => sum + (r.resultType === "video" ? (r.overall || 0) : (r.score || 0)), 0) / total) 
+    : 0;
+
+  // ----- FILTERING, SEARCH & SORTING LOGIC -----
+  const filteredResults = results.filter(item => {
+    const searchLower = searchTerm.toLowerCase();
+    const name = (item.candidateName || "").toLowerCase();
+    const job = (item.jobTitle || "").toLowerCase();
+    const typeLabel = item.resultType === "video" ? "Video Interview" : 
+                     item.resultType === "audio" ? "Audio Interview" :
+                     item.resultType === "mcq" ? "MCQ Assessment" :
+                     item.resultType === "technical" ? "Technical Interview" :
+                     item.resultType === "hr" ? "HR Interview" :
+                     item.resultType === "coding" ? "Coding Challenge" :
+                     "Assessment";
+
+    const matchesSearch = name.includes(searchLower) || job.includes(searchLower) || typeLabel.toLowerCase().includes(searchLower);
+    const matchesType = filterType === "all" || typeLabel === filterType;
+    const matchesDecision = filterDecision === "all" || (item.finalDecision || "Pending Review") === filterDecision;
+    const matchesStatus = filterStatus === "all" || (item.status || "Completed") === filterStatus;
+    
+    let matchesDate = true;
+    const dateObj = new Date(item.createdAt || item.date || Date.now());
+    const now = new Date();
+    if (filterDate === "today") {
+      matchesDate = dateObj.toDateString() === now.toDateString();
+    } else if (filterDate === "week") {
+      const weekAgo = new Date(); weekAgo.setDate(now.getDate() - 7);
+      matchesDate = dateObj >= weekAgo;
+    } else if (filterDate === "month") {
+      const monthAgo = new Date(); monthAgo.setMonth(now.getMonth() - 1);
+      matchesDate = dateObj >= monthAgo;
+    }
+
+    return matchesSearch && matchesType && matchesDecision && matchesStatus && matchesDate;
+  });
+
+  const sortedResults = [...filteredResults].sort((a, b) => {
+    const scoreA = a.resultType === "video" ? (a.overall || 0) : (a.score || 0);
+    const scoreB = b.resultType === "video" ? (b.overall || 0) : (b.score || 0);
+    const nameA = (a.candidateName || "").toLowerCase();
+    const nameB = (b.candidateName || "").toLowerCase();
+    const dateA = new Date(a.createdAt || a.date || 0);
+    const dateB = new Date(b.createdAt || b.date || 0);
+
+    switch(sortBy) {
+      case "score-desc": return scoreB - scoreA;
+      case "score-asc": return scoreA - scoreB;
+      case "name-asc": return nameA.localeCompare(nameB);
+      case "name-desc": return nameB.localeCompare(nameA);
+      case "date-asc": return dateA - dateB;
+      case "date-desc":
+      default: return dateB - dateA;
+    }
+  });
+
+  const resetFilters = () => {
+    setSearchTerm("");
+    setFilterType("all");
+    setFilterDecision("all");
+    setFilterDate("all");
+    setFilterStatus("all");
+    setSortBy("date-desc");
+  };
 
   const currentItem = selectedResult || assessment;
+  const candidate = candidateDetails || {
+    candidateName: currentItem?.candidateName || "Unknown Candidate",
+    jobTitle: currentItem?.jobTitle || "N/A",
+    email: currentItem?.email || "",
+    phone: currentItem?.phone || "",
+    location: currentItem?.location || "",
+    experience: currentItem?.experience || "N/A",
+    skills: currentItem?.skills || []
+  };
+
+  // ----- HELPER FUNCTIONS FOR UI (Orange Color Schema) -----
+  const getScoreBadge = (score) => {
+    let label = "Needs Improvement";
+    let cls = "red";
+    if (score >= 90) { label = "Excellent"; cls = "green"; }
+    else if (score >= 75) { label = "Good"; cls = "orange"; } // Changed Blue to Orange
+    else if (score >= 60) { label = "Average"; cls = "yellow"; }
+    return { label, cls };
+  };
+
+  const getInterviewTypeLabel = (item) => {
+    if (item.resultType === "video") return "Video Interview";
+    if (item.resultType === "audio") return "Audio Interview";
+    if (item.resultType === "mcq") return "MCQ Assessment";
+    if (item.resultType === "technical") return "Technical Interview";
+    if (item.resultType === "hr") return "HR Interview";
+    if (item.resultType === "coding") return "Coding Challenge";
+    return "Assessment";
+  };
 
   if (loading) {
     return (
@@ -198,27 +322,26 @@ function AIInterviewResults() {
     );
   }
 
-  // Detail View
+  // ==========================================
+  // DETAIL VIEW MODAL
+  // ==========================================
   if (currentItem) {
-    const candidate = candidateDetails || {
-      candidateName: currentItem.candidateName || "Unknown Candidate",
-      jobTitle: currentItem.jobTitle || "N/A",
-      email: currentItem.email || "",
-      phone: currentItem.phone || "",
-      location: currentItem.location || ""
-    };
-
-    // Get sections from data
-    const sections = currentItem.sections || [];
-    const answers = currentItem.answers || [];
-    const transcript = currentItem.transcript || [];
     const overall = currentItem.resultType === "video" ? currentItem.overall : currentItem.score || 0;
-    const communication = currentItem.communication || 0;
     const technical = currentItem.technical || 0;
+    const communication = currentItem.communication || 0;
     const problemSolving = currentItem.problemSolving || 0;
-    const cultureFit = currentItem.cultureFit || 0;
+    const confidence = currentItem.confidence || 0;
+    const behavioral = currentItem.behavioral || 0;
+    const coding = currentItem.coding || 0;
     const strengths = currentItem.strengths || [];
     const improvements = currentItem.improvements || [];
+
+    const getScoreColor = (sc) => {
+      if (sc >= 80) return '#10B981'; // Green
+      if (sc >= 60) return '#F59E0B'; // Yellow
+      if (sc >= 40) return '#F97316'; // Orange
+      return '#EF4444'; // Red
+    };
 
     return (
       <DashboardLayout>
@@ -229,508 +352,420 @@ function AIInterviewResults() {
 
           <div className="ai-detail-header">
             <div className="ai-detail-profile">
-              <div className="ai-detail-avatar">
+              <div className="ai-detail-avatar" style={{ background: '#fdf2e9', color: '#e67e22' }}>
                 {candidate.candidateName?.charAt(0)?.toUpperCase() || 'U'}
               </div>
               <div className="ai-detail-info">
                 <h1>{candidate.candidateName || "Unknown"}</h1>
                 <p className="ai-detail-title">{candidate.jobTitle || "N/A"}</p>
                 <div className="ai-detail-meta">
-                  {candidate.location && <span><FaMapMarkerAlt /> {candidate.location}</span>}
-                  {candidate.email && <span><FaEnvelope /> {candidate.email}</span>}
-                  {candidate.phone && <span><FaPhone /> {candidate.phone}</span>}
-                </div>
-                <div className="ai-detail-links">
-                 {/*} <button
-  className="ai-view-application-btn"
-  onClick={() =>
-    currentItem.applicationId &&
-    navigate(`/recruiter/candidates/${currentItem.applicationId}`)
-  }
->
-  <FaExternalLinkAlt /> View Application
-</button>*/}
+                  <span><FaEnvelope /> {candidate.email}</span>
+                  <span><FaPhone /> {candidate.phone}</span>
+                  <span><FaMapMarkerAlt /> {candidate.location}</span>
                 </div>
               </div>
+            </div>
+            <div className="ai-detail-status">
+              <span className={`ai-modal-status ${currentItem.finalDecision || 'pending'}`}>
+                {currentItem.finalDecision || "Pending Review"}
+              </span>
             </div>
           </div>
 
           <div className="ai-detail-tabs">
-            <button className={`ai-tab ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>
-              Overview
-            </button>
-            <button className={`ai-tab ${activeTab === 'qa' ? 'active' : ''}`} onClick={() => setActiveTab('qa')}>
-              Questions & Answers
-            </button>
-            <button className={`ai-tab ${activeTab === 'evaluation' ? 'active' : ''}`} onClick={() => setActiveTab('evaluation')}>
-              Evaluation
-            </button>
-            <button className={`ai-tab ${activeTab === 'feedback' ? 'active' : ''}`} onClick={() => setActiveTab('feedback')}>
-              Feedback
-            </button>
-            <button className={`ai-tab ${activeTab === 'transcript' ? 'active' : ''}`} onClick={() => setActiveTab('transcript')}>
-              Transcript
-            </button>
-            <button className={`ai-tab ${activeTab === 'analytics' ? 'active' : ''}`} onClick={() => setActiveTab('analytics')}>
-              Analytics
-            </button>
+            {['overview', 'evaluation', 'feedback', 'timeline'].map(tab => (
+              <button 
+                key={tab}
+                className={`ai-tab ${activeTab === tab ? 'active' : ''}`} 
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </button>
+            ))}
           </div>
 
           <div className="ai-detail-content">
+            {/* --- OVERVIEW TAB --- */}
             {activeTab === 'overview' && (
-              <>
-                <div className="ai-section-card">
-                  <h3>Interview Overview</h3>
-                  <p className="ai-overview-text">
-                    This AI interview was conducted to evaluate the candidate's technical knowledge, 
-                    problem-solving abilities, communication skills, and overall suitability for the role.
-                  </p>
-                  <div className="ai-overview-grid">
-                    <div className="ai-overview-item">
-                      <span className="ai-overview-label">Interview Type</span>
-                      <span className="ai-overview-value">
-                        {currentItem.resultType === "video" ? "AI Interview" : "Assessment"}
-                      </span>
+              <div className="ai-detail-grid">
+                <div className="ai-detail-left">
+                  <div className="ai-section-card">
+                    <h3 style={{ color: '#e67e22' }}><FaUser /> Candidate Information</h3>
+                    <div className="ai-info-list">
+                      <div className="ai-info-item"><span>Name</span> <strong>{candidate.candidateName}</strong></div>
+                      <div className="ai-info-item"><span>Email</span> {candidate.email}</div>
+                      <div className="ai-info-item"><span>Applied Job</span> {candidate.jobTitle}</div>
+                      <div className="ai-info-item"><span>Experience</span> {candidate.experience}</div>
+                      <div className="ai-info-item"><span>Resume Score</span> <span className="ai-resume-score" style={{ color: '#e67e22' }}>{candidate.atsScore || 0}%</span></div>
+                      <div className="ai-info-item skills">
+                        <span>Skills</span>
+                        <div className="ai-skill-tags">
+                          {(Array.isArray(candidate.skills) && candidate.skills.length > 0) 
+                            ? candidate.skills.map((s, i) => <span key={i} className="ai-skill-tag">{s}</span>)
+                            : 'N/A'
+                          }
+                        </div>
+                      </div>
                     </div>
-                    <div className="ai-overview-item">
-                      <span className="ai-overview-label">Duration</span>
-                      <span className="ai-overview-value">
-                        {currentItem.duration || "N/A"}
-                      </span>
-                    </div>
-                    <div className="ai-overview-item">
-                      <span className="ai-overview-label">Total Questions</span>
-                      <span className="ai-overview-value">
-                        {answers.length || 0}
-                      </span>
-                    </div>
-                    <div className="ai-overview-item">
-                      <span className="ai-overview-label">Completion Time</span>
-                      <span className="ai-overview-value">
-                        {currentItem.createdAt ? new Date(currentItem.createdAt).toLocaleDateString() : "N/A"}
-                      </span>
-                    </div>
-                    <div className="ai-overview-item full">
-                      <span className="ai-overview-label">Platform</span>
-                      <span className="ai-overview-value">AIHIRE AI Interviewer</span>
+                  </div>
+
+                  <div className="ai-section-card">
+                    <h3 style={{ color: '#e67e22' }}><FaCalendar /> Interview Summary</h3>
+                    <div className="ai-info-list grid-2">
+                      <div className="ai-info-item"><span>Type</span> {getInterviewTypeLabel(currentItem)}</div>
+                      <div className="ai-info-item"><span>Date</span> {new Date(currentItem.createdAt || Date.now()).toLocaleDateString()}</div>
+                      <div className="ai-info-item"><span>Time</span> {new Date(currentItem.createdAt || Date.now()).toLocaleTimeString()}</div>
+                      <div className="ai-info-item"><span>Duration</span> {currentItem.duration || "N/A"}</div>
+                      <div className="ai-info-item"><span>Interviewers</span> {Array.isArray(currentItem.interviewers) ? currentItem.interviewers.join(', ') : "N/A"}</div>
+                      <div className="ai-info-item"><span>Mode</span> {currentItem.mode || "Virtual"}</div>
+                      <div className="ai-info-item full"><span>Status</span> <span className={`ai-status-badge ${currentItem.status?.toLowerCase() || 'pending'}`}>{currentItem.status || "Pending"}</span></div>
                     </div>
                   </div>
                 </div>
 
-                {sections.length > 0 && (
+                <div className="ai-detail-right">
+                  <div className="ai-section-card score-card">
+                    <h3 style={{ color: '#e67e22' }}><FaChartLine /> Evaluation</h3>
+                    <div className="ai-score-circle-container">
+                      <div className={`ai-score-circle ${getScoreBadge(overall).cls}`}>
+                        <span>{overall}%</span>
+                      </div>
+                      <div className="ai-score-breakdown">
+                        <div className="ai-score-row"><span>Technical</span> <div className="ai-score-bar"><div className="ai-score-fill orange" style={{width: `${technical}%`}}></div></div> <span>{technical}%</span></div>
+                        <div className="ai-score-row"><span>Communication</span> <div className="ai-score-bar"><div className="ai-score-fill orange" style={{width: `${communication}%`}}></div></div> <span>{communication}%</span></div>
+                        <div className="ai-score-row"><span>Problem Solving</span> <div className="ai-score-bar"><div className="ai-score-fill orange" style={{width: `${problemSolving}%`}}></div></div> <span>{problemSolving}%</span></div>
+                        <div className="ai-score-row"><span>Confidence</span> <div className="ai-score-bar"><div className="ai-score-fill orange" style={{width: `${confidence}%`}}></div></div> <span>{confidence}%</span></div>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="ai-section-card">
-                    <h3>Interview Sections</h3>
-                    <table className="ai-sections-table">
-                      <thead>
-                        <tr>
-                          <th>Section</th>
-                          <th>Questions</th>
-                          <th>Score</th>
-                          <th>Performance</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {sections.map((section, index) => (
-                          <tr key={index}>
-                            <td>{section.name || `Section ${index + 1}`}</td>
-                            <td>{section.questions || 0}</td>
-                            <td>
-                              <span className="ai-score-badge">
-                                {section.score || 0}/100
-                              </span>
-                            </td>
-                            <td>
-                              <span className={`ai-performance-badge ${(section.performance || 'good').toLowerCase()}`}>
-                                {section.performance || "Good"}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-
-                <div className="ai-section-card">
-                  <div className="ai-completed-header">
-                    <FaCheckCircle className="ai-completed-icon" />
-                    <h3>AI Interview Completed</h3>
-                  </div>
-                  <div className="ai-candidate-summary">
-                    <div className="ai-candidate-avatar-lg">
-                      {candidate.candidateName?.charAt(0)?.toUpperCase() || 'U'}
-                    </div>
-                    <div className="ai-candidate-details">
-                      <h4>{candidate.candidateName || "Unknown"}</h4>
-                      <p>{candidate.jobTitle || "N/A"}</p>
-                      <div className="ai-candidate-meta">
-                        {candidate.location && <span><FaMapMarkerAlt /> {candidate.location}</span>}
-                        {candidate.email && <span><FaEnvelope /> {candidate.email}</span>}
-                        {candidate.phone && <span><FaPhone /> {candidate.phone}</span>}
+                    <h3 style={{ color: '#e67e22' }}><FaEdit /> Recruiter Notes</h3>
+                    <div className="ai-notes-area">
+                      <div className="ai-note-group">
+                        <label>Feedback</label>
+                        <textarea 
+                          value={recruiterComment} 
+                          onChange={(e) => setRecruiterComment(e.target.value)}
+                          placeholder="Add your feedback about the candidate..."
+                        />
+                      </div>
+                      <div className="ai-note-group">
+                        <label>Final Decision</label>
+                        <select value={finalDecision} onChange={(e) => setFinalDecision(e.target.value)}>
+                          <option value="">Select Decision</option>
+                          <option value="Selected">Selected</option>
+                          <option value="Rejected">Rejected</option>
+                          <option value="Hold">Hold</option>
+                          <option value="Next Round">Next Round</option>
+                        </select>
                       </div>
                     </div>
                   </div>
-                </div>
-
-                <div className="ai-section-card">
-                  <h3>Overall Score</h3>
-                  <div className="ai-overall-score">
-                    <div className="ai-score-circle" style={{ borderColor: overall >= 70 ? '#10B981' : '#F59E0B' }}>
-                      <span className="ai-score-number">{overall}%</span>
-                      <span className="ai-score-label">{overall >= 70 ? "Great Fit" : "Good Fit"}</span>
-                    </div>
-                    <div className="ai-score-details">
-                      <div className="ai-score-item">
-                        <span className="ai-score-item-label">Communication</span>
-                        <div className="ai-score-bar">
-                          <div className="ai-score-bar-fill" style={{ width: `${communication}%`, background: '#10B981' }} />
-                        </div>
-                        <span className="ai-score-item-value">{communication}/100</span>
-                      </div>
-                      <div className="ai-score-item">
-                        <span className="ai-score-item-label">Technical</span>
-                        <div className="ai-score-bar">
-                          <div className="ai-score-bar-fill" style={{ width: `${technical}%`, background: '#3B82F6' }} />
-                        </div>
-                        <span className="ai-score-item-value">{technical}/100</span>
-                      </div>
-                      <div className="ai-score-item">
-                        <span className="ai-score-item-label">Problem Solving</span>
-                        <div className="ai-score-bar">
-                          <div className="ai-score-bar-fill" style={{ width: `${problemSolving}%`, background: '#F59E0B' }} />
-                        </div>
-                        <span className="ai-score-item-value">{problemSolving}/100</span>
-                      </div>
-                      <div className="ai-score-item">
-                        <span className="ai-score-item-label">Culture Fit</span>
-                        <div className="ai-score-bar">
-                          <div className="ai-score-bar-fill" style={{ width: `${cultureFit}%`, background: '#8B5CF6' }} />
-                        </div>
-                        <span className="ai-score-item-value">{cultureFit}/100</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {strengths.length > 0 && (
-                  <div className="ai-section-card">
-                    <h3><FaThumbsUp className="ai-section-icon green" /> Key Strengths</h3>
-                    <ul className="ai-strengths-list">
-                      {strengths.map((strength, index) => (
-                        <li key={index}>{strength}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {improvements.length > 0 && (
-                  <div className="ai-section-card">
-                    <h3><FaThumbsDown className="ai-section-icon orange" /> Areas for Improvement</h3>
-                    <ul className="ai-improvements-list">
-                      {improvements.map((improvement, index) => (
-                        <li key={index}>{improvement}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {currentItem.videoPath && (
-                  <div className="ai-section-card">
-                    <h3><FaVideo className="ai-section-icon" /> AI Interview Recording</h3>
-                    <div className="ai-recording-box">
-                      <FaPlay className="ai-recording-icon" />
-                      <div>
-                        <h4>Recording Available</h4>
-                        <p>The full interview recording is ready to view.</p>
-                      </div>
-                      <a href={`http://127.0.0.1:8000/${currentItem.videoPath}`} target="_blank" rel="noopener noreferrer" className="ai-recording-btn">
-                        Watch Recording
-                      </a>
-                    </div>
-                  </div>
-                )}
-
-                <div className="ai-section-card">
-                  <h3><FaShare className="ai-section-icon" /> Next Steps</h3>
-                  <p className="ai-next-steps-text">
-                    Share feedback with the hiring team and move candidate to the next stage.
-                  </p>
-                  <button className="ai-share-feedback-btn" onClick={() => setActiveTab('feedback')}>
-                    <FaShare /> Share Feedback
-                  </button>
-                </div>
-              </>
-            )}
-
-            {activeTab === 'qa' && (
-              <div className="ai-section-card">
-                <h3>Questions & Answers</h3>
-                <div className="ai-qa-list">
-                  {answers.length > 0 ? (
-                    answers.map((answer, index) => (
-                      <div key={index} className="ai-qa-item">
-                        <div className="ai-qa-question">
-                          <span className="ai-qa-number">Q{index + 1}.</span>
-                          <span>{answer.question || `Question ${index + 1}`}</span>
-                        </div>
-                        <div className="ai-qa-answer">
-                          <span className="ai-qa-answer-label">Answer:</span>
-                          <p>{answer.answer || "No answer provided"}</p>
-                        </div>
-                        {answer.score && (
-                          <div className="ai-qa-score">
-                            <span className="ai-qa-score-label">Score:</span>
-                            <span className="ai-qa-score-value">{answer.score}/100</span>
-                          </div>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="ai-empty">No questions and answers available</div>
-                  )}
                 </div>
               </div>
             )}
 
+            {/* --- EVALUATION TAB --- */}
             {activeTab === 'evaluation' && (
               <div className="ai-section-card">
-                <h3>Evaluation</h3>
-                <div className="ai-evaluation-grid">
-                  {sections.length > 0 ? (
-                    sections.map((section, index) => (
-                      <div key={index} className="ai-evaluation-item">
-                        <h4>{section.name || `Section ${index + 1}`}</h4>
-                        <div className="ai-evaluation-score">{section.score || 0}/100</div>
-                        <p>{section.feedback || "No feedback available"}</p>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="ai-empty">No evaluation data available</div>
-                  )}
+                <h3 style={{ color: '#e67e22' }}><FaStar /> Detailed Evaluation</h3>
+                <div className="ai-detailed-eval">
+                  <div className="ai-eval-item"><span>Overall</span> <div className="ai-eval-bar"><div className="ai-eval-fill orange" style={{width: `${overall}%`}}></div></div> <span className="ai-eval-score">{overall}%</span></div>
+                  <div className="ai-eval-item"><span>Technical Skills</span> <div className="ai-eval-bar"><div className="ai-eval-fill orange" style={{width: `${technical}%`}}></div></div> <span className="ai-eval-score">{technical}%</span></div>
+                  <div className="ai-eval-item"><span>Communication</span> <div className="ai-eval-bar"><div className="ai-eval-fill orange" style={{width: `${communication}%`}}></div></div> <span className="ai-eval-score">{communication}%</span></div>
+                  <div className="ai-eval-item"><span>Problem Solving</span> <div className="ai-eval-bar"><div className="ai-eval-fill orange" style={{width: `${problemSolving}%`}}></div></div> <span className="ai-eval-score">{problemSolving}%</span></div>
+                  <div className="ai-eval-item"><span>Confidence</span> <div className="ai-eval-bar"><div className="ai-eval-fill orange" style={{width: `${confidence}%`}}></div></div> <span className="ai-eval-score">{confidence}%</span></div>
+                  <div className="ai-eval-item"><span>Behavioral</span> <div className="ai-eval-bar"><div className="ai-eval-fill orange" style={{width: `${behavioral}%`}}></div></div> <span className="ai-eval-score">{behavioral}%</span></div>
+                  <div className="ai-eval-item"><span>Coding Assessment</span> <div className="ai-eval-bar"><div className="ai-eval-fill orange" style={{width: `${coding}%`}}></div></div> <span className="ai-eval-score">{coding}%</span></div>
                 </div>
               </div>
             )}
 
+            {/* --- FEEDBACK TAB --- */}
             {activeTab === 'feedback' && (
-              <div className="ai-section-card">
-                <h3>Feedback</h3>
+              <div className="ai-section-card feedback-card">
+                <h3 style={{ color: '#e67e22' }}><FaEdit /> Recruiter Feedback</h3>
                 <div className="ai-feedback-form">
                   <div className="ai-feedback-group">
-                    <label>Recruiter Rating</label>
-                    <select value={recruiterRating} onChange={(e) => setRecruiterRating(Number(e.target.value))}>
-                      <option value="0">Select Rating</option>
-                      <option value="1">1 - Poor</option>
-                      <option value="2">2 - Below Average</option>
-                      <option value="3">3 - Average</option>
-                      <option value="4">4 - Good</option>
-                      <option value="5">5 - Excellent</option>
-                    </select>
+                    <label>Strengths</label>
+                    <textarea rows="2" placeholder="List the candidate's strengths..." />
                   </div>
                   <div className="ai-feedback-group">
-                    <label>Recruiter Comment</label>
-                    <textarea
-                      rows="4"
-                      placeholder="Add your feedback about the candidate..."
-                      value={recruiterComment}
-                      onChange={(e) => setRecruiterComment(e.target.value)}
-                    />
+                    <label>Weaknesses</label>
+                    <textarea rows="2" placeholder="List areas for improvement..." />
                   </div>
                   <div className="ai-feedback-group">
-                    <label>Final Decision</label>
+                    <label>Recruiter Feedback</label>
+                    <textarea rows="3" placeholder="Add your detailed feedback..." value={recruiterComment} onChange={(e) => setRecruiterComment(e.target.value)} />
+                  </div>
+                  <div className="ai-feedback-group">
+                    <label>Hiring Recommendation</label>
                     <select value={finalDecision} onChange={(e) => setFinalDecision(e.target.value)}>
                       <option value="">Select Decision</option>
-                      <option value="Selected">✅ Selected</option>
+                      <option value="Selected">✅ Approve & Select</option>
+                      <option value="Next Round">🔄 Move to Next Round</option>
                       <option value="Hold">⏳ Hold</option>
-                      <option value="Rejected">❌ Rejected</option>
+                      <option value="Rejected">❌ Reject</option>
                     </select>
                   </div>
                   <div className="ai-feedback-actions">
                     <button className="ai-feedback-cancel" onClick={handleBack}>Cancel</button>
-                    <button className="ai-feedback-save" onClick={saveReview}>
-                      <FaCheckCircle /> Save Review
-                    </button>
+                    <button className="ai-feedback-save" onClick={saveReview}><FaCheckCircle /> Save Review</button>
                   </div>
                 </div>
               </div>
             )}
 
-            {activeTab === 'transcript' && (
+            {/* --- TIMELINE TAB --- */}
+            {activeTab === 'timeline' && (
               <div className="ai-section-card">
-                <h3>Transcript</h3>
-                <div className="ai-transcript">
-                  {transcript.length > 0 ? (
-                    transcript.map((item, index) => (
-                      <div key={index} className="ai-transcript-item">
-                        <div className={`ai-transcript-speaker ${item.speaker === 'interviewer' ? 'ai-interviewer' : 'ai-candidate'}`}>
-                          <span className="ai-transcript-avatar">
-                            {item.speaker === 'interviewer' ? 'AI' : 'C'}
-                          </span>
-                          <div>
-                            <span className="ai-transcript-name">
-                              {item.speaker === 'interviewer' ? 'Interviewer' : 'Candidate'}
-                            </span>
-                            <p>{item.text || "No transcript available"}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="ai-empty">No transcript available</div>
-                  )}
+                <h3 style={{ color: '#e67e22' }}><FaClock /> Recruitment Timeline</h3>
+                <div className="ai-timeline">
+                  <div className="ai-timeline-step completed"><div className="ai-timeline-dot"></div><div className="ai-timeline-content"><span>Interview Scheduled</span><span className="ai-timeline-date">{new Date(currentItem.createdAt || Date.now()).toLocaleDateString()}</span></div></div>
+                  <div className="ai-timeline-step completed"><div className="ai-timeline-dot"></div><div className="ai-timeline-content"><span>Candidate Joined</span><span className="ai-timeline-date">{new Date(currentItem.createdAt || Date.now()).toLocaleDateString()}</span></div></div>
+                  <div className="ai-timeline-step completed"><div className="ai-timeline-dot"></div><div className="ai-timeline-content"><span>Interview Completed</span><span className="ai-timeline-date">{new Date(currentItem.createdAt || Date.now()).toLocaleDateString()}</span></div></div>
+                  <div className={`ai-timeline-step ${finalDecision ? 'completed' : 'pending'}`}><div className="ai-timeline-dot"></div><div className="ai-timeline-content"><span>Recruiter Reviewed</span><span className="ai-timeline-date">{finalDecision ? 'Today' : 'Pending'}</span></div></div>
+                  <div className={`ai-timeline-step ${finalDecision ? (finalDecision === 'Selected' ? 'completed' : 'rejected') : 'pending'}`}><div className="ai-timeline-dot"></div><div className="ai-timeline-content"><span>{finalDecision || 'Final Decision Pending'}</span><span className="ai-timeline-date">{finalDecision || 'Awaiting Review'}</span></div></div>
                 </div>
               </div>
             )}
+          </div>
 
-            {activeTab === 'analytics' && (
-              <div className="ai-section-card">
-                <h3>Analytics</h3>
-                <div className="ai-analytics-grid">
-                  <div className="ai-analytics-item">
-                    <FaChartLine className="ai-analytics-icon" />
-                    <div>
-                      <span className="ai-analytics-label">Total Questions</span>
-                      <span className="ai-analytics-value">{answers.length || 0}</span>
-                    </div>
-                  </div>
-                  <div className="ai-analytics-item">
-                    <FaClock className="ai-analytics-icon" />
-                    <div>
-                      <span className="ai-analytics-label">Duration</span>
-                      <span className="ai-analytics-value">{currentItem.duration || "N/A"}</span>
-                    </div>
-                  </div>
-                  <div className="ai-analytics-item">
-                    <FaStar className="ai-analytics-icon" />
-                    <div>
-                      <span className="ai-analytics-label">Overall Score</span>
-                      <span className="ai-analytics-value">{overall}%</span>
-                    </div>
-                  </div>
-                  <div className="ai-analytics-item">
-                    <FaCheckCircle className="ai-analytics-icon" />
-                    <div>
-                      <span className="ai-analytics-label">Status</span>
-                      <span className="ai-analytics-value completed">{currentItem.status || "Completed"}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+          <div className="ai-modal-actions">
+            <div className="ai-modal-actions-left">
+              <button className="ai-action-btn" onClick={() => alert("Download Report triggered!")}><FaDownload /> Download Report</button>
+            </div>
+            <div className="ai-modal-actions-right">
+              <button className="ai-action-btn reject" onClick={() => { setFinalDecision("Rejected"); saveReview(); }}><FaTimes /> Reject</button>
+              <button className="ai-action-btn hold" onClick={() => { setFinalDecision("Hold"); saveReview(); }}><FaClock /> Hold</button>
+              <button className="ai-action-btn next" onClick={() => { setFinalDecision("Next Round"); saveReview(); }}><FaArrowRight /> Next Round</button>
+              <button className="ai-action-btn approve" onClick={() => { setFinalDecision("Selected"); saveReview(); }}><FaCheck /> Select</button>
+            </div>
           </div>
         </div>
       </DashboardLayout>
     );
   }
 
-  // List View
+  // ==========================================
+  // MAIN LIST VIEW
+  // ==========================================
   return (
     <DashboardLayout>
       <div className="ai-results-page">
-        <div className="ai-stats">
-          <div className="ai-stat">
-            <div className="ai-stat-icon blue"><FaRobot /></div>
-            <div>
-              <div className="ai-stat-value">{total}</div>
-              <div className="ai-stat-label">Total</div>
+        
+        {/* --- DASHBOARD STATISTICS (6 Equal Width Cards) --- */}
+        <div className="ai-stats-grid">
+          <div className="ai-stat-card"><div className="ai-stat-icon" style={{ background: '#fdf2e9', color: '#e67e22' }}><FaUsers /></div><div className="ai-stat-content"><div className="ai-stat-value">{total}</div><div className="ai-stat-label">Total Interviews</div></div></div>
+          <div className="ai-stat-card"><div className="ai-stat-icon green"><FaCheckCircle /></div><div className="ai-stat-content"><div className="ai-stat-value">{completed}</div><div className="ai-stat-label">Completed</div></div></div>
+          <div className="ai-stat-card"><div className="ai-stat-icon yellow"><FaClock /></div><div className="ai-stat-content"><div className="ai-stat-value">{pendingReview}</div><div className="ai-stat-label">Pending Review</div></div></div>
+          <div className="ai-stat-card"><div className="ai-stat-icon orange"><FaThumbsUp /></div><div className="ai-stat-content"><div className="ai-stat-value">{hired}</div><div className="ai-stat-label">Selected</div></div></div>
+          <div className="ai-stat-card"><div className="ai-stat-icon red"><FaThumbsDown /></div><div className="ai-stat-content"><div className="ai-stat-value">{rejected}</div><div className="ai-stat-label">Rejected</div></div></div>
+          <div className="ai-stat-card"><div className="ai-stat-icon purple"><FaChartLine /></div><div className="ai-stat-content"><div className="ai-stat-value">{avgScore}%</div><div className="ai-stat-label">Avg Score</div></div></div>
+        </div>
+
+        {/* --- ANALYTICS SECTION (Selection vs Rejection) --- */}
+        <div className="ai-charts-row">
+          <div className="ai-chart-card">
+            <h4 style={{ color: '#e67e22' }}><FaChartLine /> Selection vs Rejection</h4>
+            <div className="ai-bar-chart">
+              <div className="ai-bar-row"><span>Selected</span><div className="ai-bar-track"><div className="ai-bar-fill green" style={{ width: `${total > 0 ? (hired/total)*100 : 0}%` }}></div></div><span>{hired} ({total > 0 ? Math.round((hired/total)*100) : 0}%)</span></div>
+              <div className="ai-bar-row"><span>Rejected</span><div className="ai-bar-track"><div className="ai-bar-fill red" style={{ width: `${total > 0 ? (rejected/total)*100 : 0}%` }}></div></div><span>{rejected} ({total > 0 ? Math.round((rejected/total)*100) : 0}%)</span></div>
+              <div className="ai-bar-row"><span>Pending</span><div className="ai-bar-track"><div className="ai-bar-fill yellow" style={{ width: `${total > 0 ? (pendingReview/total)*100 : 0}%` }}></div></div><span>{pendingReview} ({total > 0 ? Math.round((pendingReview/total)*100) : 0}%)</span></div>
             </div>
           </div>
-          <div className="ai-stat">
-            <div className="ai-stat-icon green"><FaCheckCircle /></div>
-            <div>
-              <div className="ai-stat-value">{hired}</div>
-              <div className="ai-stat-label">Selected</div>
-            </div>
-          </div>
-          <div className="ai-stat">
-            <div className="ai-stat-icon orange"><FaTimesCircle /></div>
-            <div>
-              <div className="ai-stat-value">{rejected}</div>
-              <div className="ai-stat-label">Rejected</div>
-            </div>
-          </div>
-          <div className="ai-stat">
-            <div className="ai-stat-icon purple"><FaClock /></div>
-            <div>
-              <div className="ai-stat-value">{pending}</div>
-              <div className="ai-stat-label">Pending Review</div>
+
+          {/* --- ANALYTICS SECTION (Interview Type Distribution) --- */}
+          <div className="ai-chart-card">
+            <h4 style={{ color: '#e67e22' }}><FaVideo /> Interview Type Distribution</h4>
+            <div className="ai-bar-chart">
+              {['video', 'audio', 'technical', 'hr', 'mcq', 'coding'].map(type => {
+                const count = results.filter(r => r.resultType === type).length;
+                const pct = total > 0 ? Math.round((count/total)*100) : 0;
+                const label = type.charAt(0).toUpperCase() + type.slice(1);
+                return (
+                  <div key={type} className="ai-bar-row">
+                    <span>{label}</span>
+                    <div className="ai-bar-track"><div className="ai-bar-fill orange" style={{ width: `${pct}%` }}></div></div>
+                    <span>{count} ({pct}%)</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
 
-        <div className="ai-results-table">
-          <div className="ai-table-header">
-            <h2>All Results</h2>
-            <span className="ai-table-count">{total} results</span>
+        {/* --- SEARCH, FILTER & SORTING --- */}
+        <div className="ai-controls-bar">
+          <div className="ai-search-box">
+            <FaSearch className="ai-search-icon" />
+            <input type="text" placeholder="Search candidates, jobs, or types..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
           </div>
+          <div className="ai-filters-group">
+            <select value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+              <option value="all">Type: All</option>
+              <option value="Video Interview">Video Interview</option>
+              <option value="Audio Interview">Audio Interview</option>
+              <option value="MCQ Assessment">MCQ Assessment</option>
+              <option value="Technical Interview">Technical Interview</option>
+              <option value="HR Interview">HR Interview</option>
+              <option value="Coding Challenge">Coding Challenge</option>
+            </select>
+            <select value={filterDecision} onChange={(e) => setFilterDecision(e.target.value)}>
+              <option value="all">Decision: All</option>
+              <option value="Selected">Selected</option>
+              <option value="Rejected">Rejected</option>
+              <option value="Hold">Hold</option>
+              <option value="Next Round">Next Round</option>
+              <option value="Pending Review">Pending Review</option>
+            </select>
+            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+              <option value="all">Status: All</option>
+              <option value="Completed">Completed</option>
+              <option value="Pending">Pending</option>
+              <option value="In Review">In Review</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+            <select value={filterDate} onChange={(e) => setFilterDate(e.target.value)}>
+              <option value="all">Date: All</option>
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+            </select>
+            <div className="ai-sort-group">
+              <span><FaSortAmountDown /> Sort:</span>
+              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                <option value="date-desc">Latest First</option>
+                <option value="date-asc">Oldest First</option>
+                <option value="score-desc">Highest Score</option>
+                <option value="score-asc">Lowest Score</option>
+                <option value="name-asc">Name (A-Z)</option>
+                <option value="name-desc">Name (Z-A)</option>
+              </select>
+            </div>
+            <button className="ai-reset-btn" onClick={resetFilters}>Reset Filters</button>
+          </div>
+        </div>
 
+        {/* --- RESULTS TABLE --- */}
+        <div className="ai-table-container">
+          <div className="ai-table-header">
+            <h2>Interview Results</h2>
+            <span className="ai-table-count">{sortedResults.length} results</span>
+          </div>
           <div className="table-responsive">
             <table className="ai-table">
               <thead>
                 <tr>
-                  <th>Type</th>
+                  <th style={{width: '40px'}}>#</th>
                   <th>Candidate</th>
-                  <th>Score</th>
-                  <th>AI Result</th>
+                  <th>Applied Job</th>
+                  <th>Interview Type</th>
+                  <th>Overall Score</th>
+                  <th>Status</th>
                   <th>Recruiter Decision</th>
-                  <th>Action</th>
+                  <th>Interview Date</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {results.length === 0 ? (
-                  <tr>
-                    <td colSpan="6" className="ai-empty">No Results Found</td>
-                  </tr>
+                {sortedResults.length === 0 ? (
+                  <tr><td colSpan="9">
+                    <div className="ai-empty-state">
+                      <FaRobot className="ai-empty-icon" style={{ color: '#e67e22' }} />
+                      <h3>No Interview Results Yet</h3>
+                      <p>Completed interview evaluations will appear here once recruiters finish reviewing candidates.</p>
+                      <div className="ai-empty-actions">
+                        <button className="ai-empty-btn" onClick={() => navigate('/recruiter/interviews')}>Go to Interview Calendar</button>
+                        <button className="ai-empty-btn secondary" onClick={() => navigate('/recruiter/interviews')}>Schedule New Interview</button>
+                      </div>
+                    </div>
+                  </td></tr>
                 ) : (
-                  results.map((item) => (
-                    <tr key={item._id}>
-                      <td>
-                        <span className={item.resultType === "video" ? "badge-video" : "badge-assessment"}>
-                          {item.resultType === "video" ? <FaVideo /> : <FaRobot />}
-                          {item.resultType === "video" ? " Video" : " Assessment"}
-                        </span>
-                      </td>
-                      <td>{item.candidateName || "Unknown"}</td>
-                      <td>
-                        <span className="score-badge">
-                          {item.resultType === "video" ? item.overall || 0 : item.score || 0}%
-                        </span>
-                      </td>
-                      <td>
-                        {item.resultType === "video" ? (
-                          item.verdict === "Hire" ? (
-                            <span className="badge-hire">Hire</span>
-                          ) : item.verdict === "Reject" ? (
-                            <span className="badge-reject">Reject</span>
-                          ) : (
-                            <span className="badge-review">Review</span>
-                          )
-                        ) : (
-                          (item.score || 0) >= 75 ? (
-                            <span className="badge-hire">Hire</span>
-                          ) : (item.score || 0) < 50 ? (
-                            <span className="badge-reject">Reject</span>
-                          ) : (
-                            <span className="badge-review">Review</span>
-                          )
-                        )}
-                      </td>
-                      <td>
-                        <span className="decision-badge">
-                          {item.finalDecision || "Pending"}
-                        </span>
-                      </td>
-                      <td>
-                        <button className="review-btn" onClick={() => handleViewDetails(item)}>
-                          View Details
-                        </button>
-                      </td>
-                    </tr>
-                  ))
+                  sortedResults.map((item, index) => {
+                    const score = item.resultType === "video" ? (item.overall || 0) : (item.score || 0);
+                    const scoreBadge = getScoreBadge(score);
+                    const status = item.status || "Completed";
+                    const decision = item.finalDecision || "Pending Review";
+                    const date = item.createdAt || item.date || "N/A";
+
+                    return (
+                      <tr key={item._id} className="ai-table-row">
+                        <td className="ai-row-index">{index + 1}</td>
+                        <td>
+                          <div className="ai-candidate-cell">
+                            <div className="ai-avatar-sm" style={{ background: '#fdf2e9', color: '#e67e22' }}>
+                              {item.candidateName?.charAt(0)?.toUpperCase() || 'U'}
+                            </div>
+                            <div>
+                              <div className="ai-name">{item.candidateName || "Unknown"}</div>
+                              <div className="ai-email"><FaEnvelope /> {item.email || "N/A"}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td>{item.jobTitle || "N/A"}</td>
+                        <td>
+                          <span className={`ai-type-badge ${item.resultType}`}>
+                            {item.resultType === "video" ? <FaVideo /> : <FaRobot />}
+                            {getInterviewTypeLabel(item)}
+                          </span>
+                        </td>
+                        <td>
+                          <div className={`ai-score-badge ${scoreBadge.cls}`}>
+                            <span className="ai-score-num">{score}%</span>
+                            <span className="ai-score-label">{scoreBadge.label}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <span className={`ai-status-badge ${status.toLowerCase().replace(' ', '-')}`}>
+                            {status === "Completed" ? <FaCheckCircle /> : <FaClock />} {status}
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`ai-decision-badge ${decision.toLowerCase().replace(' ', '-')}`}>
+                            {decision === "Selected" ? <FaThumbsUp /> : 
+                             decision === "Rejected" ? <FaThumbsDown /> : 
+                             decision === "Next Round" ? <FaArrowRight /> : <FaClock />} {decision}
+                          </span>
+                        </td>
+                        <td>{new Date(date).toLocaleDateString()}</td>
+                        <td>
+                          <div className="ai-action-buttons">
+                            <button className="ai-btn-view" title="View Details" onClick={() => handleViewDetails(item)}><FaExternalLinkAlt /></button>
+                            <button className="ai-btn-download" title="Download Report" onClick={() => alert("Download Report triggered!")}><FaDownload /></button>
+                            <button className="ai-btn-approve" title="Approve & Select" onClick={() => { setFinalDecision("Selected"); saveReview(); }}><FaCheck /></button>
+                            <button className="ai-btn-reject" title="Reject" onClick={() => { setFinalDecision("Rejected"); saveReview(); }}><FaTimes /></button>
+                            <button className="ai-btn-next" title="Move to Next Round" onClick={() => { setFinalDecision("Next Round"); saveReview(); }}><FaArrowRight /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
           </div>
         </div>
+
+        {/* --- FUTURE READY: AI INSIGHTS SECTION --- */}
+        <div className="ai-future-insights" style={{ borderLeftColor: '#e67e22' }}>
+          <div className="ai-insights-header">
+            <h4><FaRobot style={{ color: '#e67e22' }} /> AI Insights <span className="ai-coming-soon" style={{ background: '#fdf2e9', color: '#e67e22' }}>Coming Soon</span></h4>
+          </div>
+          <div className="ai-insights-placeholder">
+            <div className="ai-insight-item"><span>AI Recommendation</span> <span className="ai-placeholder-text">Available After AI Integration</span></div>
+            <div className="ai-insight-item"><span>Confidence Score</span> <span className="ai-placeholder-text">--</span></div>
+            <div className="ai-insight-item"><span>Technical Analysis</span> <span className="ai-placeholder-text">AI Module Not Yet Connected</span></div>
+            <div className="ai-insight-item"><span>Communication Analysis</span> <span className="ai-placeholder-text">Coming Soon</span></div>
+            <div className="ai-insight-item"><span>Behavioral Analysis</span> <span className="ai-placeholder-text">Coming Soon</span></div>
+            <div className="ai-insight-item"><span>Final Recommendation</span> <span className="ai-placeholder-text">--</span></div>
+          </div>
+          <div className="ai-insights-footer">
+            <p>AI-powered interview evaluation and recommendations will become available after integrating the AI evaluation engine.</p>
+          </div>
+        </div>
+
       </div>
     </DashboardLayout>
   );

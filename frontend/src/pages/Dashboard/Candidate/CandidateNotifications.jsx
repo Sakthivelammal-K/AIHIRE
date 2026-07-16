@@ -7,6 +7,7 @@ import {
   FaBell,
   FaCheckCircle,
   FaTimesCircle,
+  FaFilter,
   FaClock,
   FaUserPlus,
   FaCalendarAlt,
@@ -16,7 +17,6 @@ import {
   FaTrash,
   FaCheckDouble,
   FaSpinner,
-  FaFilter,
   FaSearch,
   FaCog,
   FaEnvelope,
@@ -38,35 +38,23 @@ const ICON_MAP = {
   FaInfoCircle, FaArrowRight, FaSortAmountDown, FaSortAmountUp
 };
 
-function Notifications() {
+function CandidateNotifications() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState([]);
   const [filter, setFilter] = useState("all");
-  const [showSettings, setShowSettings] = useState(false);
-  const [markingAll, setMarkingAll] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchTimeout, setSearchTimeout] = useState(null);
   const [error, setError] = useState(null);
   const [skip, setSkip] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [sortOrder, setSortOrder] = useState(-1); // -1 = newest first
+  const [sortOrder, setSortOrder] = useState(-1);
   const [stats, setStats] = useState({ total: 0, unread: 0, read: 0, by_type: {} });
+  const [markingAll, setMarkingAll] = useState(false);
 
   const myEmail = localStorage.getItem("email");
-  const myRole = localStorage.getItem("role") || "recruiter";
-
-  // ==========================================
-  // NEW: STATE FOR USER PREFERENCES
-  // ==========================================
-  const [emailEnabled, setEmailEnabled] = useState(true);
-
-  // ==========================================
-  // DYNAMIC PATH HELPER
-  // ==========================================
-  const getDashboardBasePath = () => {
-    return myRole.toLowerCase() === "candidate" ? "/candidate" : "/recruiter";
-  };
+  const myRole = localStorage.getItem("role") || "candidate";
 
   // ==========================================
   // FETCH NOTIFICATIONS
@@ -125,54 +113,30 @@ function Notifications() {
   };
 
   // ==========================================
-  // NEW: LOAD USER PREFERENCES
+  // SEARCH HANDLER
   // ==========================================
-  const loadPreferences = async () => {
-    try {
-      const response = await API.get(`/users/profile?email=${myEmail}`);
-      if (response.data && response.data.preferences) {
-        setEmailEnabled(response.data.preferences.emailEnabled !== false); // Default to true if missing
-      }
-    } catch (error) {
-      console.log("Error loading preferences:", error);
-    }
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    if (searchTimeout) clearTimeout(searchTimeout);
+    const newTimeout = setTimeout(() => {
+      loadNotifications(true);
+    }, 500);
+    setSearchTimeout(newTimeout);
   };
 
   // ==========================================
-  // NEW: SAVE PREFERENCES
-  // ==========================================
-  const savePreference = async (key, value) => {
-    try {
-      const payload = { 
-        email: myEmail, 
-        emailEnabled: key === "emailEnabled" ? value : emailEnabled,
-        soundEnabled: false // Sound is permanently disabled
-      };
-      await API.put(`/users/preferences`, payload);
-      
-      if (key === "emailEnabled") setEmailEnabled(value);
-    } catch (error) {
-      console.log("Error saving preference:", error);
-    }
-  };
-
-  // ==========================================
-  // INITIAL LOAD
+  // INITIAL LOAD & POLLING
   // ==========================================
   useEffect(() => {
     if (myEmail) {
       loadNotifications(true);
       loadStats();
-      loadPreferences(); // Load email preference
     }
   }, [filter, searchTerm, sortOrder, myEmail]);
 
-  // ==========================================
-  // REAL-TIME POLLING (NO SOUND)
-  // ==========================================
   useEffect(() => {
     if (!myEmail) return;
-
     const intervalId = setInterval(() => {
       const fetchNew = async () => {
         try {
@@ -182,30 +146,19 @@ function Notifications() {
 
           const response = await API.get(url);
           if (response.data && response.data.length > 0) {
-            // Check if new notifications arrived
             if (notifications.length === 0 || response.data[0]._id !== notifications[0]?._id) {
               setNotifications(response.data);
               setHasMore(response.data.length >= 15);
               setSkip(0);
-              loadStats(); // Update stats
+              loadStats();
             }
           }
         } catch (err) {}
       };
       fetchNew();
     }, 5000);
-
     return () => clearInterval(intervalId);
   }, [myEmail, filter, notifications, sortOrder]);
-
-  // ==========================================
-  // LOAD MORE
-  // ==========================================
-  const handleLoadMore = () => {
-    const newSkip = skip + 15;
-    setSkip(newSkip);
-    loadNotifications(false);
-  };
 
   // ==========================================
   // ACTIONS
@@ -213,9 +166,7 @@ function Notifications() {
   const markAsRead = async (id) => {
     try {
       await API.put(`/notifications/${id}/read`);
-      setNotifications(prev =>
-        prev.map(notif => notif._id === id ? { ...notif, read: true } : notif)
-      );
+      setNotifications(prev => prev.map(notif => notif._id === id ? { ...notif, read: true } : notif));
       loadStats();
     } catch (error) {
       console.log("Error marking notification as read:", error);
@@ -245,6 +196,15 @@ function Notifications() {
     }
   };
 
+    // ==========================================
+  // LOAD MORE
+  // ==========================================
+  const handleLoadMore = () => {
+    const newSkip = skip + 15;
+    setSkip(newSkip);
+    loadNotifications(false);
+  };
+
   const deleteAllNotifications = async () => {
     if (window.confirm("Are you sure you want to delete all notifications?")) {
       try {
@@ -259,31 +219,23 @@ function Notifications() {
   };
 
   // ==========================================
-  // NAVIGATION (FORCE RECRUITER/CANDIDATES)
+  // NAVIGATION
   // ==========================================
   const handleNotificationClick = (notification) => {
     if (!notification.read) markAsRead(notification._id);
-    
     let targetPath = "";
-
-    // 1. If the link is specifically "/candidates", force it to "/recruiter/candidates"
+    
     if (notification.action_link === "/candidates") {
-      targetPath = "/recruiter/candidates";
-    } 
-    // 2. If it's an empty link, go to the dashboard base
-    else if (!notification.action_link) {
-      targetPath = getDashboardBasePath();
-    }
-    // 3. If it starts with /recruiter or /candidate, use it as-is
-    else if (notification.action_link.startsWith("/recruiter") || notification.action_link.startsWith("/candidate")) {
+      targetPath = "/candidate/candidates"; // Candidate doesn't have candidates page, fallback to dashboard
+    } else if (!notification.action_link) {
+      targetPath = "/candidate";
+    } else if (notification.action_link.startsWith("/candidate")) {
       targetPath = notification.action_link;
-    }
-    // 4. Otherwise, prepend the base path
-    else {
-      targetPath = `${getDashboardBasePath()}${notification.action_link}`;
+    } else {
+      targetPath = `/candidate${notification.action_link}`;
     }
     
-    console.log("Navigating to:", targetPath); // Check your browser console!
+    console.log("Candidate Navigating to:", targetPath);
     navigate(targetPath);
   };
 
@@ -295,7 +247,6 @@ function Notifications() {
     const date = new Date(timestamp);
     const now = new Date();
     const diff = now - date;
-    
     if (diff < 60000) return 'Just now';
     if (diff < 3600000) return `${Math.floor(diff / 60000)} min ago`;
     if (diff < 86400000) return `${Math.floor(diff / 3600000)} hours ago`;
@@ -312,18 +263,17 @@ function Notifications() {
     { value: "application", label: "Applications", icon: FaUserPlus },
     { value: "interview", label: "Interviews", icon: FaCalendarAlt },
     { value: "assessment", label: "Assessments", icon: FaFileAlt },
-    { value: "hire", label: "Hires", icon: FaAward },
     { value: "job", label: "Jobs", icon: FaBriefcase },
     { value: "message", label: "Messages", icon: FaEnvelope }
   ];
 
   // ==========================================
-  // RENDER STATES
+  // RENDER
   // ==========================================
   if (loading && notifications.length === 0) {
     return (
       <DashboardLayout>
-        <div className="notifications-loading">
+        <div className="candidate-loading">
           <FaSpinner className="spin" />
           <p>Loading notifications...</p>
         </div>
@@ -334,10 +284,10 @@ function Notifications() {
   if (error) {
     return (
       <DashboardLayout>
-        <div className="notifications-error">
-          <FaExclamationTriangle className="notifications-error-icon" />
+        <div className="candidate-error">
+          <FaExclamationTriangle className="candidate-error-icon" />
           <p>{error}</p>
-          <button className="notifications-retry-btn" onClick={() => loadNotifications(true)}>
+          <button className="candidate-retry-btn" onClick={() => loadNotifications(true)}>
             Retry
           </button>
         </div>
@@ -345,61 +295,65 @@ function Notifications() {
     );
   }
 
-  // ==========================================
-  // MAIN RENDER
-  // ==========================================
   return (
     <DashboardLayout>
-      <div className="notifications-page">
+      <div className="candidate-notifications-page">
+        
         {/* Header */}
-        <div className="notifications-header">
-          <div className="notifications-header-left">
+        <div className="candidate-notifications-header">
+          <div className="candidate-notifications-header-left">
             <h1>
-              <FaBell className="notifications-header-icon" />
+              <FaBell className="candidate-notifications-header-icon" />
               Notifications
             </h1>
-            <span className="notifications-stats">
-              <span className="notifications-stat">{stats.total} total</span>
-              <span className="notifications-stat unread">{stats.unread} unread</span>
-              <span className="notifications-stat read">{stats.read} read</span>
-            </span>
+            <span className="candidate-unread-badge">{unreadCount} unread</span>
           </div>
-          <div className="notifications-header-right">
+          <div className="candidate-notifications-header-right">
             <button 
-              className="notifications-mark-all"
+              className="candidate-notifications-mark-all"
               onClick={markAllAsRead}
               disabled={markingAll || unreadCount === 0}
             >
               {markingAll ? <FaSpinner className="spin" /> : <FaCheckDouble />}
               Mark all as read
             </button>
-            <button 
-              className="notifications-settings-btn"
-              onClick={() => setShowSettings(!showSettings)}
-            >
-              <FaCog />
-            </button>
+          </div>
+        </div>
+
+        {/* Stats Bar */}
+        <div className="candidate-stats-bar">
+          <div className="candidate-stat-item">
+            <span className="stat-label">Total</span>
+            <span className="stat-value">{stats.total}</span>
+          </div>
+          <div className="candidate-stat-item">
+            <span className="stat-label">New</span>
+            <span className="stat-value new">{stats.unread}</span>
+          </div>
+          <div className="candidate-stat-item">
+            <span className="stat-label">Read</span>
+            <span className="stat-value read">{stats.read}</span>
           </div>
         </div>
 
         {/* Search & Filters */}
-        <div className="notifications-toolbar">
-          <div className="notifications-search">
-            <FaSearch className="notifications-search-icon" />
+        <div className="candidate-toolbar">
+          <div className="candidate-search">
+            <FaSearch className="candidate-search-icon" />
             <input
               type="text"
               placeholder="Search notifications..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={handleSearchChange}
             />
           </div>
-          <div className="notifications-filters">
+          <div className="candidate-filters">
             {notificationTypes.map((type) => {
               const Icon = type.icon;
               return (
                 <button
                   key={type.value}
-                  className={`notifications-filter-btn ${filter === type.value ? 'active' : ''}`}
+                  className={`candidate-filter-btn ${filter === type.value ? 'active' : ''}`}
                   onClick={() => setFilter(type.value)}
                 >
                   <Icon />
@@ -410,68 +364,21 @@ function Notifications() {
           </div>
         </div>
 
-        {/* Sort Control */}
-        <div className="notifications-sort">
-          <button 
-            className="notifications-sort-btn"
-            onClick={() => setSortOrder(sortOrder === -1 ? 1 : -1)}
-          >
+        {/* Sort */}
+        <div className="candidate-sort">
+          <button className="candidate-sort-btn" onClick={() => setSortOrder(sortOrder === -1 ? 1 : -1)}>
             {sortOrder === -1 ? <FaSortAmountDown /> : <FaSortAmountUp />}
             {sortOrder === -1 ? "Newest First" : "Oldest First"}
           </button>
           {notifications.length > 0 && (
-            <button 
-              className="notifications-clear-all"
-              onClick={deleteAllNotifications}
-            >
+            <button className="candidate-clear-all" onClick={deleteAllNotifications}>
               <FaTrash /> Clear All
             </button>
           )}
         </div>
 
-        {/* Settings Panel - Sound REMOVED, Email WORKING */}
-        {showSettings && (
-          <div className="notifications-settings-panel">
-            <div className="notifications-settings-header">
-              <h3>Notification Settings</h3>
-              <button onClick={() => setShowSettings(false)}><FaTimesCircle /></button>
-            </div>
-            <div className="notifications-settings-body">
-              
-              {/* 🛑 SOUND NOTIFICATIONS HAVE BEEN PERMANENTLY DISABLED (COMMENTED OUT) */}
-              {/* <div className="notifications-setting-item">
-                <div className="notifications-setting-info">
-                  <span className="notifications-setting-label">Sound Notifications</span>
-                  <span className="notifications-setting-desc">Play sound for new notifications</span>
-                </div>
-                <label className="notifications-toggle">
-                  <input type="checkbox" defaultChecked />
-                  <span className="notifications-toggle-slider"></span>
-                </label>
-              </div> */}
-
-              {/* ✅ EMAIL NOTIFICATIONS ARE NOW FUNCTIONAL */}
-              <div className="notifications-setting-item">
-                <div className="notifications-setting-info">
-                  <span className="notifications-setting-label">Email Notifications</span>
-                  <span className="notifications-setting-desc">Receive notifications via email</span>
-                </div>
-                <label className="notifications-toggle">
-                  <input 
-                    type="checkbox" 
-                    checked={emailEnabled} 
-                    onChange={(e) => savePreference("emailEnabled", e.target.checked)} 
-                  />
-                  <span className="notifications-toggle-slider"></span>
-                </label>
-              </div>
-
-            </div>
-          </div>
-        )}
-
         {/* Notifications List */}
-        <div className="notifications-list">
+        <div className="candidate-list">
           {notifications.length > 0 ? (
             notifications.map((notification) => {
               try {
@@ -481,76 +388,66 @@ function Notifications() {
                 return (
                   <div
                     key={notification._id}
-                    className={`notifications-item ${isUnread ? 'unread' : ''}`}
+                    className={`candidate-item ${isUnread ? 'unread' : ''}`}
                     onClick={() => handleNotificationClick(notification)}
                   >
                     <div 
-                      className="notifications-item-icon"
+                      className="candidate-item-icon"
                       style={{ background: `${notification.color}15`, color: notification.color }}
                     >
                       <Icon />
                     </div>
-                    <div className="notifications-item-content">
-                      <div className="notifications-item-header">
-                        <div className="notifications-item-title">
-                          <span className="notifications-item-type">{notification.title}</span>
-                          {isUnread && <span className="notifications-item-dot"></span>}
+                    <div className="candidate-item-content">
+                      <div className="candidate-item-header">
+                        <div className="candidate-item-title">
+                          <span className="candidate-item-type">{notification.title}</span>
+                          {isUnread && <span className="candidate-item-dot"></span>}
                         </div>
-                        <div className="notifications-item-actions">
+                        <div className="candidate-item-actions">
                           {isUnread && (
                             <button 
-                              className="notifications-item-mark-read"
+                              className="candidate-item-mark-read"
                               onClick={(e) => { e.stopPropagation(); markAsRead(notification._id); }}
-                              title="Mark as read"
                             >
                               <FaCheckCircle />
                             </button>
                           )}
                           <button 
-                            className="notifications-item-delete"
+                            className="candidate-item-delete"
                             onClick={(e) => { e.stopPropagation(); deleteNotification(notification._id); }}
-                            title="Delete"
                           >
                             <FaTrash />
                           </button>
                         </div>
                       </div>
-                      <p className="notifications-item-message">{notification.message}</p>
+                      <p className="candidate-item-message">{notification.message}</p>
                       
-                      {/* Render Metadata Tags */}
                       {notification.metadata && Object.keys(notification.metadata).length > 0 && (
-                        <div className="notifications-item-metadata">
-                          {notification.metadata.candidateName && (
-                            <span className="notifications-item-tag"><FaUsers /> {notification.metadata.candidateName}</span>
-                          )}
+                        <div className="candidate-item-metadata">
                           {notification.metadata.jobTitle && (
-                            <span className="notifications-item-tag"><FaBriefcase /> {notification.metadata.jobTitle}</span>
+                            <span className="candidate-item-tag"><FaBriefcase /> {notification.metadata.jobTitle}</span>
                           )}
                           {notification.metadata.score && (
-                            <span className="notifications-item-tag score"><FaStar /> {notification.metadata.score}%</span>
-                          )}
-                          {notification.metadata.sender && (
-                            <span className="notifications-item-tag"><FaEnvelope /> {notification.metadata.sender}</span>
+                            <span className="candidate-item-tag score"><FaStar /> {notification.metadata.score}%</span>
                           )}
                           {notification.metadata.company && (
-                            <span className="notifications-item-tag"><FaUsers /> {notification.metadata.company}</span>
+                            <span className="candidate-item-tag"><FaUsers /> {notification.metadata.company}</span>
                           )}
                           {notification.metadata.status && (
-                            <span className={`notifications-item-tag status-${notification.metadata.status}`}>
+                            <span className={`candidate-item-tag status-${notification.metadata.status}`}>
                               {notification.metadata.status}
                             </span>
                           )}
                         </div>
                       )}
                       
-                      <div className="notifications-item-footer">
-                        <span className="notifications-item-time">{getTimeAgo(notification.time)}</span>
+                      <div className="candidate-item-footer">
+                        <span className="candidate-item-time">{getTimeAgo(notification.time)}</span>
                         {notification.action_link && (
                           <button 
-                            className="notifications-item-action"
+                            className="candidate-item-action"
                             onClick={(e) => {
                               e.stopPropagation();
-                              // Just call the same function to ensure consistency
                               handleNotificationClick(notification);
                             }}
                           >
@@ -567,8 +464,8 @@ function Notifications() {
               }
             })
           ) : (
-            <div className="notifications-empty">
-              <FaBell className="notifications-empty-icon" />
+            <div className="candidate-empty">
+              <FaBell className="candidate-empty-icon" />
               <h3>No notifications</h3>
               <p>You're all caught up! Check back later for updates.</p>
             </div>
@@ -577,12 +474,8 @@ function Notifications() {
 
         {/* Load More */}
         {hasMore && notifications.length > 0 && (
-          <div className="notifications-load-more">
-            <button 
-              className="notifications-load-more-btn" 
-              onClick={handleLoadMore}
-              disabled={loadingMore}
-            >
+          <div className="candidate-load-more">
+            <button className="candidate-load-more-btn" onClick={handleLoadMore} disabled={loadingMore}>
               {loadingMore ? <FaSpinner className="spin" /> : 'Load More'}
             </button>
           </div>
@@ -592,4 +485,4 @@ function Notifications() {
   );
 }
 
-export default Notifications;
+export default CandidateNotifications;

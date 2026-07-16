@@ -1,9 +1,11 @@
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from database import db
+from fastapi.responses import FileResponse
 import os
 from pypdf import PdfReader
 from bson import ObjectId
 from datetime import datetime
+
 
 router = APIRouter()
 
@@ -91,6 +93,48 @@ def delete_resume(email: str):
     if result.deleted_count == 1:
         return {"message": "Resume deleted successfully"}
     return {"message": "Resume not found"}
+
+
+# ==========================================
+# 1. VIEW ROUTE (For Preview / Overlay - NEVER downloads)
+# ==========================================
+@router.get("/view/{email}")
+def view_resume_pdf(email: str):
+    resume = resumes_collection.find_one({"email": email})
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    file_path = resume.get("resumePath")
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="PDF file not found on server")
+        
+    # "inline" tells the browser to show the PDF. We remove filename to prevent accidental downloads.
+    return FileResponse(
+        path=file_path, 
+        media_type="application/pdf",
+        headers={"Content-Disposition": "inline"}
+    )
+
+
+# ==========================================
+# 2. DOWNLOAD ROUTE (For Download Button - ALWAYS downloads)
+# ==========================================
+@router.get("/download/{email}")
+def download_resume_pdf(email: str):
+    resume = resumes_collection.find_one({"email": email})
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    file_path = resume.get("resumePath")
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="PDF file not found on server")
+        
+    # "attachment" + octet-stream + filename forces the browser to immediately download
+    return FileResponse(
+        path=file_path, 
+        media_type="application/octet-stream", 
+        filename=resume.get("resumeName")
+    )
 
 # ==========================================
 # FIXED SCREENING ROUTE (No more 500 errors)

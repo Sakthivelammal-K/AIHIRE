@@ -13,6 +13,7 @@ from routes.video_interview import router as videoInterview_router
 from routes.assessment import router as assessment_router
 from routes.messages import router as message_router
 from routes.settings import router as setting_router
+from routes.notifications import router as notification_router
 
 from fastapi.staticfiles import StaticFiles
 
@@ -135,6 +136,10 @@ app.include_router(
     setting_router
 )
 
+app.include_router(
+    notification_router,
+    prefix="/notifications"
+)
 
 
 # ==========================

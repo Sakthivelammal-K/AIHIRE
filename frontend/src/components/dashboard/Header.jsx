@@ -70,18 +70,11 @@ function Header({ userName, role, customTitle, customSubtitle }) {
     )
       return "Interviews";
 
-    // Other Recruiter Pages
     if (
-      path === "/recruiter/assessments" ||
-      path === "/recruiter/assessments/"
+      path === "/recruiter/interview-results" ||
+      path === "/recruiter/interview-results/"
     )
-      return "Assessments";
-
-    if (
-      path === "/recruiter/ai-interview-results" ||
-      path === "/recruiter/ai-interview-results/"
-    )
-      return "AI Interviews";
+      return "Interview Results";
 
     if (path === "/recruiter/reports" || path === "/recruiter/reports/")
       return "Reports";
@@ -131,6 +124,13 @@ function Header({ userName, role, customTitle, customSubtitle }) {
 
     if (path === "/candidate/activity" || path === "/candidate/activity/")
       return "My Activity";
+
+    if (
+        path === "/candidate/notifications" ||
+        path === "/candidate/notifications/"
+      ) {
+        return "Notifications";
+      }
 
     return "Dashboard";
   };
@@ -188,17 +188,10 @@ function Header({ userName, role, customTitle, customSubtitle }) {
       }
 
       if (
-        path === "/recruiter/assessments" ||
-        path === "/recruiter/assessments/"
+        path === "/recruiter/interview-results" ||
+        path === "/recruiter/interview-results/"
       ) {
-        return "Create and manage candidate assessments";
-      }
-
-      if (
-        path === "/recruiter/ai-interview-results" ||
-        path === "/recruiter/ai-interview-results/"
-      ) {
-        return "Review AI-powered interview results";
+        return "Review completed interview evaluations";
       }
 
       if (path === "/recruiter/reports" || path === "/recruiter/reports/") {
@@ -294,6 +287,10 @@ function Header({ userName, role, customTitle, customSubtitle }) {
 
       if (path === "/candidate/activity") {
         return "Track your application journey and interview progress";
+      }
+
+      if (path === "/candidate/notifications"){
+        return "Stay updated with latest activities";
       }
 
       return `Welcome back, ${userName}!`;

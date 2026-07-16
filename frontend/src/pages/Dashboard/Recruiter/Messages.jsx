@@ -1,7 +1,8 @@
 import DashboardLayout from "../../../components/dashboard/DashboardLayout";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import API from "../../../api/api";
+import EmojiPicker from "emoji-picker-react";
 
 import {
   FaSearch,
@@ -11,8 +12,6 @@ import {
   FaSmile,
   FaPhone,
   FaVideo,
-  FaRegStar,
-  FaStar,
   FaEllipsisV,
   FaCheck,
   FaCheckDouble,
@@ -43,9 +42,8 @@ function Messages() {
   const [newMessage, setNewMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   
-  // State for Tabs and Filters
-  const [view, setView] = useState("inbox"); // 'inbox' or 'archived'
-  const [filter, setFilter] = useState("all"); // 'all', 'unread', 'read'
+  const [view, setView] = useState("inbox");
+  const [filter, setFilter] = useState("all");
   
   const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 768);
   const [showSidebar, setShowSidebar] = useState(true);
@@ -57,12 +55,18 @@ function Messages() {
   const [candidateSearch, setCandidateSearch] = useState("");
   const [applications, setApplications] = useState([]);
   
-  // Chat Action States
-  const [isStarred, setIsStarred] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  
+  // --- STATES FOR ATTACHMENT & EMOJI & VIEWER ---
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [viewerFile, setViewerFile] = useState(null);
+  
   const dropdownRef = useRef(null);
-
   const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const emojiPickerRef = useRef(null);
+  const isUploadingRef = useRef(false);
+
   const myEmail = localStorage.getItem("email");
 
   // Responsive & Click Outside handler
@@ -73,9 +77,8 @@ function Messages() {
       if (mobile) setShowSidebar(true);
     };
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowDropdown(false);
-      }
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) setShowDropdown(false);
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target)) setShowEmojiPicker(false);
     };
     window.addEventListener('resize', handleResize);
     document.addEventListener('mousedown', handleClickOutside);
@@ -99,66 +102,126 @@ function Messages() {
     }
   }, [location]);
 
-  // Load messages when conversation changes & reset actions
+  // ==========================================
+  // LOAD MESSAGES & SIDEBAR
+  // ==========================================
+  const loadMessages = useCallback(async (conversation) => {
+    if (!conversation) return;
+    setLoadingMessages(true);
+    try {
+      const res = await API.get(`/messages/${myEmail}/${conversation.email}`);
+      const sorted = res.data.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+      setMessages(sorted);
+      if (sorted.length > 0) {
+        const lastMsg = sorted[sorted.length - 1];
+        setConversations(prev => prev.map(conv => 
+          conv._id === conversation._id ? { ...conv, lastMessage: lastMsg.message, lastMessageTime: lastMsg.timestamp } : conv
+        ));
+      }
+    } catch (err) { console.log("Error loading messages:", err); setMessages([]); } 
+    finally { setLoadingMessages(false); }
+  }, [myEmail]);
+
+  // ==========================================
+  // REMOVED Auto-Mark Read! 
+  // ==========================================
+  const markMessagesAsRead = useCallback(async (conversation) => {
+    try { await API.put("/messages/read", { sender: conversation.email, receiver: myEmail }); } 
+    catch (err) { console.log("Error marking messages as read:", err); }
+  }, [myEmail]);
+
+  // Load messages ONLY when user clicks on the left
   useEffect(() => {
     if (selectedConversation) {
       loadMessages(selectedConversation);
-      setIsStarred(false); 
       setShowDropdown(false);
-      
-      // Mark conversation as read when you open it
-      setConversations(prev => prev.map(conv => 
-        conv._id === selectedConversation._id 
-          ? { ...conv, unreadCount: 0 } 
-          : conv
-      ));
     } else {
       setMessages([]);
     }
-  }, [selectedConversation]);
+  }, [selectedConversation, loadMessages]);
 
-  // Scroll to bottom
+  // AUTO-SCROLL
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
 
-  // --- API FUNCTIONS ---
-
+  // ==========================================
+  // LOAD SIDEBAR (Completely Dynamic)
+  // ==========================================
   const loadConversations = async () => {
     setLoading(true);
     try {
       const response = await API.get(`/messages/users/${myEmail}`);
-      // Add an 'isArchived' property to handle the archive tab (default false)
-      const dataWithArchive = response.data.map(conv => ({
-        ...conv,
-        isArchived: false 
-      }));
-      setConversations(dataWithArchive);
-    } catch (error) {
-      console.log("Error loading conversations:", error);
-      setConversations([]);
-    } finally {
-      setLoading(false);
-    }
+      let data = response.data.map(conv => ({ ...conv, isArchived: false }));
+      setConversations(data);
+    } catch (error) { console.log("Error loading conversations:", error); setConversations([]); } 
+    finally { setLoading(false); }
   };
 
-  const loadMessages = async (conversation) => {
-    if (!conversation) return;
-    setLoadingMessages(true);
-    try {
-      const res = await API.get(`/messages/${myEmail}/${conversation.email}`);
-      // Sort messages by date (newest at bottom)
-      const sorted = res.data.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-      setMessages(sorted);
-    } catch (err) {
-      console.log("Error loading messages:", err);
-      setMessages([]);
-    } finally {
-      setLoadingMessages(false);
-    }
-  };
+  // ==========================================
+  // POLLING: Real-Time Sync
+  // ==========================================
+  useEffect(() => {
+    if (!selectedConversation) return;
+
+    const intervalId = setInterval(() => {
+      if (selectedConversation) {
+        const forceSyncSidebar = async () => {
+          if (isUploadingRef.current) return; 
+
+          try {
+            // Fetch sidebar data
+            const sidebarRes = await API.get(`/messages/users/${myEmail}`);
+            
+            if (sidebarRes.data && sidebarRes.data.length > 0) {
+              const updatedSidebar = sidebarRes.data.map(conv => ({ ...conv, isArchived: false }));
+              setConversations(updatedSidebar);
+            }
+
+            // Then update the chat messages
+            const res = await API.get(`/messages/${myEmail}/${selectedConversation.email}`);
+            const sorted = res.data.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+            
+            if (sorted.length > 0 && messages.length > 0) {
+               const latestDb = sorted[sorted.length - 1];
+               const latestState = messages[messages.length - 1];
+               if (latestDb._id === latestState._id) return;
+            }
+
+            if (sorted.length !== messages.length) {
+              setMessages(sorted);
+            }
+
+            if (sorted.length > 0) {
+              const lastMsg = sorted[sorted.length - 1];
+              const unreadCount = sorted.filter(msg => 
+                msg.sender !== myEmail && msg.read === false
+              ).length;
+
+              setConversations(prev => prev.map(conv => 
+                conv._id === selectedConversation._id 
+                  ? { 
+                      ...conv, 
+                      lastMessage: lastMsg.message, 
+                      lastMessageTime: lastMsg.timestamp,
+                      unreadCount: unreadCount 
+                    } 
+                  : conv
+              ));
+            }
+          } catch (err) { console.log("Error syncing sidebar:", err); }
+        };
+
+        forceSyncSidebar();
+      }
+    }, 3000);
+
+    return () => clearInterval(intervalId);
+  }, [selectedConversation, messages, myEmail]);
+
+  // --- API FUNCTIONS ---
 
   const loadCandidates = async () => {
     try {
@@ -167,206 +230,132 @@ function Messages() {
       } else {
         const response = await API.get("/applications/");
         const data = Array.isArray(response.data) ? response.data : response.data.applications || [];
-        setAvailableCandidates(data);
         setApplications(data);
+        const uniqueCandidates = [];
+        const seenEmails = new Set();
+        data.forEach(candidate => {
+          const email = candidate.email;
+          if (!seenEmails.has(email)) { seenEmails.add(email); uniqueCandidates.push(candidate); }
+        });
+        setAvailableCandidates(uniqueCandidates);
       }
-    } catch (error) {
-      console.log("Error loading candidates:", error);
-      setAvailableCandidates([]);
-    }
+    } catch (error) { console.log("Error loading candidates:", error); setAvailableCandidates([]); }
   };
 
   const startConversationWithCandidate = async (candidateId, candidateName, candidateEmail) => {
-    setShowNewConversation(false);
-    setSelectedCandidate(null);
+    setShowNewConversation(false); setSelectedCandidate(null);
     try {
       const existingConv = conversations.find(c => c.email === candidateEmail);
-      if (existingConv) {
-        setSelectedConversation(existingConv);
-        if (isMobileView) setShowSidebar(false);
-        return;
-      }
-
-      const newConv = {
-        _id: candidateId,
-        name: candidateName || "Candidate",
-        email: candidateEmail,
-        role: "Applicant",
-        lastMessage: "",
-        lastMessageTime: new Date().toISOString(),
-        unreadCount: 0,
-        isArchived: false
-      };
+      if (existingConv) { setSelectedConversation(existingConv); if (isMobileView) setShowSidebar(false); return; }
+      const newConv = { _id: candidateId, name: candidateName || "Candidate", email: candidateEmail, role: "Applicant", lastMessage: "", lastMessageTime: new Date().toISOString(), unreadCount: 0, isArchived: false };
       setConversations([newConv, ...conversations]);
       setSelectedConversation(newConv);
       if (isMobileView) setShowSidebar(false);
-      
-      // Reload official list from backend just in case
-      try {
-        const res = await API.get(`/messages/users/${myEmail}`);
-        const dataWithArchive = res.data.map(conv => ({ ...conv, isArchived: false }));
-        setConversations(dataWithArchive);
-      } catch (e) { console.log(e); }
-    } catch (error) {
-      console.log("Error starting conversation:", error);
-    }
+    } catch (error) { console.log("Error starting conversation:", error); }
   };
 
   const handleStartNewConversation = async () => {
-    if (!showNewConversation) {
-      setShowNewConversation(true);
-      return;
+    if (!showNewConversation) { setShowNewConversation(true); return; }
+    if (!selectedCandidate) { alert("Please select a candidate"); return; }
+    await startConversationWithCandidate(selectedCandidate._id, selectedCandidate.candidateName || selectedCandidate.name, selectedCandidate.email);
+  };
+
+  // ==========================================
+  // EMOJI & ATTACHMENT LOGIC
+  // ==========================================
+  
+  const handleAttachmentClick = () => { if (fileInputRef.current) fileInputRef.current.click(); };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setSending(true);
+    isUploadingRef.current = true;
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("sender", myEmail);
+    formData.append("receiver", selectedConversation.email);
+
+    try {
+      const res = await API.post("/messages/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      if (res.data && res.data.fileUrl) {
+        await sendFileMessage(res.data.fileUrl, file.type, file.name);
+      }
+    } catch (error) {
+      console.error("File upload failed:", error);
+      setNewMessage(prev => prev + ` 📎 ${file.name}`);
+      alert("Upload failed. Sending as text instead.");
+    } finally {
+      setSending(false);
+      isUploadingRef.current = false;
+      e.target.value = null;
     }
-    if (!selectedCandidate) {
-      alert("Please select a candidate");
-      return;
-    }
-    await startConversationWithCandidate(
-      selectedCandidate._id,
-      selectedCandidate.candidateName || selectedCandidate.name,
-      selectedCandidate.email
-    );
+  };
+
+  const sendFileMessage = async (fileUrl, fileType, fileName) => {
+    if (!selectedConversation) return;
+    try {
+      const timestamp = new Date().toISOString();
+      const tempMsg = {
+        _id: `file_${Date.now()}`,
+        sender: myEmail,
+        message: fileUrl,
+        type: fileType && fileType.startsWith('image/') ? 'image' : 'file', 
+        originalName: fileName,
+        timestamp: timestamp,
+        status: "sent"
+      };
+      setMessages(prev => [...prev, tempMsg]);
+      setConversations(prev => prev.map(conv => 
+        conv._id === selectedConversation._id ? { ...conv, lastMessage: '📎 File Attached', lastMessageTime: timestamp, unreadCount: 0 } : conv
+      ));
+
+      await API.post("/messages/send", { sender: myEmail, receiver: selectedConversation.email, message: fileUrl });
+    } catch (error) { console.log("Error sending file message:", error); }
+  };
+
+  const onEmojiClick = (emojiData, event) => {
+    const emoji = emojiData.emoji || emojiData.character || emojiData;
+    if (emoji) setNewMessage(prev => prev + emoji);
+    setShowEmojiPicker(false);
   };
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation) return;
     setSending(true);
     try {
-      // Optimistic UI Update
-      const tempMsg = {
-        _id: `temp_${Date.now()}`,
-        sender: myEmail,
-        message: newMessage,
-        timestamp: new Date().toISOString(),
-        status: "sent"
-      };
-      setMessages(prev => [...prev, tempMsg]);
       const msgText = newMessage;
+      const timestamp = new Date().toISOString();
+      const tempMsg = { _id: `temp_${Date.now()}`, sender: myEmail, message: msgText, timestamp: timestamp, status: "sent" };
+      setMessages(prev => [...prev, tempMsg]);
       setNewMessage("");
-
-      // Update sidebar
-      setConversations(prev => prev.map(conv => 
-        conv._id === selectedConversation._id 
-          ? { ...conv, lastMessage: msgText, lastMessageTime: new Date().toISOString() } 
-          : conv
-      ));
-
-      // Send to Backend
-      await API.post("/messages/send", {
-        sender: myEmail,
-        receiver: selectedConversation.email,
-        message: msgText
-      });
-
-      // Reload real messages from DB to ensure IDs/Status are correct
+      setConversations(prev => prev.map(conv => conv._id === selectedConversation._id ? { ...conv, lastMessage: msgText, lastMessageTime: timestamp, unreadCount: 0 } : conv));
+      await API.post("/messages/send", { sender: myEmail, receiver: selectedConversation.email, message: msgText });
       await loadMessages(selectedConversation);
       setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-    } catch (error) {
-      console.log("Error sending message:", error);
-      alert("Failed to send message.");
-    } finally {
-      setSending(false);
-    }
+    } catch (error) { console.log("Error sending message:", error); alert("Failed to send message."); } 
+    finally { setSending(false); }
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
+  const handleKeyPress = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } };
 
-  // --- SPECIFIC BUTTON ACTIONS ---
+  const handleCopyChat = () => { navigator.clipboard.writeText(messages.map(m => `${m.sender}: ${m.message}`).join('\n')); alert("Chat copied to clipboard!"); setShowDropdown(false); };
+  const handleDeleteChat = async () => { if (window.confirm("Are you sure you want to delete this conversation?")) { try { await API.delete(`/messages/conversation/${selectedConversation._id}`, { data: { myEmail: myEmail } }); setConversations(prev => prev.filter(c => c._id !== selectedConversation._id)); setSelectedConversation(null); setShowDropdown(false); } catch (error) { console.log("Error deleting conversation:", error); } } };
+  const handleArchiveChat = () => { setConversations(prev => prev.map(conv => conv._id === selectedConversation._id ? { ...conv, isArchived: !conv.isArchived } : conv)); setSelectedConversation(null); setShowDropdown(false); };
 
-  const handleStarToggle = () => {
-    setIsStarred(!isStarred);
-  };
-
-  const handleCopyChat = () => {
-    const chatText = messages.map(m => `${m.sender}: ${m.message}`).join('\n');
-    navigator.clipboard.writeText(chatText);
-    alert("Chat copied to clipboard!");
-    setShowDropdown(false);
-  };
-
-  const handleDeleteChat = () => {
-    if (window.confirm("Are you sure you want to delete this conversation?")) {
-      setConversations(prev => prev.filter(c => c._id !== selectedConversation._id));
-      setSelectedConversation(null);
-      setShowDropdown(false);
-    }
-  };
-
-  const handleArchiveChat = () => {
-    // Toggle the archive status for this conversation
-    setConversations(prev => prev.map(conv => 
-      conv._id === selectedConversation._id 
-        ? { ...conv, isArchived: !conv.isArchived } 
-        : conv
-    ));
-    setSelectedConversation(null);
-    setShowDropdown(false);
-  };
-
-  // --- UI HELPERS ---
-
-  const formatTime = (timestamp) => {
-    if (!timestamp) return "";
-    return new Date(timestamp).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
-
-  const formatDateDivider = (timestamp) => {
-    if (!timestamp) return '';
-    return new Date(timestamp).toLocaleDateString('en-US', { 
-      weekday: 'short', 
-      month: 'short', 
-      day: 'numeric'
-    });
-  };
-
-  const getStatusIcon = (status) => {
-    switch(status) {
-      case 'sent': return <FaCheck className="message-status-icon sent" />;
-      case 'delivered': return <FaCheckDouble className="message-status-icon delivered" />;
-      case 'read': return <FaCheckDouble className="message-status-icon read" />;
-      default: return <FaClock className="message-status-icon" />;
-    }
-  };
-
-  // --- FILTERING LOGIC (This is the fix) ---
-
-  // Step 1: Filter by Inbox or Archived
-  const viewFiltered = conversations.filter(conv => {
-    if (view === 'inbox') return !conv.isArchived;
-    if (view === 'archived') return conv.isArchived;
-    return true;
-  });
-
-  // Step 2: Filter by Search term
-  const searchFiltered = viewFiltered.filter(conv => {
-    const search = searchTerm.toLowerCase();
-    return (conv.name || "").toLowerCase().includes(search) ||
-           (conv.role || "").toLowerCase().includes(search) ||
-           (conv.lastMessage || "").toLowerCase().includes(search);
-  });
-
-  // Step 3: Filter by Read/Unread status
-  const finalFilteredConversations = searchFiltered.filter(conv => {
-    if (filter === "unread") return conv.unreadCount > 0;
-    if (filter === "read") return conv.unreadCount === 0;
-    return true; // all
-  });
-
+  const formatTime = (timestamp) => { if (!timestamp) return ""; try { return new Date(timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true }); } catch (e) { return ""; } };
+  const formatDateDivider = (timestamp) => { if (!timestamp) return ''; return new Date(timestamp).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }); };
+  const getStatusIcon = (status) => { switch(status) { case 'sent': return <FaCheck className="message-status-icon sent" />; case 'delivered': return <FaCheckDouble className="message-status-icon delivered" />; case 'read': return <FaCheckDouble className="message-status-icon read" />; default: return <FaClock className="message-status-icon" />; } };
   const getInitial = (name) => (name ? name.charAt(0).toUpperCase() : "?");
 
-  const filteredCandidates = availableCandidates.filter(c => {
-    const search = candidateSearch.toLowerCase();
-    return ((c.candidateName || c.name || "") + (c.email || "")).toLowerCase().includes(search);
-  });
+  const viewFiltered = conversations.filter(conv => { if (view === 'inbox') return !conv.isArchived; if (view === 'archived') return conv.isArchived; return true; });
+  const searchFiltered = viewFiltered.filter(conv => { const search = searchTerm.toLowerCase(); return (conv.name || "").toLowerCase().includes(search) || (conv.role || "").toLowerCase().includes(search) || (conv.lastMessage || "").toLowerCase().includes(search); });
+  const finalFilteredConversations = searchFiltered.filter(conv => { if (filter === "unread") return conv.unreadCount > 0; if (filter === "read") return conv.unreadCount === 0; return true; });
+  const filteredCandidates = availableCandidates.filter(c => { const search = candidateSearch.toLowerCase(); return ((c.candidateName || c.name || "") + (c.email || "")).toLowerCase().includes(search); });
 
   if (loading) {
     return (
@@ -383,44 +372,25 @@ function Messages() {
     <DashboardLayout>
       <div className="messages-wrapper">
         
-        {/* --- SIDEBAR (LEFT) --- */}
+        {/* SIDEBAR (LEFT) */}
         <div className="messages-sidebar">
           <div className="sidebar-header">
             <div className="sidebar-top-row">
               <h2><FaEnvelope style={{color:'#e67e22'}} /> Messages</h2>
               <button onClick={handleStartNewConversation} className="btn-new-message"><FaPlus /> New</button>
             </div>
-            
-            {/* WORKING TABS */}
             <div className="sidebar-tabs">
-              <span 
-                className={view === 'inbox' ? 'active' : ''} 
-                onClick={() => { setView('inbox'); setShowNewConversation(false); }}
-              >
-                Inbox
-              </span>
-              <span 
-                className={view === 'archived' ? 'active' : ''} 
-                onClick={() => { setView('archived'); setShowNewConversation(false); }}
-              >
-                Archived
-              </span>
+              <span className={view === 'inbox' ? 'active' : ''} onClick={() => { setView('inbox'); setShowNewConversation(false); }}>Inbox</span>
+              <span className={view === 'archived' ? 'active' : ''} onClick={() => { setView('archived'); setShowNewConversation(false); }}>Archived</span>
             </div>
-
             <div className="sidebar-search">
               <FaSearch className="sidebar-search-icon" />
               <input type="text" placeholder="Search messages..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
             </div>
-
             <div className="sidebar-actions">
-               {/* WORKING FILTERS */}
                <div style={{display:'flex', gap:'10px', alignItems:'center'}}>
                   <span className="sidebar-actions-left"><FaFilter style={{color:'#e67e22', fontSize:'12px'}} /> Filters</span>
-                  <select 
-                    value={filter} 
-                    onChange={(e) => setFilter(e.target.value)}
-                    style={{padding:'4px 8px', borderRadius:'4px', border:'1px solid #e2e8f0', outline:'none', fontSize:'12px', cursor:'pointer'}}
-                  >
+                  <select value={filter} onChange={(e) => setFilter(e.target.value)} style={{padding:'4px 8px', borderRadius:'4px', border:'1px solid #e2e8f0', outline:'none', fontSize:'12px', cursor:'pointer'}}>
                     <option value="all">All</option>
                     <option value="unread">Unread</option>
                     <option value="read">Read</option>
@@ -429,7 +399,6 @@ function Messages() {
             </div>
           </div>
 
-          {/* New Conversation Modal (Inline) */}
           {showNewConversation && (
             <div style={{padding:'15px', borderBottom:'1px solid #f0f2f5', background:'#f8f9fa'}}>
               <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'10px'}}>
@@ -459,9 +428,7 @@ function Messages() {
           <div className="conversation-list">
             {finalFilteredConversations.length > 0 ? finalFilteredConversations.map(conv => (
               <div key={conv._id} onClick={() => { setSelectedConversation(conv); if (isMobileView) setShowSidebar(false); setShowNewConversation(false); }} className={`conv-item ${selectedConversation?._id === conv._id ? 'active' : ''} ${conv.unreadCount > 0 ? 'unread' : ''}`}>
-                <div className="conv-avatar">
-                  {conv.profileImage ? <img src={conv.profileImage} alt="avatar" /> : getInitial(conv.name)}
-                </div>
+                <div className="conv-avatar">{conv.profileImage ? <img src={conv.profileImage} alt="avatar" /> : getInitial(conv.name)}</div>
                 <div className="conv-info">
                   <div className="conv-top">
                     <span className="conv-name">{conv.name}</span>
@@ -482,36 +449,26 @@ function Messages() {
           </div>
         </div>
 
-        {/* --- CHAT AREA (MIDDLE - EXPANDED) --- */}
+        {/* CHAT AREA (RIGHT) */}
         <div className="chat-area">
           {selectedConversation ? (
             <>
               <div className="chat-header">
                 <div className="chat-user-info">
-                  {isMobileView && <FaArrowLeft onClick={() => setSelectedConversation(null)} style={{cursor:'pointer'}} />}
-                  <div className="chat-user-avatar">
-                    {selectedConversation.profileImage ? <img src={selectedConversation.profileImage} alt="avatar" /> : getInitial(selectedConversation.name)}
-                  </div>
+                  <FaArrowLeft onClick={() => setSelectedConversation(null)} style={{cursor:'pointer', marginRight:'16px', color:'#64748b', fontSize:'18px'}} />
+                  <div className="chat-user-avatar">{selectedConversation.profileImage ? <img src={selectedConversation.profileImage} alt="avatar" /> : getInitial(selectedConversation.name)}</div>
                   <div className="chat-user-text">
                      <span className="chat-user-name">{selectedConversation.name}</span>
                      <span className="chat-user-role">{selectedConversation.role}</span>
                   </div>
                 </div>
-                
                 <div className="chat-header-actions" style={{position:'relative'}}>
-                   <span onClick={handleStarToggle}>
-                     {isStarred ? <FaStar className="starred" /> : <FaRegStar />}
-                   </span>
-                   
                    <span onClick={() => setShowDropdown(!showDropdown)} ref={dropdownRef}>
                      <FaEllipsisV />
                      {showDropdown && (
                        <div className="action-dropdown" ref={dropdownRef}>
                          <div onClick={handleCopyChat}><FaCopy /> Copy Chat</div>
-                         <div onClick={handleArchiveChat} className="archive">
-                           {selectedConversation.isArchived ? <FaArchive /> : <FaArchive />} 
-                           {selectedConversation.isArchived ? ' Unarchive' : ' Archive Chat'}
-                         </div>
+                         <div onClick={handleArchiveChat} className="archive">{selectedConversation.isArchived ? <FaArchive /> : <FaArchive />} {selectedConversation.isArchived ? ' Unarchive' : ' Archive Chat'}</div>
                          <div onClick={handleDeleteChat} className="delete"><FaTrashAlt /> Delete Chat</div>
                        </div>
                      )}
@@ -526,13 +483,47 @@ function Messages() {
                   messages.map((msg, index) => {
                     const isRecruiter = msg.sender === myEmail;
                     const showDate = index === 0 || new Date(msg.timestamp).toDateString() !== new Date(messages[index - 1].timestamp).toDateString();
+                    
+                    const isRealUrl = msg.message && msg.message.startsWith('http');
+                    const isImage = isRealUrl && (msg.message.match(/\.(jpeg|jpg|gif|png)$/i) || msg.type === 'image');
+                    const isFile = isRealUrl && !isImage;
+
                     return (
                       <div key={msg._id}>
                         {showDate && <div className="date-divider"><span>{formatDateDivider(msg.timestamp)}</span></div>}
                         <div className={`msg-row ${isRecruiter ? 'sent' : 'received'}`}>
                           <div className="msg-bubble">
                             {!isRecruiter && <span className="msg-sender-name">{selectedConversation.name}</span>}
-                            {msg.message}
+                            
+                            {/* RENDER IMAGE PREVIEW */}
+                            {isImage && (
+                              <div 
+                                style={{ cursor: 'pointer', display: 'inline-block' }} 
+                                onClick={() => setViewerFile(msg.message)}
+                              >
+                                <img 
+                                  src={msg.message} 
+                                  alt="Attached" 
+                                  style={{ maxWidth: '250px', maxHeight: '250px', borderRadius: '8px', marginTop: '4px', display: 'block' }} 
+                                />
+                              </div>
+                            )}
+                            
+                            {/* RENDER FILE DOWNLOAD LINK */}
+                            {isFile && !isImage && (
+                              <div 
+                                style={{ color: '#e67e22', fontWeight: 600, textDecoration: 'underline', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} 
+                                onClick={() => setViewerFile(msg.message)}
+                              >
+                                <FaFile /> {msg.originalName || "View Attachment"}
+                              </div>
+                            )}
+
+                            {/* RENDER NORMAL TEXT */}
+                            {!isRealUrl && (
+                              <span>{msg.message}</span>
+                            )}
+                            
                           </div>
                           <div className="msg-footer">
                             {formatTime(msg.timestamp)}
@@ -553,10 +544,18 @@ function Messages() {
               </div>
 
               <div className="chat-input-area">
+                 <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileChange} />
                  <div className="chat-input-wrapper">
-                    <FaPaperclip />
+                    <FaPaperclip style={{ cursor: 'pointer' }} onClick={handleAttachmentClick} />
                     <input type="text" placeholder="Type your message..." value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyDown={handleKeyPress} />
-                    <FaSmile />
+                    <div style={{ position: 'relative' }}>
+                      <FaSmile style={{ cursor: 'pointer' }} onClick={() => setShowEmojiPicker(!showEmojiPicker)} />
+                      {showEmojiPicker && (
+                        <div ref={emojiPickerRef} style={{ position: 'absolute', bottom: '35px', right: '0px', zIndex: 100 }}>
+                          <EmojiPicker onEmojiClick={onEmojiClick} />
+                        </div>
+                      )}
+                    </div>
                  </div>
                  <button className="btn-send" onClick={sendMessage} disabled={!newMessage.trim() || sending}>
                     {sending ? <FaSpinner className="spin" /> : <><FaPaperPlane /> Send</>}
@@ -571,8 +570,77 @@ function Messages() {
             </div>
           )}
         </div>
-
       </div>
+
+      {/* ========================================== */}
+      {/* FILE VIEWER OVERLAY WITH CLOSE BUTTON */}
+      {/* ========================================== */}
+      {viewerFile && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 9999,
+            padding: '20px'
+          }}
+          onClick={() => setViewerFile(null)}
+        >
+          <div 
+            style={{
+              position: 'relative',
+              maxWidth: '90vw',
+              maxHeight: '90vh',
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              padding: '10px',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.5)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button 
+              onClick={() => setViewerFile(null)}
+              style={{
+                position: 'absolute',
+                top: '-15px',
+                right: '-15px',
+                background: '#e67e22',
+                color: 'white',
+                border: 'none',
+                borderRadius: '50%',
+                width: '35px',
+                height: '35px',
+                fontSize: '18px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 2px 10px rgba(0,0,0,0.3)'
+              }}
+            >
+              <FaTimes />
+            </button>
+
+            {viewerFile.match(/\.(jpeg|jpg|gif|png|svg|webp)$/i) ? (
+              <img 
+                src={viewerFile} 
+                alt="Preview" 
+                style={{ maxWidth: '100%', maxHeight: '80vh', borderRadius: '4px', objectFit: 'contain' }} 
+              />
+            ) : (
+              <iframe 
+                src={viewerFile} 
+                style={{ width: '80vw', height: '80vh', border: 'none', borderRadius: '4px' }} 
+                title="File Preview"
+              />
+            )}
+          </div>
+        </div>
+      )}
+
     </DashboardLayout>
   );
 }

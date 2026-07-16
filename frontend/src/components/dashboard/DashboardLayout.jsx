@@ -33,7 +33,7 @@ function DashboardLayout({ children, customTitle, customSubtitle }) {
       "/recruiter/candidates": "Candidates",
       "/recruiter/interviews": "Interviews",
       "/recruiter/assessments": "Assessments",
-      "/recruiter/ai-interview-results": "AI Interviews",
+      "/recruiter/interview-results": "Interview Results",
       "/recruiter/reports": "Reports",
       "/recruiter/messages": "Messages",
       "/recruiter/activity": "Activities",

@@ -167,19 +167,6 @@ function CandidateActivity() {
   return (
     <DashboardLayout>
       <div className="cand-activity-page">
-        
-        {/* HEADER */}
-        <div className="cand-activity-header">
-          <div className="cand-activity-header-left">
-            <h1><FaBell /> My Activity</h1>
-            <p>Track your application journey and interview progress</p>
-          </div>
-          <div className="cand-activity-header-right">
-            <span style={{ fontSize: '13px', color: '#718096', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <FaClock /> Real-time data
-            </span>
-          </div>
-        </div>
 
         {/* FILTER TABS */}
         <div className="cand-activity-tabs">

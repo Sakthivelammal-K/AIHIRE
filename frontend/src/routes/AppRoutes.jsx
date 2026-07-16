@@ -51,6 +51,7 @@ import OnlineAssessment from "../pages/Dashboard/Candidate/OnlineAssessment";
 import CandidateActivities from "../pages/Dashboard/Candidate/CandidateActivities";
 import SavedJobs from "../pages/Dashboard/Candidate/SavedJobs";
 import CandidateMessages from "../pages/Dashboard/Candidate/CandidateMessages";
+import CandidateNotifications from "../pages/Dashboard/Candidate/CandidateNotifications";
 
 function AppRoutes() {
   return (
@@ -207,7 +208,7 @@ function AppRoutes() {
       />
 
       <Route
-        path="/recruiter/ai-interview-results"
+        path="/recruiter/interview-results"
         element={
           <ProtectedRoute>
             <AIInterviewResults />
@@ -386,6 +387,15 @@ function AppRoutes() {
             <CandidateMessages />
           </ProtectedRoute>
         }
+      />
+
+      <Route
+      path="/candidate/notifications"
+      element={
+        <ProtectedRoute>
+          <CandidateNotifications />
+        </ProtectedRoute>
+      }
       />
 
     </Routes>

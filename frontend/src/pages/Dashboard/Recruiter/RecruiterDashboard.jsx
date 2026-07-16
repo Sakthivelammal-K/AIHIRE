@@ -277,16 +277,16 @@ const handleViewCandidate = (appId) => {
                     <div className="pipeline-icon-final" style={{ color: item.color, background: item.color + '15' }}>
                       <Icon />
                     </div>
-                    {item.hasTrend && item.count > 0 && (
+                    {/*{item.hasTrend && item.count > 0 && (
                       <div className="pipeline-trend-final down">
                         <FaArrowDown />
                         <span>{item.trend}%</span>
                       </div>
-                    )}
+                    )}*/}
                   </div>
                   <div className="pipeline-count-final">{item.count}</div>
                   <div className="pipeline-label-final">{item.label}</div>
-                  <div className="pipeline-percent-final">{item.percentage}%</div>
+                  {/*<div className="pipeline-percent-final">{item.percentage}%</div>
                   <div className="pipeline-bar-final">
                     <div 
                       className="pipeline-bar-fill-final" 
@@ -295,7 +295,7 @@ const handleViewCandidate = (appId) => {
                         background: item.percentage > 0 ? item.color : '#E5E7EB' 
                       }}
                     />
-                  </div>
+                  </div>*/}
                 </div>
               );
             })}

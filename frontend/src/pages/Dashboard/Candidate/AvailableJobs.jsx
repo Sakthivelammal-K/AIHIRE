@@ -296,7 +296,9 @@ function AvailableJobs() {
                 <option value="San Francisco">San Francisco</option>
                 <option value="Remote">Remote</option>
                 <option value="New York">New York</option>
-                <option value="Austin">Austin</option>
+                <option value="Madurai">Madurai</option>
+                <option value="Coimbatore">Coimbatore</option>
+                <option value="Chennai">Chennai</option>
               </select>
             </div>
 

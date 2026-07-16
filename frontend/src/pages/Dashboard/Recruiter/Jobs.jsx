@@ -232,7 +232,6 @@ function Jobs() {
             <div>
               <div className="jobs-stat-value-redesign">{totalJobs}</div>
               <div className="jobs-stat-label-redesign">Total Jobs</div>
-              <div className="jobs-stat-trend-redesign up"><FaArrowUp /> {totalJobs > 0 ? Math.round((activeJobs/totalJobs)*100) : 0}% active</div>
             </div>
           </div>
           <div className="jobs-stat-redesign" onClick={() => setFilterStatus('active')}>
@@ -240,7 +239,6 @@ function Jobs() {
             <div>
               <div className="jobs-stat-value-redesign">{activeJobs}</div>
               <div className="jobs-stat-label-redesign">Active Jobs</div>
-              <div className="jobs-stat-trend-redesign up"><FaArrowUp /> {activeJobs > 0 ? Math.round((activeJobs/totalJobs)*100) : 0}% of total</div>
             </div>
           </div>
           <div className="jobs-stat-redesign" onClick={() => setFilterStatus('draft')}>
@@ -248,7 +246,6 @@ function Jobs() {
             <div>
               <div className="jobs-stat-value-redesign">{draftJobs}</div>
               <div className="jobs-stat-label-redesign">Draft Jobs</div>
-              <div className="jobs-stat-trend-redesign up"><FaArrowUp /> {draftJobs > 0 ? Math.round((draftJobs/totalJobs)*100) : 0}% of total</div>
             </div>
           </div>
           <div className="jobs-stat-redesign" onClick={() => setFilterStatus('closed')}>
@@ -256,7 +253,6 @@ function Jobs() {
             <div>
               <div className="jobs-stat-value-redesign">{closedJobs}</div>
               <div className="jobs-stat-label-redesign">Closed Jobs</div>
-              <div className="jobs-stat-trend-redesign down"><FaArrowDown /> {closedJobs > 0 ? Math.round((closedJobs/totalJobs)*100) : 0}% of total</div>
             </div>
           </div>
         </div>

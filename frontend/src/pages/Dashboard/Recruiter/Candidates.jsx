@@ -28,8 +28,12 @@ import {
   FaFilePdf,
   FaEnvelope,
   FaCode,
-  FaFileAlt as FaFileIcon
+  FaFileAlt as FaFileIcon,
+  FaFilter,
+  FaSortAmountDown,
+  FaSortAmountUp
 } from "react-icons/fa";
+// Added Tooltip import (assuming you have a library, otherwise replaced with standard HTML title below)
 
 function Candidates() {
   const navigate = useNavigate();
@@ -47,6 +51,10 @@ function Candidates() {
   const [itemsPerPage] = useState(8);
   const [topSkills, setTopSkills] = useState([]);
   const [filterStatus, setFilterStatus] = useState("all");
+  
+  // --- NEW: Sorting State ---
+  const [sortBy, setSortBy] = useState("ats"); // 'ats', 'name', 'date'
+  const [sortOrder, setSortOrder] = useState("desc"); // 'asc', 'desc'
 
   useEffect(() => {
     loadCandidates();
@@ -122,7 +130,7 @@ function Candidates() {
         applicationId: selectedCandidate._id,
         date: interviewDate,
         type: interviewType, 
-        interviewType: interviewType, // Video, MCQ, Technical Coding
+        interviewType: interviewType,
         status: "Scheduled"
       });
 
@@ -164,21 +172,43 @@ function Candidates() {
 
   const safeApplications = Array.isArray(applications) ? applications : [];
 
-  const filteredApplications = safeApplications
+  // --- NEW: Filter, Sort, and Pagination Pipeline ---
+  const processedApplications = safeApplications
     .filter(app => {
       const search = searchTerm.toLowerCase();
       const matchesSearch = (app.candidateName || "").toLowerCase().includes(search) ||
                            (app.jobTitle || "").toLowerCase().includes(search) ||
-                           (app.email || "").toLowerCase().includes(search);
+                           (app.email || "").toLowerCase().includes(search) ||
+                           (app.skills || []).some(skill => skill.toLowerCase().includes(search));
       const matchesStatus = filterStatus === "all" || app.status?.toLowerCase() === filterStatus.toLowerCase();
       return matchesSearch && matchesStatus;
     })
-    .sort((a, b) => (atsScores[b._id] || 0) - (atsScores[a._id] || 0));
+    .sort((a, b) => {
+      let valA, valB;
+      switch(sortBy) {
+        case 'ats':
+          valA = atsScores[a._id] || 0;
+          valB = atsScores[b._id] || 0;
+          break;
+        case 'name':
+          valA = (a.candidateName || "").toLowerCase();
+          valB = (b.candidateName || "").toLowerCase();
+          break;
+        case 'date':
+          valA = new Date(a.createdAt || 0);
+          valB = new Date(b.createdAt || 0);
+          break;
+        default: return 0;
+      }
+      if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+      if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+      return 0;
+    });
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredApplications.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredApplications.length / itemsPerPage);
+  const currentItems = processedApplications.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(processedApplications.length / itemsPerPage);
 
   const total = safeApplications.length;
   const shortlisted = safeApplications.filter(a => a.status === "Shortlisted").length;
@@ -193,6 +223,7 @@ function Candidates() {
     return diffDays <= 30;
   }).length;
 
+  // --- NEW: Better Status Badges with Text ---
   const getStatusBadge = (status) => {
     const statusMap = {
       'Shortlisted': 'status-shortlisted',
@@ -293,7 +324,6 @@ function Candidates() {
             <div>
               <div className="candidates-stat-value-redesign">{total}</div>
               <div className="candidates-stat-label-redesign">Total Candidates</div>
-              <div className="candidates-stat-trend-redesign up"><FaArrowUp /> 12% from last month</div>
             </div>
           </div>
           <div className="candidates-stat-redesign">
@@ -301,7 +331,6 @@ function Candidates() {
             <div>
               <div className="candidates-stat-value-redesign">{newCandidates}</div>
               <div className="candidates-stat-label-redesign">New Candidates</div>
-              <div className="candidates-stat-trend-redesign up"><FaArrowUp /> 18% from last month</div>
             </div>
           </div>
           <div className="candidates-stat-redesign">
@@ -309,7 +338,6 @@ function Candidates() {
             <div>
               <div className="candidates-stat-value-redesign">{shortlisted}</div>
               <div className="candidates-stat-label-redesign">Shortlisted</div>
-              <div className="candidates-stat-trend-redesign up"><FaArrowUp /> 8% from last month</div>
             </div>
           </div>
           <div className="candidates-stat-redesign">
@@ -317,20 +345,63 @@ function Candidates() {
             <div>
               <div className="candidates-stat-value-redesign">{hired}</div>
               <div className="candidates-stat-label-redesign">Hired</div>
-              <div className="candidates-stat-trend-redesign up"><FaArrowUp /> 7% from last month</div>
             </div>
           </div>
         </div>
 
-        {/* Search */}
-        <div className="candidates-search-redesign">
-          <FaSearch className="candidates-search-icon-redesign" />
-          <input
-            type="text"
-            placeholder="Search candidates, skills, or jobs..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        {/* Search & Advanced Filters Row */}
+        <div className="candidates-controls-redesign">
+          <div className="candidates-search-redesign">
+            <FaSearch className="candidates-search-icon-redesign" />
+            <input
+              type="text"
+              placeholder="Search candidates, skills, or jobs..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          
+          {/* --- NEW: Advanced Filters & Sorting --- */}
+          <div className="candidates-advanced-filters-redesign">
+            <div className="candidates-filter-group-redesign">
+              <FaFilter className="candidates-filter-icon-redesign" />
+              <select 
+                className="candidates-filter-select-redesign"
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+              >
+                <option value="all">All Status</option>
+                <option value="applied">Applied</option>
+                <option value="screening">Screening</option>
+                <option value="shortlisted">Shortlisted</option>
+                <option value="assessment">Assessment</option>
+                <option value="interview">Interview</option>
+                <option value="offer">Offer</option>
+                <option value="hired">Hired</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+
+            <div className="candidates-filter-group-redesign">
+              <span className="candidates-sort-label-redesign">Sort by:</span>
+              <select 
+                className="candidates-filter-select-redesign small"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+              >
+                <option value="ats">ATS Score</option>
+                <option value="name">Name</option>
+                <option value="date">Date Applied</option>
+              </select>
+              <button 
+                className="candidates-sort-toggle-redesign"
+                onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                title={sortOrder === 'asc' ? "Ascending" : "Descending"}
+              >
+                {sortOrder === 'asc' ? <FaSortAmountUp /> : <FaSortAmountDown />}
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Top Skills - Full Width */}
@@ -353,24 +424,7 @@ function Candidates() {
         {/* Table Section */}
         <div className="candidates-table-section-redesign">
           <div className="candidates-table-header-redesign">
-            <span>Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredApplications.length)} of {filteredApplications.length} candidates</span>
-            <div className="candidates-table-filters-redesign">
-              <select 
-                className="candidates-filter-select-redesign"
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-              >
-                <option value="all">All Status</option>
-                <option value="applied">Applied</option>
-                <option value="screening">Screening</option>
-                <option value="shortlisted">Shortlisted</option>
-                <option value="assessment">Assessment</option>
-                <option value="interview">Interview</option>
-                <option value="offer">Offer</option>
-                <option value="hired">Hired</option>
-                <option value="rejected">Rejected</option>
-              </select>
-            </div>
+            <span>Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, processedApplications.length)} of {processedApplications.length} candidates</span>
           </div>
 
           <div className="candidates-table-scroll-redesign">
@@ -378,7 +432,7 @@ function Candidates() {
               <thead>
                 <tr>
                   <th>Candidate</th>
-                  <th>ATS Score</th>
+                  <th><FaRobot className="inline-icon" /> ATS Score</th>
                   <th>Experience</th>
                   <th>Skills</th>
                   <th>Current Job</th>
@@ -413,12 +467,14 @@ function Candidates() {
                           </div>
                         </td>
                         <td>
-                          <span className="candidates-score-redesign" style={{ color: getScoreColor(score) }}>
-                            {score}
-                          </span>
+                          {/* --- NEW: ATS Score Badge --- */}
+                          <div className="candidates-ats-badge-redesign" style={{ background: getScoreColor(score) + '20', color: getScoreColor(score) }}>
+                            {score}%
+                          </div>
                         </td>
                         <td>{experience}</td>
                         <td>
+                          {/* --- NEW: Skill Badges --- */}
                           <div className="candidates-skills-preview-redesign">
                             {displaySkills.map((skill, i) => (
                               <span key={i} className="candidates-skill-pill-redesign">{skill}</span>
@@ -426,10 +482,14 @@ function Candidates() {
                             {skills.length > 3 && (
                               <span className="candidates-skill-pill-redesign more">+{skills.length - 3}</span>
                             )}
+                            {skills.length === 0 && (
+                              <span className="candidates-skill-pill-redesign none">No skills listed</span>
+                            )}
                           </div>
                         </td>
                         <td>{app.currentJob || app.jobTitle || 'N/A'}</td>
                         <td>
+                          {/* --- NEW: Better Status Badges --- */}
                           <span className={`candidates-badge-redesign ${getStatusBadge(app.status)}`}>
                             {getStatusIcon(app.status)} {getStatusText(app.status)}
                           </span>
@@ -437,6 +497,7 @@ function Candidates() {
                         <td>{app.jobTitle || 'N/A'}</td>
                         <td>
                           <div className="candidates-actions-redesign">
+                            {/* --- NEW: Tooltips added via 'title' attribute --- */}
                             <button 
                               className="candidates-action-redesign view" 
                               title="View Full Profile"
@@ -552,7 +613,7 @@ function Candidates() {
           </div>
 
           {/* Pagination */}
-          {filteredApplications.length > 0 && (
+          {processedApplications.length > 0 && (
             <div className="candidates-pagination-redesign">
               <button 
                 className="candidates-page-btn-redesign"
@@ -595,7 +656,7 @@ function Candidates() {
         </div>
       </div>
 
-      {/* Schedule Interview Modal - Updated to use 3 Types */}
+      {/* Schedule Interview Modal */}
       {selectedCandidate && (
         <div className="candidates-modal-overlay" onClick={() => setSelectedCandidate(null)}>
           <div className="candidates-modal" onClick={(e) => e.stopPropagation()}>

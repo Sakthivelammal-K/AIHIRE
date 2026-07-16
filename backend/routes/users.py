@@ -125,6 +125,30 @@ def get_activity(email: str):
     return activities
 
 # ==========================
+# UPDATE NOTIFICATION PREFERENCES
+# ==========================
+@router.put("/preferences")
+def update_preferences(data: dict):
+    email = data.get("email")
+    sound_enabled = data.get("soundEnabled")
+    email_enabled = data.get("emailEnabled")
+
+    update_data = {}
+    if sound_enabled is not None:
+        update_data["preferences.soundEnabled"] = sound_enabled
+    if email_enabled is not None:
+        update_data["preferences.emailEnabled"] = email_enabled
+
+    if not update_data:
+        return {"message": "No preferences to update"}
+
+    users.update_one(
+        {"email": email},
+        {"$set": update_data}
+    )
+    return {"message": "Preferences updated successfully"}
+
+# ==========================
 # UPDATE PROFILE
 # ==========================
 

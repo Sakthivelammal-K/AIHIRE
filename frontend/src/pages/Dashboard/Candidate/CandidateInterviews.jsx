@@ -24,13 +24,22 @@ import {
   FaArrowRight,
   FaInfoCircle,
   FaPlay,
-  FaCircle,
   FaCheckCircle,
   FaTimesCircle,
   FaBuilding,
   FaFileAlt,
   FaUserCircle,
   FaEnvelope,
+  FaDownload,
+  FaEllipsisV,
+  FaRegCalendarAlt,
+  FaHeadphones,
+  FaCode,
+  FaComments,
+  FaClipboardList,
+  FaCrown,
+  FaExternalLinkAlt,
+  FaLongArrowAltRight
 } from "react-icons/fa";
 
 function CandidateInterviews() {
@@ -38,9 +47,8 @@ function CandidateInterviews() {
   const [interviews, setInterviews] = useState([]);
   const [results, setResults] = useState([]);
   const [selectedInterview, setSelectedInterview] = useState(null);
-  const [selectedResult, setSelectedResult] = useState(null);
-  const [activeTab, setActiveTab] = useState("upcoming");
   const [loading, setLoading] = useState(true);
+  const [personalNotes, setPersonalNotes] = useState("");
 
   useEffect(() => {
     loadInterviews();
@@ -85,8 +93,27 @@ function CandidateInterviews() {
     item.status === "Cancelled" || item.status === "Canceled"
   );
 
-  // Get next upcoming interview
   const nextInterview = upcomingInterviews.length > 0 ? upcomingInterviews[0] : null;
+
+  // ==========================================
+  // INTERVIEW TYPE HELPER
+  // ==========================================
+  const getInterviewTypeConfig = (type) => {
+    const configs = {
+      "Video": { icon: <FaVideo />, label: "Video Interview", color: "#7c3aed", bg: "#ede9fe" },
+      "Audio": { icon: <FaHeadphones />, label: "Audio Interview", color: "#8b5cf6", bg: "#ede9fe" },
+      "MCQ": { icon: <FaClipboardList />, label: "MCQ Assessment", color: "#f59e0b", bg: "#fef3c7" },
+      "Technical": { icon: <FaCode />, label: "Technical Assessment", color: "#10b981", bg: "#d1fae5" },
+      "Technical Coding": { icon: <FaCode />, label: "Technical Coding", color: "#10b981", bg: "#d1fae5" },
+      "HR": { icon: <FaComments />, label: "HR Interview", color: "#ec4899", bg: "#fce7f3" },
+      "Coding": { icon: <FaCode />, label: "Coding Challenge", color: "#10b981", bg: "#d1fae5" },
+    };
+    if (configs[type]) return configs[type];
+    for (const [key, value] of Object.entries(configs)) {
+      if (type?.toLowerCase().includes(key.toLowerCase())) return value;
+    }
+    return configs["Video"];
+  };
 
   const getStatusClass = (status) => {
     const map = {
@@ -166,6 +193,29 @@ function CandidateInterviews() {
     return { bg: colors[index], text: companyName?.charAt(0)?.toUpperCase() || 'C' };
   };
 
+  // --- TIMER LOGIC ---
+  const calculateTimeLeft = (dateStr) => {
+    const diff = new Date(dateStr) - new Date();
+    if (diff <= 0) return null;
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const minutes = Math.floor((diff / (1000 * 60)) % 60);
+    return `${days > 0 ? days + 'd ' : ''}${hours}h ${minutes}m`;
+  };
+
+  // --- HELPER FOR FORMATTING DATE DISPLAY IN CARDS ---
+  const formatDateCard = (dateStr) => {
+    if (!dateStr) return 'Today';
+    try {
+      const date = new Date(dateStr);
+      const today = new Date();
+      if (date.toDateString() === today.toDateString()) return 'Today';
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch {
+      return 'N/A';
+    }
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -181,396 +231,318 @@ function CandidateInterviews() {
 
   return (
     <DashboardLayout>
-      <div className="cand-interviews-page">
-        {/* Header */}
-        <div className="cand-interviews-header">
-          <h1>My Interviews</h1>
-          <p>Track and manage all your upcoming and past interviews.</p>
+      <div className="cand-interviews-page-new">
+        {/* STATS ROW (4 Cards) */}
+        <div className="cand-stats-row-new">
+          <div className="cand-stat-card-new">
+            <div className="cand-stat-icon purple"><FaRegCalendarAlt /></div>
+            <div className="cand-stat-content-new">
+              <h2>{upcomingInterviews.length}</h2>
+              <p>Upcoming</p>
+              <span className="cand-stat-sub">Next: {nextInterview ? formatTime(nextInterview.date) : 'None'}</span>
+            </div>
+          </div>
+          <div className="cand-stat-card-new">
+            <div className="cand-stat-icon green"><FaCheckCircle /></div>
+            <div className="cand-stat-content-new">
+              <h2>{completedInterviews.length}</h2>
+              <p>Completed</p>
+              <span className="cand-stat-sub">Keep it up!</span>
+            </div>
+          </div>
+          <div className="cand-stat-card-new">
+            <div className="cand-stat-icon orange"><FaClock /></div>
+            <div className="cand-stat-content-new">
+              <h2>{cancelledInterviews.length}</h2>
+              <p>Rescheduled</p>
+              <span className="cand-stat-sub">View details</span>
+            </div>
+          </div>
+          <div className="cand-stat-card-new">
+            <div className="cand-stat-icon grey"><FaTimesCircle /></div>
+            <div className="cand-stat-content-new">
+              <h2>{cancelledInterviews.length}</h2>
+              <p>Cancelled</p>
+              <span className="cand-stat-sub">View details</span>
+            </div>
+          </div>
         </div>
 
-        {/* Stats Tabs */}
-        <div className="cand-interviews-tabs">
-          <span 
-            className={activeTab === "upcoming" ? "active" : ""} 
-            onClick={() => setActiveTab("upcoming")}
-          >
-            Upcoming <span>{upcomingInterviews.length}</span>
-          </span>
-          <span 
-            className={activeTab === "completed" ? "active" : ""} 
-            onClick={() => setActiveTab("completed")}
-          >
-            Completed <span>{completedInterviews.length}</span>
-          </span>
-          <span 
-            className={activeTab === "cancelled" ? "active" : ""} 
-            onClick={() => setActiveTab("cancelled")}
-          >
-            Cancelled <span>{cancelledInterviews.length}</span>
-          </span>
-        </div>
-
-        {/* Main Grid */}
-        <div className="cand-interviews-grid">
-          {/* Left Column */}
-          <div className="cand-interviews-left">
-            {/* Next Interview Card */}
-            <div className="cand-interviews-next-card">
-              <div className="cand-interviews-next-header">
-                <h3>Next Interview</h3>
-                <div className="cand-interviews-next-actions">
-                  <FaCalendarAlt />
-                  <FaFilter />
+        {/* 2-COLUMN LAYOUT */}
+        <div className="cand-layout-new">
+          
+          {/* MAIN COLUMN (Upcoming & Completed Lists) */}
+          <div className="cand-main-col-new">
+            
+            {/* UPCOMING SECTION */}
+            <div className="cand-section-header-new">
+              <h3>Upcoming Interviews</h3>
+              {upcomingInterviews.length === 0 ? (
+                <div className="cand-empty-state-mini">
+                  <p>No upcoming interviews scheduled.</p>
                 </div>
-              </div>
-              <div className="cand-interviews-next-content">
-                <div className="cand-interviews-next-info">
-                  <div className="cand-interviews-next-date">
-                    <FaClock />
-                    <span>Today, 2:00 PM</span>
-                  </div>
-                  <div className="cand-interviews-next-interviewer">
-                    <FaUser />
-                    <span>Sarah Johnson</span>
-                  </div>
-                </div>
-                <div className="cand-interviews-next-badge">
-                  <span className="cand-interviews-next-count">1</span>
-                  <span className="cand-interviews-next-label">Upcoming</span>
-                </div>
-              </div>
+              ) : (
+                <span className="cand-section-count">{upcomingInterviews.length} upcoming</span>
+              )}
             </div>
 
-            {/* Interview List */}
-            <div className="cand-interviews-list">
-              {activeTab === "upcoming" && upcomingInterviews.map((item, index) => {
+            <div className="cand-list-new">
+              {upcomingInterviews.map((item, index) => {
                 const logo = getCompanyLogo(item.company);
+                const typeConfig = getInterviewTypeConfig(item.type);
+                
                 return (
-                  <div 
-                    key={item._id || index} 
-                    className="cand-interviews-card"
-                    onClick={() => setSelectedInterview(item)}
-                  >
-                    <div className="cand-interviews-card-logo" style={{ backgroundColor: logo.bg }}>
+                  <div key={item._id || index} className="cand-card-item-new" onClick={() => setSelectedInterview(item)}>
+                    <div className="cand-card-logo-new" style={{ backgroundColor: logo.bg }}>
                       {logo.text}
                     </div>
-                    <div className="cand-interviews-card-content">
-                      <div className="cand-interviews-card-header">
-                        <h4>{item.jobTitle}</h4>
-                        <span className={`cand-interviews-status ${getStatusClass(item.status)}`}>
-                          {getStatusDisplay(item.status)}
-                        </span>
+                    <div className="cand-card-details-new">
+                      <div className="cand-card-row-top">
+                        <h4 className="cand-card-title">{item.jobTitle}</h4>
+                        <span className="cand-card-company">{item.company}</span>
                       </div>
-                      <p className="cand-interviews-card-company">{item.company}</p>
-                      <div className="cand-interviews-card-meta">
-                        <span className="cand-interviews-card-type">
-                          <FaVideo /> Video Interview
+                      <div className="cand-card-row-mid">
+                        <span className="cand-card-type-badge" style={{ backgroundColor: typeConfig.bg, color: typeConfig.color }}>
+                          {typeConfig.icon} {typeConfig.label}
                         </span>
-                        <span className="cand-interviews-card-round">
-                          {index === 0 ? 'Technical Round' : index === 1 ? 'HR Round' : 'Video Interview'}
-                        </span>
+                        <span className="cand-card-round-badge">{item.round || 'Technical Round'}</span>
                       </div>
-                      <div className="cand-interviews-card-footer">
-                        <span className="cand-interviews-card-date">
-                          <FaCalendarAlt /> {formatDate(item.date)}
-                        </span>
-                        <span className="cand-interviews-card-time">
-                          <FaClock /> {formatTime(item.date)}
-                        </span>
+                      <div className="cand-card-row-bottom">
+                        <span className="cand-card-date"><FaRegCalendarAlt /> {formatDateCard(item.date)}</span>
+                        <span className="cand-card-time"><FaClock /> {formatTime(item.date)}</span>
+                        {item.interviewers && (
+                          <span className="cand-card-interviewer"><FaUser /> {item.interviewers}</span>
+                        )}
                       </div>
                     </div>
-                    <div className="cand-interviews-card-arrow">
-                      <FaChevronRight />
-                    </div>
-                  </div>
-                );
-              })}
-
-              {activeTab === "completed" && completedInterviews.map((item, index) => {
-                const logo = getCompanyLogo(item.company);
-                return (
-                  <div 
-                    key={item._id || index} 
-                    className="cand-interviews-card completed"
-                    onClick={() => setSelectedInterview(item)}
-                  >
-                    <div className="cand-interviews-card-logo" style={{ backgroundColor: logo.bg }}>
-                      {logo.text}
-                    </div>
-                    <div className="cand-interviews-card-content">
-                      <div className="cand-interviews-card-header">
-                        <h4>{item.jobTitle}</h4>
-                        <span className={`cand-interviews-status ${getStatusClass(item.status)}`}>
-                          {getStatusDisplay(item.status)}
-                        </span>
-                      </div>
-                      <p className="cand-interviews-card-company">{item.company}</p>
-                      <div className="cand-interviews-card-meta">
-                        <span className="cand-interviews-card-type">
-                          <FaVideo /> Video Interview
-                        </span>
-                        <span className="cand-interviews-card-round">
-                          Technical Round
-                        </span>
-                      </div>
-                      <div className="cand-interviews-card-footer">
-                        <span className="cand-interviews-card-date">
-                          <FaCalendarAlt /> {formatDate(item.date)}
-                        </span>
-                        <span className="cand-interviews-card-time">
-                          <FaClock /> {formatTime(item.date)}
-                        </span>
+                    <div className="cand-card-actions-new">
+                      <button 
+                        className="cand-btn-join-new" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (item.type === "Video" || item.type === "Audio" || item.type === "HR") {
+                            navigate("/candidate/video-interview");
+                          } else if (item.type === "MCQ" || item.type === "Technical" || item.type === "Coding") {
+                            navigate("/candidate/online-assessment");
+                          }
+                        }}
+                      >
+                        <FaVideo /> Join Interview
+                      </button>
+                      <div className="cand-card-more-new">
+                        <span className="cand-reschedule-link">Reschedule</span>
+                        <FaEllipsisV />
                       </div>
                     </div>
                   </div>
                 );
               })}
+            </div>
 
-              {activeTab === "cancelled" && cancelledInterviews.map((item, index) => {
-                const logo = getCompanyLogo(item.company);
-                return (
-                  <div 
-                    key={item._id || index} 
-                    className="cand-interviews-card cancelled"
-                    onClick={() => setSelectedInterview(item)}
-                  >
-                    <div className="cand-interviews-card-logo" style={{ backgroundColor: logo.bg }}>
-                      {logo.text}
-                    </div>
-                    <div className="cand-interviews-card-content">
-                      <div className="cand-interviews-card-header">
-                        <h4>{item.jobTitle}</h4>
-                        <span className={`cand-interviews-status ${getStatusClass(item.status)}`}>
-                          {getStatusDisplay(item.status)}
-                        </span>
-                      </div>
-                      <p className="cand-interviews-card-company">{item.company}</p>
-                      <div className="cand-interviews-card-meta">
-                        <span className="cand-interviews-card-type">
-                          <FaVideo /> Video Interview
-                        </span>
-                        <span className="cand-interviews-card-round">
-                          Technical Round
-                        </span>
-                      </div>
-                      <div className="cand-interviews-card-footer">
-                        <span className="cand-interviews-card-date">
-                          <FaCalendarAlt /> {formatDate(item.date)}
-                        </span>
-                        <span className="cand-interviews-card-time">
-                          <FaClock /> {formatTime(item.date)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-
-              {activeTab === "upcoming" && upcomingInterviews.length === 0 && (
-                <div className="cand-interviews-empty">
-                  <FaCalendarAlt className="empty-icon" />
-                  <h3>No upcoming interviews</h3>
-                  <p>You don't have any scheduled interviews at the moment.</p>
+            {/* COMPLETED SECTION */}
+            <div className="cand-section-header-new mt-large">
+              <h3>Completed Interviews</h3>
+              {completedInterviews.length > 0 ? (
+                <span className="cand-section-count">{completedInterviews.length} completed</span>
+              ) : (
+                <div className="cand-empty-state-mini">
+                  <p>No completed interviews yet.</p>
                 </div>
               )}
             </div>
-          </div>
 
-          {/* Right Sidebar */}
-          <div className="cand-interviews-right">
-            {/* Stats Card - Applications */}
-            <div className="cand-interviews-stats-card">
-              <div className="cand-interviews-stats-item">
-                <div className="cand-interviews-stats-icon blue">
-                  <FaVideo />
-                </div>
-                <div>
-                  <span className="cand-interviews-stats-number">{upcomingInterviews.length}</span>
-                  <span className="cand-interviews-stats-label">Upcoming</span>
-                  <span className="cand-interviews-stats-sub">
-                    Next: {nextInterview ? formatTime(nextInterview.date) : 'No upcoming'}
-                  </span>
-                </div>
-              </div>
-              <div className="cand-interviews-stats-item">
-                <div className="cand-interviews-stats-icon green">
-                  <FaCheckCircle />
-                </div>
-                <div>
-                  <span className="cand-interviews-stats-number">{completedInterviews.length}</span>
-                  <span className="cand-interviews-stats-label">Completed</span>
-                  <span className="cand-interviews-stats-sub">Keep it up!</span>
-                </div>
-              </div>
-              <div className="cand-interviews-stats-item">
-                <div className="cand-interviews-stats-icon orange">
-                  <FaClock />
-                </div>
-                <div>
-                  <span className="cand-interviews-stats-number">{cancelledInterviews.length}</span>
-                  <span className="cand-interviews-stats-label">Rescheduled</span>
-                  <span className="cand-interviews-stats-sub">View details</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Activity Links */}
-            <div className="cand-interviews-activity-card">
-              <div className="cand-interviews-activity-item">
-                <FaFileAlt />
-                <span>Resume</span>
-              </div>
-              <div className="cand-interviews-activity-item">
-                <FaUserCircle />
-                <span>Profile</span>
-              </div>
-            </div>
-
-            {/* Messages Card */}
-            <div className="cand-interviews-messages-card">
-              <h4>Messages</h4>
-              {myInterviews.slice(0, 3).map((item, index) => {
+            <div className="cand-list-new">
+              {completedInterviews.map((item, index) => {
                 const logo = getCompanyLogo(item.company);
-                const rounds = ['Technical Round', 'HR Round', 'Video Interview'];
+                const typeConfig = getInterviewTypeConfig(item.type);
+                
                 return (
-                  <div key={index} className="cand-interviews-message-item">
-                    <div className="cand-interviews-message-logo" style={{ backgroundColor: logo.bg }}>
+                  <div key={item._id || index} className="cand-card-item-new completed-card">
+                    <div className="cand-card-logo-new" style={{ backgroundColor: logo.bg }}>
                       {logo.text}
                     </div>
-                    <div className="cand-interviews-message-content">
-                      <h5>{item.jobTitle}</h5>
-                      <p>{item.company}</p>
-                      <span className="cand-interviews-message-type">
-                        <FaVideo /> Video Interview
-                      </span>
-                      <span className="cand-interviews-message-round">
-                        {rounds[index % rounds.length]}
-                      </span>
+                    <div className="cand-card-details-new">
+                      <div className="cand-card-row-top">
+                        <h4 className="cand-card-title">{item.jobTitle}</h4>
+                        <span className="cand-card-company">{item.company}</span>
+                      </div>
+                      <div className="cand-card-row-mid">
+                        <span className="cand-card-type-badge" style={{ backgroundColor: typeConfig.bg, color: typeConfig.color }}>
+                          {typeConfig.icon} {typeConfig.label}
+                        </span>
+                        <span className="cand-card-round-badge">{item.round || 'Technical Round'}</span>
+                      </div>
+                      <div className="cand-card-row-bottom">
+                        <span className="cand-card-date"><FaRegCalendarAlt /> {formatDateCard(item.date)}</span>
+                        <span className="cand-card-time"><FaClock /> {formatTime(item.date)}</span>
+                        {item.interviewers && (
+                          <span className="cand-card-interviewer"><FaUser /> {item.interviewers}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="cand-card-actions-new end">
+                      <span className="cand-status-completed-badge"><FaCheckCircle /> Completed</span>
+                      <button className="cand-btn-share-new">Share Feedback</button>
+                      <FaEllipsisV />
                     </div>
                   </div>
                 );
               })}
             </div>
-
-            {/* Premium Card */}
-            <div className="cand-interviews-premium-card">
-              <h4>Upgraded to Premium</h4>
-              <p>Unlock mock interviews, resume review and more.</p>
-              <button className="cand-interviews-premium-btn">Upgrade Now</button>
-            </div>
-
-            {/* Interview Preparation */}
-            <div className="cand-interviews-prep-card">
-              <h4>Interview Preparation</h4>
-              <div className="cand-interviews-prep-item">
-                <div className="cand-interviews-prep-icon">
-                  <FaRobot />
-                </div>
-                <div>
-                  <h5>Mock Interview</h5>
-                  <p>Practice with AI and improve your confidence.</p>
-                </div>
-              </div>
-              <div className="cand-interviews-prep-item">
-                <div className="cand-interviews-prep-icon">
-                  <FaBrain />
-                </div>
-                <div>
-                  <h5>Common Questions</h5>
-                  <p>View role-specific frequently asked questions.</p>
-                </div>
-              </div>
-              <div className="cand-interviews-prep-item">
-                <div className="cand-interviews-prep-icon">
-                  <FaLightbulb />
-                </div>
-                <div>
-                  <h5>Interview Tips</h5>
-                  <p>Tips and best practices to ace your interview.</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Tips */}
-            <div className="cand-interviews-tips-card">
-              <FaInfoCircle className="cand-interviews-tips-icon" />
-              <p>Test your internet connection, camera and mic before the interview.</p>
-            </div>
           </div>
-        </div>
 
-        {/* Interview Details Modal */}
-        {selectedInterview && (
-          <div className="cand-interviews-modal-overlay" onClick={() => setSelectedInterview(null)}>
-            <div className="cand-interviews-modal" onClick={(e) => e.stopPropagation()}>
-              <button className="cand-interviews-modal-close" onClick={() => setSelectedInterview(null)}>
-                ×
-              </button>
-              <div className="cand-interviews-modal-content">
-                <div className="cand-interviews-modal-header">
-                  <div className="cand-interviews-modal-logo" style={{ 
-                    backgroundColor: getCompanyLogo(selectedInterview.company).bg 
-                  }}>
-                    {getCompanyLogo(selectedInterview.company).text}
+          {/* SIDEBAR COLUMN */}
+          <div className="cand-side-col-new">
+            
+            {/* NEXT INTERVIEW CARD */}
+            <div className="cand-side-widget-new">
+              <div className="cand-side-header-new">
+                <h4>Next Interview</h4>
+                <span className="cand-side-link">View all</span>
+              </div>
+              {nextInterview ? (
+                <div className="cand-side-next-card">
+                  <div className="cand-side-next-logo" style={{ backgroundColor: getCompanyLogo(nextInterview.company).bg }}>
+                    {getCompanyLogo(nextInterview.company).text}
                   </div>
-                  <div className="cand-interviews-modal-title">
-                    <h2>{selectedInterview.jobTitle}</h2>
-                    <p>{selectedInterview.company}</p>
-                  </div>
-                  <div className="cand-interviews-modal-status">
-                    <span className={`cand-interviews-status ${getStatusClass(selectedInterview.status)}`}>
-                      {getStatusDisplay(selectedInterview.status)}
+                  <div className="cand-side-next-info">
+                    <h5>{nextInterview.jobTitle}</h5>
+                    <span className="cand-side-company">{nextInterview.company}</span>
+                    <span className="cand-side-type-badge" style={{ 
+                      backgroundColor: getInterviewTypeConfig(nextInterview.type).bg, 
+                      color: getInterviewTypeConfig(nextInterview.type).color 
+                    }}>
+                      {getInterviewTypeConfig(nextInterview.type).label}
                     </span>
                   </div>
-                </div>
-
-                <div className="cand-interviews-modal-body">
-                  <div className="cand-interviews-modal-info-grid">
-                    <div className="cand-interviews-modal-info">
-                      <label>Date</label>
-                      <span>{formatDate(selectedInterview.date)}</span>
-                    </div>
-                    <div className="cand-interviews-modal-info">
-                      <label>Time</label>
-                      <span>{formatTime(selectedInterview.date)}</span>
-                    </div>
-                    <div className="cand-interviews-modal-info">
-                      <label>Type</label>
-                      <span>{selectedInterview.type || 'Video Interview'}</span>
-                    </div>
-                    <div className="cand-interviews-modal-info">
-                      <label>Interviewers</label>
-                      <span>{selectedInterview.interviewers || 'TBD'}</span>
-                    </div>
+                  <div className="cand-side-next-details">
+                    <p><FaRegCalendarAlt /> {formatDate(nextInterview.date)}</p>
+                    <p><FaClock /> {formatTime(nextInterview.date)}</p>
+                    <p><FaUser /> {nextInterview.interviewers || 'TBD'}</p>
                   </div>
-
-                  {selectedInterview.description && (
-                    <div className="cand-interviews-modal-section">
-                      <h4>Description</h4>
-                      <p>{selectedInterview.description}</p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="cand-interviews-modal-footer">
                   <button 
-                    className="cand-interviews-modal-btn primary"
+                    className="cand-btn-side-join"
                     onClick={() => {
-                      if (selectedInterview.type === "Video Interview") {
+                      if (nextInterview.type === "Video" || nextInterview.type === "Audio" || nextInterview.type === "HR") {
                         navigate("/candidate/video-interview");
-                      } else if (selectedInterview.type === "Online Assessment") {
+                      } else {
                         navigate("/candidate/online-assessment");
                       }
                     }}
                   >
+                    <FaVideo /> Join Interview
+                  </button>
+                  <button className="cand-btn-side-calendar">
+                    <FaCalendarAlt /> Add to Calendar
+                  </button>
+                </div>
+              ) : (
+                <div className="cand-side-empty">No upcoming interviews</div>
+              )}
+            </div>
+
+            {/* PREPARATION CARD */}
+            <div className="cand-side-widget-new">
+              <div className="cand-side-header-new">
+                <h4>Interview Preparation</h4>
+                <span className="cand-side-link">View all</span>
+              </div>
+              <div className="cand-prep-item-new">
+                <div className="cand-prep-icon purple"><FaRobot /></div>
+                <div className="cand-prep-text">
+                  <h5>Mock Interview</h5>
+                  <p>Practice with AI and improve your confidence.</p>
+                </div>
+                <FaArrowRight className="cand-prep-arrow" />
+              </div>
+              <div className="cand-prep-item-new">
+                <div className="cand-prep-icon green"><FaBrain /></div>
+                <div className="cand-prep-text">
+                  <h5>Common Questions</h5>
+                  <p>View role-specific frequently asked questions.</p>
+                </div>
+                <FaArrowRight className="cand-prep-arrow" />
+              </div>
+              <div className="cand-prep-item-new">
+                <div className="cand-prep-icon orange"><FaLightbulb /></div>
+                <div className="cand-prep-text">
+                  <h5>Interview Tips</h5>
+                  <p>Tips and best practices to ace your interview.</p>
+                </div>
+                <FaArrowRight className="cand-prep-arrow" />
+              </div>
+            </div>
+
+            {/* QUICK TIPS */}
+            <div className="cand-side-widget-new tips-widget">
+              <h4>Quick Tips</h4>
+              <div className="cand-tip-card">
+                <div className="cand-tip-icon"><FaMicrophone /></div>
+                <div className="cand-tip-content">
+                  <p>Test your internet connection, camera and mic before the interview.</p>
+                  <div className="cand-tip-dots">
+                    <span className="active"></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* PREMIUM WIDGET */}
+            <div className="cand-side-widget-new premium-widget">
+              <div className="cand-premium-header">
+                <FaCrown className="cand-premium-icon" />
+                <h4>Upgrade to Premium</h4>
+                <p>Unlock mock interviews, resume review and more.</p>
+                <button className="cand-premium-btn">Upgrade Now</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* DETAILS MODAL */}
+        {selectedInterview && (
+          <div className="cand-modal-overlay-new" onClick={() => setSelectedInterview(null)}>
+            <div className="cand-modal-new" onClick={(e) => e.stopPropagation()}>
+              <div className="cand-modal-header-new">
+                <div className="cand-modal-logo-new" style={{ backgroundColor: getCompanyLogo(selectedInterview.company).bg }}>
+                  {getCompanyLogo(selectedInterview.company).text}
+                </div>
+                <div className="cand-modal-title-new">
+                  <h2>{selectedInterview.jobTitle}</h2>
+                  <p>{selectedInterview.company}</p>
+                </div>
+                <span className={`cand-modal-status-new ${getStatusClass(selectedInterview.status)}`}>
+                  {getStatusDisplay(selectedInterview.status)}
+                </span>
+                <button className="cand-modal-close-new" onClick={() => setSelectedInterview(null)}>×</button>
+              </div>
+              <div className="cand-modal-body-new">
+                <div className="cand-modal-grid-new">
+                  <div className="cand-modal-info-item"><label>Date</label><span>{formatDate(selectedInterview.date)}</span></div>
+                  <div className="cand-modal-info-item"><label>Time</label><span>{formatTime(selectedInterview.date)}</span></div>
+                  <div className="cand-modal-info-item"><label>Type</label><span className="cand-modal-type-badge" style={{ backgroundColor: getInterviewTypeConfig(selectedInterview.type).bg, color: getInterviewTypeConfig(selectedInterview.type).color }}>{getInterviewTypeConfig(selectedInterview.type).icon} {getInterviewTypeConfig(selectedInterview.type).label}</span></div>
+                  <div className="cand-modal-info-item"><label>Interviewers</label><span>{selectedInterview.interviewers || 'TBD'}</span></div>
+                  <div className="cand-modal-info-item full"><label>Meeting Link</label><span>{selectedInterview.meetingLink ? <a href={selectedInterview.meetingLink} target="_blank" rel="noopener noreferrer">{selectedInterview.meetingLink}</a> : 'Not provided'}</span></div>
+                </div>
+                {selectedInterview.description && (
+                  <div className="cand-modal-desc-new">
+                    <h4>Description</h4>
+                    <p>{selectedInterview.description}</p>
+                  </div>
+                )}
+                <div className="cand-modal-actions-new">
+                  <button className="cand-modal-btn-primary" onClick={() => {
+                    if (selectedInterview.type === "Video" || selectedInterview.type === "Audio" || selectedInterview.type === "HR") {
+                      navigate("/candidate/video-interview");
+                    } else {
+                      navigate("/candidate/online-assessment");
+                    }
+                  }}>
                     <FaPlay /> Join Interview
                   </button>
-                  <button 
-                    className="cand-interviews-modal-btn secondary"
-                    onClick={() => setSelectedInterview(null)}
-                  >
-                    Close
-                  </button>
+                  <button className="cand-modal-btn-secondary" onClick={() => setSelectedInterview(null)}>Close</button>
                 </div>
               </div>
             </div>

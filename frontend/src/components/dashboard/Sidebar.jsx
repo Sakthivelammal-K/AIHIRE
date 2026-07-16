@@ -46,8 +46,8 @@ function Sidebar() {
       { name: "Jobs", icon: <MdWork />, path: "/recruiter/jobs" },
       { name: "Candidates", icon: <MdPeople />, path: "/recruiter/candidates" },
       { name: "Interview Calendar", icon: <MdCalendarToday />, path: "/recruiter/interviews" },
+      { name: "Interview Results", icon: <MdPsychology />, path: "/recruiter/interview-results" },
       { name: "Activities", icon: <MdLocalActivity />, path: "/recruiter/activity" },
-      { name: "AI Interviews", icon: <MdPsychology />, path: "/recruiter/ai-interview-results" },
       { name: "Reports", icon: <MdOutlineTrendingUp />, path: "/recruiter/reports" },
 
       // OTHERS SECTION
@@ -67,7 +67,8 @@ function Sidebar() {
       { name: "Activity", icon: <MdLocalActivity />, path: "/candidate/activity" },      // NEW
       { name: "Resume", icon: <MdFolder />, path: "/candidate/resume" },
       { name: "Profile", icon: <MdPerson />, path: "/candidate/profile" },
-      { name: "Messages", icon: <MdMessage />, path: "/candidate/messages" }             // NEW
+      { name: "Messages", icon: <MdMessage />, path: "/candidate/messages" },             // NEW
+      { name: "Notifications", icon: <MdNotifications />, path: "/candidate/notifications"}
     ]
   };
 
