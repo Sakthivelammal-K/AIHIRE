@@ -23,4 +23,3 @@ uvicorn==0.49.0
 python-jose
 email-validator
 pypdf
-emoji-picker-react@4.12.0

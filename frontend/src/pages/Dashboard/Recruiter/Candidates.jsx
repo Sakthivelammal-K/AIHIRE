@@ -33,7 +33,6 @@ import {
   FaSortAmountDown,
   FaSortAmountUp
 } from "react-icons/fa";
-// Added Tooltip import (assuming you have a library, otherwise replaced with standard HTML title below)
 
 function Candidates() {
   const navigate = useNavigate();
@@ -41,6 +40,7 @@ function Candidates() {
   
   const [applications, setApplications] = useState([]);
   const [atsScores, setAtsScores] = useState({});
+  const [candidateProfiles, setCandidateProfiles] = useState({}); 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [interviewType, setInterviewType] = useState("Video");
@@ -52,9 +52,9 @@ function Candidates() {
   const [topSkills, setTopSkills] = useState([]);
   const [filterStatus, setFilterStatus] = useState("all");
   
-  // --- NEW: Sorting State ---
-  const [sortBy, setSortBy] = useState("ats"); // 'ats', 'name', 'date'
-  const [sortOrder, setSortOrder] = useState("desc"); // 'asc', 'desc'
+  // --- Sorting State ---
+  const [sortBy, setSortBy] = useState("ats"); 
+  const [sortOrder, setSortOrder] = useState("desc"); 
 
   useEffect(() => {
     loadCandidates();
@@ -68,12 +68,11 @@ function Candidates() {
       const data = Array.isArray(appResponse.data) ? appResponse.data : appResponse.data.applications || [];
       setApplications(data);
 
-      // Calculate ATS scores
       const scores = {};
       const skillCount = {};
+      const profiles = {};
       
       for (const app of data) {
-        // Get ATS score
         try {
           const report = await API.get(`/resumes/report/${app.job_id}/${app.email}`);
           scores[app._id] = report.data.atsScore || 0;
@@ -81,7 +80,17 @@ function Candidates() {
           scores[app._id] = 0;
         }
 
-        // Collect skills from applications
+        if (app.email) {
+          try {
+            const profileRes = await API.get(`/users/profile?email=${app.email}`);
+            if (profileRes.data) {
+              profiles[app._id] = profileRes.data;
+            }
+          } catch (err) {
+            console.log(`Could not fetch profile for ${app.email}`);
+          }
+        }
+
         const skills = app.skills || app.requiredSkills || [];
         skills.forEach(skill => {
           if (!skillCount[skill]) skillCount[skill] = 0;
@@ -89,8 +98,8 @@ function Candidates() {
         });
       }
       setAtsScores(scores);
+      setCandidateProfiles(profiles);
 
-      // Calculate top skills from all applications
       const sortedSkills = Object.entries(skillCount)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 5)
@@ -172,7 +181,6 @@ function Candidates() {
 
   const safeApplications = Array.isArray(applications) ? applications : [];
 
-  // --- NEW: Filter, Sort, and Pagination Pipeline ---
   const processedApplications = safeApplications
     .filter(app => {
       const search = searchTerm.toLowerCase();
@@ -223,7 +231,6 @@ function Candidates() {
     return diffDays <= 30;
   }).length;
 
-  // --- NEW: Better Status Badges with Text ---
   const getStatusBadge = (status) => {
     const statusMap = {
       'Shortlisted': 'status-shortlisted',
@@ -290,6 +297,11 @@ function Candidates() {
 
   const getCandidateSkills = (app) => {
     return app.skills || app.requiredSkills || [];
+  };
+
+  const getRealExperience = (appId) => {
+    const profile = candidateProfiles[appId];
+    return profile?.experience;
   };
 
   if (loading) {
@@ -361,7 +373,6 @@ function Candidates() {
             />
           </div>
           
-          {/* --- NEW: Advanced Filters & Sorting --- */}
           <div className="candidates-advanced-filters-redesign">
             <div className="candidates-filter-group-redesign">
               <FaFilter className="candidates-filter-icon-redesign" />
@@ -404,23 +415,6 @@ function Candidates() {
           </div>
         </div>
 
-        {/* Top Skills - Full Width */}
-        <div className="candidates-skills-full-redesign">
-          <h4>Top Skills</h4>
-          <div className="candidates-skill-list-full-redesign">
-            {topSkills.length > 0 ? (
-              topSkills.map((skill, i) => (
-                <div key={i} className="candidates-skill-item-full-redesign">
-                  <span>{skill.name}</span>
-                  <span className="candidates-skill-count-full-redesign">{skill.count}</span>
-                </div>
-              ))
-            ) : (
-              <div className="candidates-no-data-redesign">No skills data available</div>
-            )}
-          </div>
-        </div>
-
         {/* Table Section */}
         <div className="candidates-table-section-redesign">
           <div className="candidates-table-header-redesign">
@@ -432,10 +426,11 @@ function Candidates() {
               <thead>
                 <tr>
                   <th>Candidate</th>
-                  <th><FaRobot className="inline-icon" /> ATS Score</th>
-                  <th>Experience</th>
-                  <th>Skills</th>
                   <th>Current Job</th>
+                  <th>ATS Score</th>
+                  <th>Experience</th>
+                  {/* 🛑 SKILLS COLUMN COMMENTED OUT */}
+                  {/* <th>Skills</th> */}
                   <th>Status</th>
                   <th>Applied Job</th>
                   <th>Actions</th>
@@ -446,12 +441,12 @@ function Candidates() {
                   currentItems.map((app) => {
                     const score = atsScores[app._id] || 0;
                     const skills = getCandidateSkills(app);
-                    const displaySkills = skills.slice(0, 3);
-                    const experience = app.experience || 
-                      `${Math.floor(Math.random() * 5) + 2}-${Math.floor(Math.random() * 3) + 4} years`;
+                    // const displaySkills = skills.slice(0, 3);
+                    const experience = getRealExperience(app._id);
                     
                     return (
                       <tr key={app._id} className="candidates-table-row-redesign">
+                        {/* 1. Candidate */}
                         <td>
                           <div className="candidates-cell-redesign">
                             <div className="candidates-avatar-redesign">
@@ -466,38 +461,42 @@ function Candidates() {
                             </div>
                           </div>
                         </td>
+
+                        <td>{app.currentJob || app.jobTitle || 'N/A'}</td>
+
                         <td>
-                          {/* --- NEW: ATS Score Badge --- */}
                           <div className="candidates-ats-badge-redesign" style={{ background: getScoreColor(score) + '20', color: getScoreColor(score) }}>
                             {score}%
                           </div>
                         </td>
-                        <td>{experience}</td>
-                        <td>
-                          {/* --- NEW: Skill Badges --- */}
+
+                        <td>{experience || ''}</td>
+
+                        {/* 🛑 SKILLS COLUMN COMMENTED OUT */}
+                        {/* <td>
                           <div className="candidates-skills-preview-redesign">
-                            {displaySkills.map((skill, i) => (
-                              <span key={i} className="candidates-skill-pill-redesign">{skill}</span>
-                            ))}
+                            {displaySkills.length > 0 ? (
+                              displaySkills.map((skill, i) => (
+                                <span key={i} className="candidates-skill-pill-redesign">{skill}</span>
+                              ))
+                            ) : null}
                             {skills.length > 3 && (
                               <span className="candidates-skill-pill-redesign more">+{skills.length - 3}</span>
                             )}
-                            {skills.length === 0 && (
-                              <span className="candidates-skill-pill-redesign none">No skills listed</span>
-                            )}
                           </div>
-                        </td>
-                        <td>{app.currentJob || app.jobTitle || 'N/A'}</td>
+                        </td> */}
+
                         <td>
-                          {/* --- NEW: Better Status Badges --- */}
                           <span className={`candidates-badge-redesign ${getStatusBadge(app.status)}`}>
                             {getStatusIcon(app.status)} {getStatusText(app.status)}
                           </span>
                         </td>
+
                         <td>{app.jobTitle || 'N/A'}</td>
+
+                        {/* Actions: Exact Dynamic Logic */}
                         <td>
                           <div className="candidates-actions-redesign">
-                            {/* --- NEW: Tooltips added via 'title' attribute --- */}
                             <button 
                               className="candidates-action-redesign view" 
                               title="View Full Profile"
@@ -573,16 +572,7 @@ function Candidates() {
                               </span>
                             ) : null}
                             
-                            {role === "admin" && (
-                              <button 
-                                className="candidates-action-redesign delete" 
-                                title="Delete Candidate"
-                                onClick={() => handleDeleteCandidate(app._id, app.candidateName)}
-                              >
-                                <FaTrash />
-                              </button>
-                            )}
-
+                            {/* Envelope Icon for Direct Messaging */}
                             <button 
                               className="candidates-action-new message" 
                               title="Send Message"
@@ -598,6 +588,16 @@ function Candidates() {
                             >
                               <FaEnvelope />
                             </button>
+
+                            {role === "admin" && (
+                              <button 
+                                className="candidates-action-redesign delete" 
+                                title="Delete Candidate"
+                                onClick={() => handleDeleteCandidate(app._id, app.candidateName)}
+                              >
+                                <FaTrash />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>

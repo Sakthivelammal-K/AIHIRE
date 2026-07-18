@@ -35,7 +35,9 @@ import {
   FaUsers,
   FaUserCheck,
   FaUserTie,
-  FaThumbsUp
+  FaThumbsUp,
+  FaPaperPlane, // 🟢 ADDED
+  FaTimes // 🟢 ADDED
 } from "react-icons/fa";
 
 function CandidateDetail() {
@@ -50,6 +52,14 @@ function CandidateDetail() {
   const [hasResume, setHasResume] = useState(false);
   const [resumeFileName, setResumeFileName] = useState("");
   const [resumePath, setResumePath] = useState("");
+
+  // 🟢 NEW STATES FOR EMAIL TEMPLATE FEATURE
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [templatesList, setTemplatesList] = useState([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState("");
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailBody, setEmailBody] = useState("");
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   // API base URL - hardcode or use environment variable
   const API_BASE_URL = 'http://127.0.0.1:8000';
@@ -153,6 +163,86 @@ function CandidateDetail() {
       setCandidate(null);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 🟢 NEW: LOAD TEMPLATES AND OPEN EMAIL MODAL
+  const openEmailModal = async () => {
+    if (!candidate || !candidate.email) {
+      alert("This candidate does not have an email address.");
+      return;
+    }
+    try {
+      const res = await API.get("/templates?type=email");
+      if (res.data && res.data.length > 0) {
+        setTemplatesList(res.data);
+        setSelectedTemplateId("");
+        setEmailSubject("");
+        setEmailBody("");
+        setShowEmailModal(true);
+      } else {
+        alert("No email templates found. Please create a template in the Templates page first.");
+      }
+    } catch (error) {
+      console.log("Error loading templates:", error);
+      alert("Failed to load templates.");
+    }
+  };
+
+  // 🟢 NEW: HANDLE TEMPLATE SELECTION
+  const handleTemplateSelect = (e) => {
+    const id = e.target.value;
+    setSelectedTemplateId(id);
+    
+    if (id) {
+      const template = templatesList.find(t => t._id === id);
+      if (template) {
+        // Replace placeholders with real candidate data
+        let subject = template.subject;
+        let body = template.body;
+        
+        subject = subject.replace(/{candidate_name}/g, candidate.name);
+        subject = subject.replace(/{position}/g, candidate.jobTitle);
+        
+        body = body.replace(/{candidate_name}/g, candidate.name);
+        body = body.replace(/{position}/g, candidate.jobTitle);
+        body = body.replace(/{recruiter_name}/g, localStorage.getItem("name") || "Recruiter");
+        
+        // Set state
+        setEmailSubject(subject);
+        setEmailBody(body);
+      }
+    } else {
+      setEmailSubject("");
+      setEmailBody("");
+    }
+  };
+
+  // 🟢 NEW: SEND EMAIL VIA CHAT API
+  const handleSendEmail = async () => {
+    if (!emailSubject.trim() || !emailBody.trim()) {
+      alert("Please fill in the subject and body.");
+      return;
+    }
+    
+    setSendingEmail(true);
+    try {
+      const myEmail = localStorage.getItem("email");
+      const fullMessage = `${emailSubject}\n\n${emailBody}`;
+      
+      await API.post("/messages/send", {
+        sender: myEmail,
+        receiver: candidate.email,
+        message: fullMessage
+      });
+      
+      alert("Email sent successfully! It has been added to the candidate's chat.");
+      setShowEmailModal(false);
+      setSendingEmail(false);
+    } catch (error) {
+      console.log("Error sending email:", error);
+      alert("Failed to send email. Please try again.");
+      setSendingEmail(false);
     }
   };
 
@@ -396,6 +486,11 @@ function CandidateDetail() {
             </div>
           </div>
           <div className="candidate-detail-actions">
+            {/* 🟢 ADDED: Send Email Button */}
+            <button className="candidate-detail-btn primary-email" onClick={openEmailModal}>
+              <FaPaperPlane /> Send Email
+            </button>
+            
             <button className="candidate-detail-btn primary" onClick={() => navigate(`/recruiter/interviews`)}>
               <FaVideo /> Schedule Interview
             </button>
@@ -629,6 +724,70 @@ function CandidateDetail() {
             )}
           </div>
         </div>
+
+        {/* 🟢 NEW: EMAIL TEMPLATE MODAL */}
+        {showEmailModal && (
+          <div className="candidate-modal-overlay" onClick={() => setShowEmailModal(false)}>
+            <div className="candidate-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="candidate-modal-header">
+                <h3><FaPaperPlane /> Send Email to {candidate.name}</h3>
+                <button className="candidate-modal-close" onClick={() => setShowEmailModal(false)}><FaTimes /></button>
+              </div>
+              <div className="candidate-modal-body">
+                <div className="candidate-form-group">
+                  <label>Select Template</label>
+                  <select 
+                    value={selectedTemplateId} 
+                    onChange={handleTemplateSelect}
+                    className="candidate-form-select"
+                  >
+                    <option value="">-- Choose a saved template --</option>
+                    {templatesList.map(t => (
+                      <option key={t._id} value={t._id}>{t.name}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="candidate-form-group">
+                  <label>Subject</label>
+                  <input 
+                    type="text" 
+                    value={emailSubject}
+                    onChange={(e) => setEmailSubject(e.target.value)}
+                    placeholder="Email Subject"
+                    className="candidate-form-input"
+                  />
+                </div>
+                
+                <div className="candidate-form-group">
+                  <label>Body</label>
+                  <textarea 
+                    rows="8"
+                    value={emailBody}
+                    onChange={(e) => setEmailBody(e.target.value)}
+                    placeholder="Write your message..."
+                    className="candidate-form-textarea"
+                  />
+                  <small className="candidate-form-hint">
+                    You can use {'{candidate_name}'}, {'{position}'}, and {'{recruiter_name}'} as placeholders.
+                  </small>
+                </div>
+              </div>
+              <div className="candidate-modal-footer">
+                <button className="candidate-modal-btn cancel" onClick={() => setShowEmailModal(false)}>Cancel</button>
+                <button 
+                  className="candidate-modal-btn send" 
+                  onClick={handleSendEmail}
+                  disabled={sendingEmail || !emailSubject.trim() || !emailBody.trim()}
+                >
+                  {sendingEmail ? <FaSpinner className="spin" /> : <FaPaperPlane />}
+                  {sendingEmail ? "Sending..." : "Send Email"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </DashboardLayout>
   );

@@ -14,6 +14,8 @@ from routes.assessment import router as assessment_router
 from routes.messages import router as message_router
 from routes.settings import router as setting_router
 from routes.notifications import router as notification_router
+from routes.templates import router as template_router
+from routes import ai_prompts
 
 from fastapi.staticfiles import StaticFiles
 
@@ -141,6 +143,15 @@ app.include_router(
     prefix="/notifications"
 )
 
+app.include_router(
+    template_router,
+    prefix="/templates"
+)
+
+app.include_router(
+    ai_prompts.router,
+    prefix="/ai-prompts"
+)
 
 # ==========================
 # STATIC & UPLOADS FILES

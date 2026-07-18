@@ -192,7 +192,7 @@ function Jobs() {
   };
 
   const handleViewAllActivity = () => {
-    navigate('/recruiter/reports');
+    navigate('/recruiter/activity');
   };
 
   if (loading) {
@@ -553,7 +553,7 @@ function Jobs() {
                   <span className="jobs-most-count-redesign">{item.count}</span>
                 </div>
               ))}
-              <button className="jobs-sidebar-link-redesign" onClick={handleViewAllJobs}>View All Jobs →</button>
+              {/*<button className="jobs-sidebar-link-redesign" onClick={handleViewAllJobs}>View All Jobs →</button>*/}
             </div>
 
             <div className="jobs-premium-redesign">

@@ -8,7 +8,7 @@ import re
 # IMPORT NOTIFICATION HELPER
 # ==========================================
 try:
-    from .notifications import create_notification, trigger_candidate_interview_invite  # 🟢 IMPORT CANDIDATE TRIGGER
+    from .notifications import create_notification, trigger_candidate_interview_invite, trigger_interview_status_notification
 except ImportError:
     def create_notification(recipient_email, title, message, type, metadata=None, action_link=None, priority="medium", icon=None, color=None):
         print(f"⚠️ NOTIFICATION SKIPPED (DB helper missing): {title} - {message}")
@@ -47,13 +47,13 @@ def create_interview(data: dict):
     # ==========================================
     
     candidate_name = data.get("candidateName")
-    candidate_email = data.get("candidateEmail")  # 🟢 FIXED: Get candidate email
+    candidate_email = data.get("candidateEmail")
     job_title = data.get("jobTitle")
     interview_date = data.get("date")
     interview_time = data.get("time", "TBD")
     meeting_link = data.get("meetingLink", "")
 
-    # 1. Notify all recruiters about scheduled interview (Case insensitive)
+    # 1. Notify all recruiters about scheduled interview
     all_recruiters = users_collection.find(
         {"role": {"$regex": "^recruiter$", "$options": "i"}}, 
         {"email": 1}
@@ -79,7 +79,7 @@ def create_interview(data: dict):
                 color="#10b981"
             )
 
-    # 2. 🟢 NEW: Notify the Candidate about the interview
+    # 2. Notify the Candidate about the interview
     if candidate_email:
         trigger_candidate_interview_invite(
             candidate_email=candidate_email,
@@ -90,6 +90,7 @@ def create_interview(data: dict):
         )
 
     return {"message": "Interview scheduled", "interviewId": interview_id}
+
 
 # ==========================================
 # SAVE AI RESULT
@@ -148,6 +149,7 @@ def save_result(data: dict):
 
     return {"message": "AI Result saved"}
 
+
 # ==========================================
 # GET SCHEDULED INTERVIEWS
 # ==========================================
@@ -160,6 +162,7 @@ def get_interviews():
         item["_id"] = str(item["_id"])
         scheduled.append(item)
     return {"scheduled": scheduled}
+
 
 # ==========================================
 # COMBINED RESULTS
@@ -212,6 +215,7 @@ def get_results():
             "verdict": interview.get("finalDecision", "Pending") if interview else "Pending"
         })
     return results
+
 
 # ==========================================
 # UPDATE INTERVIEW + SAVE RECRUITER REVIEW
@@ -288,6 +292,52 @@ def update_interview(id: str, data: dict):
             )
 
     return {"message": "Interview updated"}
+
+
+# ==========================================
+# 🟢 NEW: TRIGGER INTERVIEW STATUS NOTIFICATION
+# ==========================================
+@router.post("/{id}/notify")
+def trigger_interview_notification(id: str, data: dict):
+    # 1. Fetch the interview from the database
+    interview = interviews.find_one({"_id": ObjectId(id)})
+    if not interview:
+        return {"error": "Interview not found"}
+
+    # 2. Get the status from the request
+    status = data.get("status")
+    if not status:
+        return {"error": "Status is required"}
+
+    # 3. Send notification to Recruiter
+    recruiter_email = data.get("recruiter_email")
+    if not recruiter_email:
+        recruiter_email = interview.get("interviewers", [None])[0]
+
+    if recruiter_email:
+        trigger_interview_status_notification(
+            recipient_email=recruiter_email,
+            candidate_name=interview.get("candidateName", "Candidate"),
+            job_title=interview.get("jobTitle", "Position"),
+            status=status,
+            interview_id=id,
+            date=interview.get("date")
+        )
+
+    # 4. Send notification to Candidate
+    candidate_email = interview.get("candidateEmail") or interview.get("email")
+    if candidate_email:
+        trigger_interview_status_notification(
+            recipient_email=candidate_email,
+            candidate_name=interview.get("candidateName", "Candidate"),
+            job_title=interview.get("jobTitle", "Position"),
+            status=status,
+            interview_id=id,
+            date=interview.get("date")
+        )
+
+    return {"message": "Notifications sent successfully"}
+
 
 # ==========================================
 # DEBUG ROUTE

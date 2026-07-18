@@ -37,6 +37,7 @@ import Notifications from "../pages/Dashboard/Recruiter/Notifications";
 import Templates from "../pages/Dashboard/Recruiter/Templates";
 import RecruiterSettings from "../pages/Dashboard/Recruiter/RecruiterSettings";
 import Activity from "../pages/Dashboard/Recruiter/Activity";
+import AIPrompts from "../pages/Dashboard/Recruiter/AIPrompts";
 
 // Candidate
 import CandidateDashboard from "../pages/Dashboard/Candidate/CandidateDashboard";
@@ -277,6 +278,15 @@ function AppRoutes() {
             <Activity />
           </ProtectedRoute>
         }
+      />
+
+      <Route
+      path="/recruiter/ai-prompts"
+      element={
+        <ProtectedRoute>
+          <AIPrompts />
+        </ProtectedRoute>
+      }
       />
 
       {/* ========================= CANDIDATE ========================= */}

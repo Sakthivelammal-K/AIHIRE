@@ -29,7 +29,8 @@ import {
   FaFilter,
   FaCopy,
   FaTrashAlt,
-  FaArchive
+  FaArchive,
+  FaFileAlt
 } from "react-icons/fa";
 
 function Messages() {
@@ -56,7 +57,11 @@ function Messages() {
   const [applications, setApplications] = useState([]);
   
   const [showDropdown, setShowDropdown] = useState(false);
-  
+
+  // 🟢 ADD THESE NEW STATES:
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
+  const [templatesList, setTemplatesList] = useState([]);
+
   // --- STATES FOR ATTACHMENT & EMOJI & VIEWER ---
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [viewerFile, setViewerFile] = useState(null);
@@ -324,6 +329,33 @@ function Messages() {
     setShowEmojiPicker(false);
   };
 
+  // ==========================================
+  // 🟢 NEW: TEMPLATE INTEGRATION
+  // ==========================================
+  const loadTemplatesForChat = async () => {
+    try {
+      const res = await API.get("/templates?type=email");
+      if (res.data) {
+        setTemplatesList(res.data);
+        setShowTemplatePicker(true);
+      }
+    } catch (error) {
+      console.log("Error loading templates for chat:", error);
+    }
+  };
+
+  const insertTemplate = (template) => {
+    // Replace newline characters so they display correctly in a textarea
+    const formattedBody = template.body.replace(/\\n/g, '\n');
+    
+    // Try to auto-replace {candidate_name} with the actual candidate's name
+    const finalBody = formattedBody.replace(/{candidate_name}/g, selectedConversation?.name || "Candidate");
+    
+    // Pre-fill the message box with Subject + Body
+    setNewMessage(`${template.subject}\n\n${finalBody}`);
+    setShowTemplatePicker(false);
+  };
+
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation) return;
     setSending(true);
@@ -519,9 +551,11 @@ function Messages() {
                               </div>
                             )}
 
-                            {/* RENDER NORMAL TEXT */}
+                            {/* 🟢 FIXED: Render Normal Text with preserved line breaks */}
                             {!isRealUrl && (
-                              <span>{msg.message}</span>
+                              <span style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
+                                {msg.message}
+                              </span>
                             )}
                             
                           </div>
@@ -545,19 +579,108 @@ function Messages() {
 
               <div className="chat-input-area">
                  <input type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileChange} />
-                 <div className="chat-input-wrapper">
-                    <FaPaperclip style={{ cursor: 'pointer' }} onClick={handleAttachmentClick} />
-                    <input type="text" placeholder="Type your message..." value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyDown={handleKeyPress} />
+                 
+                 {/* 🟢 FIXED: Added position:relative to wrapper */}
+                 <div className="chat-input-wrapper" style={{ position: 'relative', display: 'flex', flex: 1, alignItems: 'center', gap: '8px' }}>
+                    
+                    {/* 🟢 FIXED TEMPLATE BUTTON POSITION */}
+                    {!showTemplatePicker && (
+                      <span 
+                        style={{ cursor: 'pointer', marginRight: '6px', color: '#e67e22', fontSize: '18px' }} 
+                        onClick={loadTemplatesForChat}
+                        title="Insert a saved template"
+                      >
+                        <FaFileAlt />
+                      </span>
+                    )}
+                    
+                    <FaPaperclip style={{ cursor: 'pointer', color: '#6B7280', fontSize: '18px' }} onClick={handleAttachmentClick} />
+                    <input 
+                      type="text" 
+                      style={{ flex: 1, border: 'none', padding: '8px', outline: 'none', fontSize: '14px', background: 'transparent' }}
+                      placeholder="Type your message..." 
+                      value={newMessage} 
+                      onChange={(e) => setNewMessage(e.target.value)} 
+                      onKeyDown={handleKeyPress} 
+                    />
                     <div style={{ position: 'relative' }}>
-                      <FaSmile style={{ cursor: 'pointer' }} onClick={() => setShowEmojiPicker(!showEmojiPicker)} />
+                      <FaSmile style={{ cursor: 'pointer', color: '#6B7280', fontSize: '18px' }} onClick={() => setShowEmojiPicker(!showEmojiPicker)} />
                       {showEmojiPicker && (
-                        <div ref={emojiPickerRef} style={{ position: 'absolute', bottom: '35px', right: '0px', zIndex: 100 }}>
+                        <div ref={emojiPickerRef} style={{ position: 'absolute', bottom: '40px', right: '0px', zIndex: 100 }}>
                           <EmojiPicker onEmojiClick={onEmojiClick} />
                         </div>
                       )}
                     </div>
+
+                    {/* 🟢 FIXED: TEMPLATE PICKER DROPDOWN - NOW ANCHORED PROPERLY */}
+                    {showTemplatePicker && (
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '55px',
+                        left: '0',
+                        right: '0',
+                        background: 'white',
+                        border: '1px solid #E5E7EB',
+                        borderRadius: '12px',
+                        boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+                        padding: '12px',
+                        maxHeight: '250px',
+                        overflowY: 'auto',
+                        zIndex: 1000
+                      }}>
+                        <div style={{display:'flex', justifyContent:'space-between', marginBottom:'10px', paddingBottom:'8px', borderBottom:'1px solid #F3F4F6'}}>
+                          <span style={{fontWeight:'600', fontSize:'14px', color:'#374151'}}>📄 Select a Template</span>
+                          <button 
+                            onClick={() => setShowTemplatePicker(false)} 
+                            style={{background:'none', border:'none', cursor:'pointer', color:'#9CA3AF', fontSize:'16px'}}
+                          >
+                            <FaTimes />
+                          </button>
+                        </div>
+                        
+                        {templatesList.length > 0 ? templatesList.map(t => (
+                          <div 
+                            key={t._id} 
+                            onClick={() => insertTemplate(t)}
+                            style={{
+                              padding: '10px 14px',
+                              borderRadius: '8px',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                              borderBottom: '1px solid #F9FAFB',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '2px'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = '#FFF7ED'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                          >
+                            <div style={{fontWeight:'600', fontSize:'14px', color:'#111827'}}>{t.name}</div>
+                            <div style={{fontSize:'13px', color:'#6B7280', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis'}}>
+                              {t.subject} — {t.body?.substring(0, 60)}...
+                            </div>
+                          </div>
+                        )) : (
+                          <div style={{textAlign:'center', color:'#9CA3AF', padding:'20px', fontSize:'14px'}}>
+                            No templates found. Go to Templates page to create one.
+                          </div>
+                        )}
+                      </div>
+                    )}
                  </div>
-                 <button className="btn-send" onClick={sendMessage} disabled={!newMessage.trim() || sending}>
+
+                 <button className="btn-send" style={{
+                   padding: '8px 20px',
+                   background: '#e67e22',
+                   color: 'white',
+                   border: 'none',
+                   borderRadius: '8px',
+                   fontWeight: '600',
+                   cursor: 'pointer',
+                   display: 'flex',
+                   alignItems: 'center',
+                   gap: '6px'
+                 }} onClick={sendMessage} disabled={!newMessage.trim() || sending}>
                     {sending ? <FaSpinner className="spin" /> : <><FaPaperPlane /> Send</>}
                  </button>
               </div>

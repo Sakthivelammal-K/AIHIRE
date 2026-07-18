@@ -100,7 +100,8 @@ def create_notification(
     except Exception as e:
         print(f"❌ Error saving notification: {e}")
         return None
-    
+
+
 # ==========================================
 # ALL NOTIFICATION TRIGGERS - Call these from your routes
 # ==========================================
@@ -113,7 +114,6 @@ def trigger_new_application_notification(applicant_email: str, job_title: str, r
         message=f"{applicant_email} applied for {job_title} position.",
         type="application",
         metadata={"candidateName": applicant_email, "jobTitle": job_title},
-        # 🔥 CHANGE: Redirects to the Recruiter's Candidates page
         action_link="/candidates",  
         priority="high"
     )
@@ -132,7 +132,6 @@ def trigger_application_status_notification(applicant_email: str, job_title: str
         message=f"{status_messages.get(status, 'Your application status changed')} for {job_title}.",
         type="application",
         metadata={"jobTitle": job_title, "status": status},
-        # 🔥 CHANGE: Redirects to the Recruiter's Candidates page
         action_link="/candidates",
         priority="high"
     )
@@ -160,6 +159,60 @@ def trigger_interview_scheduled_notification(candidate_email: str, job_title: st
         action_link="/interviews",
         priority="high"
     )
+
+# ==========================================
+# INTERVIEW STATUS NOTIFICATION TRIGGER
+# ==========================================
+
+def trigger_interview_status_notification(
+    recipient_email: str, 
+    candidate_name: str, 
+    job_title: str, 
+    status: str, 
+    interview_id: str,
+    date: str = None
+):
+    """Send a notification when an interview status changes"""
+    
+    status_messages = {
+        "Scheduled": f"Your interview with {candidate_name} for {job_title} has been scheduled.",
+        "Rescheduled": f"Your interview with {candidate_name} for {job_title} has been rescheduled.",
+        "Cancelled": f"Your interview with {candidate_name} for {job_title} has been cancelled.",
+        "Completed": f"Your interview with {candidate_name} for {job_title} has been completed."
+    }
+    
+    status_icons = {
+        "Scheduled": "FaCalendarAlt",
+        "Rescheduled": "FaUndo",
+        "Cancelled": "FaTimesCircle",
+        "Completed": "FaCheckCircle"
+    }
+    
+    status_colors = {
+        "Scheduled": "#10b981",
+        "Rescheduled": "#f59e0b",
+        "Cancelled": "#ef4444",
+        "Completed": "#3b82f6"
+    }
+    
+    return create_notification(
+        recipient_email=recipient_email,
+        title=f"Interview {status}",
+        message=status_messages.get(status, f"Your interview status has been updated to {status}."),
+        type="interview",
+        metadata={
+            "candidateName": candidate_name,
+            "jobTitle": job_title,
+            "status": status,
+            "interviewId": interview_id,
+            "interviewDate": date
+        },
+        action_link="/interviews",
+        priority="high",
+        icon=status_icons.get(status, "FaCalendarAlt"),
+        color=status_colors.get(status, "#10b981")
+    )
+
 
 def trigger_job_post_notification(job_title: str, company: str, target_audience: List[str]):
     """New job posted notification (for candidates)"""
@@ -317,7 +370,7 @@ def get_notifications(
     recipient: Optional[str] = Query(None, description="Filter by recipient email"),
     type: Optional[str] = Query(None, description="Filter by notification type"),
     read: Optional[bool] = Query(None, description="Filter by read status"),
-    search: Optional[str] = Query(None, description="Search in title and message"), # 👈 ADDED THIS
+    search: Optional[str] = Query(None, description="Search in title and message"),
     limit: int = Query(50, description="Limit number of results"),
     skip: int = Query(0, description="Skip for pagination"),
     sort_by: str = Query("time", description="Sort field"),
@@ -332,28 +385,11 @@ def get_notifications(
     if read is not None:
         query["read"] = read
 
-    # 👇 ADD THIS SEARCH LOGIC
     if search:
-        # Use MongoDB $regex to search case-insensitively in Title and Message
         query["$or"] = [
             {"title": {"$regex": search, "$options": "i"}},
             {"message": {"$regex": search, "$options": "i"}}
         ]
-
-    # Optional: Keep the original metadata search if you want, 
-    # but you can't have two $or at the root level. 
-    # If you need to combine them, nest them like this:
-    
-    # if recipient and search:
-    #     query = {
-    #         "$and": [
-    #             {"recipient": recipient},
-    #             {"$or": [
-    #                 {"title": {"$regex": search, "$options": "i"}},
-    #                 {"message": {"$regex": search, "$options": "i"}}
-    #             ]}
-    #         ]
-    #     }
 
     notifications = []
     for item in notifications_collection.find(query).sort(sort_by, sort_order).skip(skip).limit(limit):
@@ -434,6 +470,24 @@ def delete_notification(id: str):
 def clear_all_notifications(recipient: str):
     result = notifications_collection.delete_many({"recipient": recipient})
     return {"message": f"Deleted {result.deleted_count} notifications"}
+
+# ==========================================
+# 🟢 NEW: MANUAL NOTIFICATION CREATION FALLBACK
+# ==========================================
+@router.post("/create-manual")
+def create_manual_notification(data: dict):
+    """Creates a notification directly without triggers (Used as fallback)"""
+    return create_notification(
+        recipient_email=data.get("recipient"),
+        title=data.get("title"),
+        message=data.get("message"),
+        type=data.get("type"),
+        metadata=data.get("metadata", {}),
+        action_link=data.get("action_link"),
+        priority=data.get("priority", "high"),
+        icon=data.get("icon", "FaBell"),
+        color=data.get("color", "#e67e22")
+    )
 
 # ==========================================
 # API: SEED DATA FOR TESTING

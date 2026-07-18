@@ -48,6 +48,11 @@ function CreateJob() {
     benefits: ""
   });
 
+  // 🟢 NEW STATES FOR JOB TEMPLATES
+  const [jobTemplates, setJobTemplates] = useState([]);
+  const [showTemplateDropdown, setShowTemplateDropdown] = useState(false);
+  const [loadingTemplates, setLoadingTemplates] = useState(false);
+
   // NEW SKILL STATES
   const [skillArray, setSkillArray] = useState([]);
   const [newSkill, setNewSkill] = useState("");
@@ -57,6 +62,8 @@ function CreateJob() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isDirty, setIsDirty] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
+
+  const myEmail = localStorage.getItem("email");
 
   // Store initial form data on mount
   useEffect(() => {
@@ -76,6 +83,63 @@ function CreateJob() {
       setIsDirty(isFormDirty);
     }
   }, [formData, skillArray, initialFormData, hasInteracted]);
+
+  // 🟢 NEW: FETCH JOB TEMPLATES
+  const loadJobTemplates = async () => {
+    if (jobTemplates.length > 0) {
+      setShowTemplateDropdown(!showTemplateDropdown);
+      return;
+    }
+    
+    setLoadingTemplates(true);
+    try {
+      // Only fetch templates with type="job"
+      const response = await API.get(`/templates?recruiter_email=${myEmail}&type=job`);
+      if (response.data && response.data.length > 0) {
+        setJobTemplates(response.data);
+      } else {
+        alert("No job templates found. Go to Templates page to create one.");
+      }
+    } catch (error) {
+      console.log("Error loading job templates:", error);
+      alert("Failed to load job templates.");
+    } finally {
+      setLoadingTemplates(false);
+      setShowTemplateDropdown(true);
+    }
+  };
+
+  // 🟢 NEW: APPLY TEMPLATE TO FORM (ALL FIELDS INCLUDED)
+  const applyJobTemplate = (template) => {
+    setFormData({
+      ...formData,
+      title: template.jobTitle || "",
+      department: template.department || "",
+      employmentType: template.employmentType || "Full Time",
+      experienceLevel: template.experienceLevel || "Mid Level (2-5 years)",
+      location: template.location || "",
+      workMode: template.workMode || "Hybrid",
+      summary: template.summary || "",
+      description: template.description || "",
+      minExperience: template.minExperience || "",
+      maxExperience: template.maxExperience || "",
+      minSalary: template.minSalary || "",
+      maxSalary: template.maxSalary || "",
+      applicationDeadline: template.applicationDeadline || "",
+      openings: template.openings || "",
+      benefits: template.benefits || ""
+    });
+
+    // Auto-fill skills if they exist in the template
+    if (template.requirements && Array.isArray(template.requirements) && template.requirements.length > 0) {
+      setSkillArray(template.requirements);
+    } else {
+      setSkillArray([]);
+    }
+
+    setShowTemplateDropdown(false);
+    setHasInteracted(true);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -263,6 +327,93 @@ function CreateJob() {
         <div className="job-create-grid-new">
           {/* Form */}
           <form className="job-create-form-new" onSubmit={handleSubmit}>
+            
+            {/* 🟢 POLISHED TEMPLATE LOADER SECTION */}
+            <div style={{ marginBottom: '24px', display: 'flex', gap: '12px', alignItems: 'center', position: 'relative', flexWrap: 'wrap' }}>
+              <button 
+                type="button" 
+                onClick={loadJobTemplates}
+                style={{
+                  padding: '10px 20px',
+                  background: '#F3F4F6',
+                  border: '1px solid #E5E7EB',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontWeight: '500',
+                  color: '#374151',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => e.target.style.background = '#E5E7EB'}
+                onMouseLeave={(e) => e.target.style.background = '#F3F4F6'}
+              >
+                <FaBriefcase /> 
+                {loadingTemplates ? <FaSpinner className="spin" /> : "Load Job Template"}
+              </button>
+
+              <span style={{ fontSize: '13px', color: '#9CA3AF' }}>
+                {jobTemplates.length > 0 && `(${jobTemplates.length} templates available)`}
+              </span>
+
+              {/* 🟢 STYLED DROPDOWN */}
+              {showTemplateDropdown && jobTemplates.length > 0 && (
+                <div style={{
+                  position: 'absolute',
+                  top: '48px',
+                  left: '0',
+                  background: 'white',
+                  border: '1px solid #E5E7EB',
+                  borderRadius: '12px',
+                  boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+                  padding: '8px 0',
+                  maxHeight: '260px',
+                  overflowY: 'auto',
+                  zIndex: 100,
+                  minWidth: '300px',
+                }}>
+                  {jobTemplates.map(t => (
+                    <div 
+                      key={t._id} 
+                      onClick={() => applyJobTemplate(t)}
+                      style={{
+                        padding: '10px 16px',
+                        cursor: 'pointer',
+                        borderBottom: '1px solid #F3F4F6',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '2px'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#FFF7ED'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <div style={{ fontWeight: '600', fontSize: '14px', color: '#111827' }}>{t.name}</div>
+                      <div style={{ fontSize: '12px', color: '#6B7280', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <FaBriefcase style={{ fontSize: '10px' }} /> {t.jobTitle}
+                      </div>
+                    </div>
+                  ))}
+                  <div 
+                    onClick={() => setShowTemplateDropdown(false)}
+                    style={{
+                      padding: '10px 16px',
+                      cursor: 'pointer',
+                      color: '#ef4444',
+                      textAlign: 'center',
+                      fontWeight: '500',
+                      borderTop: '1px solid #F3F4F6',
+                      fontSize: '13px'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#FEE2E2'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <FaTimes style={{ fontSize: '12px', marginRight: '6px' }} /> Close
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Section 1: Job Information */}
             <div className="job-section-new">
               <h3>1. Job Information</h3>

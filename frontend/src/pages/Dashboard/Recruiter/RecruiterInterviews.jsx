@@ -82,6 +82,10 @@ function RecruiterInterviews() {
 
   useEffect(() => {
     load();
+    // 🟢 Request notification permission for browser reminders
+    if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+      Notification.requestPermission();
+    }
   }, []);
 
   const load = async () => {
@@ -116,57 +120,70 @@ function RecruiterInterviews() {
   };
 
   // ==========================================
-  // FIXED SAVE CHANGES: Proper URL formatting
+  // ✅ SAVE CHANGES & SEND NOTIFICATION
   // ==========================================
-const saveInterview = async () => {
-  if (!selectedInterview) return;
-  try {
-    // FIXED: Ensure there is a forward slash before the ID
-    await API.put(`/interviews/result/${selectedInterview._id}`, {
-      type: selectedInterview.type,
-      interviewType: selectedInterview.interviewType,
-      date: selectedInterview.date,
-      duration: selectedInterview.duration,
-      mode: selectedInterview.mode,
-      meetingLink: selectedInterview.meetingLink,
-      interviewers: selectedInterview.interviewers,
-      rounds: selectedInterview.rounds,
-      instructions: selectedInterview.instructions,
-      notes: selectedInterview.notes,
-      status: selectedInterview.status
-    });
+  const saveInterview = async () => {
+    if (!selectedInterview) return;
+    try {
+      const oldStatus = selectedInterview.status;
+      const newStatus = selectedInterview.status;
 
-    // Update local state to match the saved data
-    setInterviews(prev =>
-      prev.map(item =>
-        item._id === selectedInterview._id
-          ? {
-              ...item,
-              type: selectedInterview.type,
-              interviewType: selectedInterview.interviewType,
-              date: selectedInterview.date,
-              duration: selectedInterview.duration,
-              mode: selectedInterview.mode,
-              meetingLink: selectedInterview.meetingLink,
-              interviewers: selectedInterview.interviewers,
-              rounds: selectedInterview.rounds,
-              instructions: selectedInterview.instructions,
-              notes: selectedInterview.notes,
-              status: selectedInterview.status
-            }
-          : item
-      )
-    );
+      // 1. Save the interview
+      await API.put(`/interviews/result/${selectedInterview._id}`, {
+        type: selectedInterview.type,
+        interviewType: selectedInterview.interviewType,
+        date: selectedInterview.date,
+        duration: selectedInterview.duration,
+        mode: selectedInterview.mode,
+        meetingLink: selectedInterview.meetingLink,
+        interviewers: selectedInterview.interviewers,
+        rounds: selectedInterview.rounds,
+        instructions: selectedInterview.instructions,
+        notes: selectedInterview.notes,
+        status: selectedInterview.status
+      });
 
-    setSelectedInterview({ ...selectedInterview });
-    alert("Interview updated successfully!");
-    load(); // Reload data from database to ensure sync
-  } catch (err) {
-    console.log(err);
-    alert("Update failed. Please try again.");
-  }
-};
+      // 2. 🟢 Trigger notification if status changed
+      if (newStatus !== oldStatus) {
+        try {
+          await API.post(`/interviews/${selectedInterview._id}/notify`, {
+            status: newStatus
+          });
+        } catch (notifErr) {
+          console.log("Notification skipped:", notifErr);
+        }
+      }
 
+      // Update local state
+      setInterviews(prev =>
+        prev.map(item =>
+          item._id === selectedInterview._id
+            ? {
+                ...item,
+                type: selectedInterview.type,
+                interviewType: selectedInterview.interviewType,
+                date: selectedInterview.date,
+                duration: selectedInterview.duration,
+                mode: selectedInterview.mode,
+                meetingLink: selectedInterview.meetingLink,
+                interviewers: selectedInterview.interviewers,
+                rounds: selectedInterview.rounds,
+                instructions: selectedInterview.instructions,
+                notes: selectedInterview.notes,
+                status: selectedInterview.status
+              }
+            : item
+        )
+      );
+
+      setSelectedInterview({ ...selectedInterview });
+      alert("Interview updated successfully!");
+      load(); // Reload data from database to ensure sync
+    } catch (err) {
+      console.log(err);
+      alert("Update failed. Please try again.");
+    }
+  };
 
   const handleScheduleInterview = async (e) => {
     e.preventDefault();
@@ -336,6 +353,9 @@ const saveInterview = async () => {
     return statusMap[status] || statusMap['Scheduled'];
   };
 
+  // ==========================================
+  // ✅ RESCHEDULE + NOTIFICATION (FIXED)
+  // ==========================================
   const handleRescheduleInterview = async (id, newDate) => {
     const newDateTime = prompt("Enter new date and time (YYYY-MM-DD HH:MM):", newDate);
     if (!newDateTime) return;
@@ -347,7 +367,20 @@ const saveInterview = async () => {
     }
 
     try {
-      await API.put(`/interviews/${id}`, { date: dateObj.toISOString(), status: "Rescheduled" });
+      // 1. Update the interview status
+      await API.put(`/interviews/result/${id}`, { 
+        date: dateObj.toISOString(), 
+        status: "Rescheduled" 
+      });
+      
+      // 2. 🟢 FIXED: Pass the recruiter_email explicitly
+      const myEmail = localStorage.getItem("email");
+      
+      await API.post(`/interviews/${id}/notify`, {
+        status: "Rescheduled",
+        recruiter_email: myEmail // ✅ SENDING THE RECRUITER EMAIL
+      });
+      
       alert("Interview rescheduled successfully!");
       load();
     } catch (err) {
@@ -356,12 +389,25 @@ const saveInterview = async () => {
     }
   };
 
+  // ==========================================
+  // ✅ CANCEL + NOTIFICATION (FIXED)
+  // ==========================================
   const handleCancelInterview = async (id) => {
     if (!window.confirm("Are you sure you want to cancel this interview? This action cannot be undone.")) {
       return;
     }
     try {
-      await API.put(`/interviews/${id}`, { status: "Cancelled" });
+      // 1. Update status
+      await API.put(`/interviews/result/${id}`, { status: "Cancelled" });
+      
+      // 2. 🟢 FIXED: Pass the recruiter_email explicitly
+      const myEmail = localStorage.getItem("email");
+      
+      await API.post(`/interviews/${id}/notify`, {
+        status: "Cancelled",
+        recruiter_email: myEmail // ✅ SENDING THE RECRUITER EMAIL
+      });
+      
       alert("Interview cancelled successfully.");
       load();
     } catch (err) {
@@ -370,12 +416,45 @@ const saveInterview = async () => {
     }
   };
 
+  // ==========================================
+  // ✅ BROWSER REMINDER (No API call, safe)
+  // ==========================================
   const handleSetReminder = async (id) => {
-    try {
-      await API.post(`/interviews/${id}/reminder`).catch(() => {}); 
-      alert("Reminder set! You will be notified 15 minutes before the interview.");
-    } catch (err) {
-      alert("Reminder set! (Backend reminder service simulated)");
+    // 1. Prevent the API call from happening (fixes the 404 error)
+    // await API.post(`/interviews/${id}/reminder`).catch(() => {}); 
+
+    // 2. Get the interview date
+    const interview = interviews.find(i => i._id === id);
+    if (!interview) return alert("Interview not found.");
+
+    const interviewDate = new Date(interview.date);
+    const now = new Date();
+    const diffMs = interviewDate - now;
+
+    if (diffMs <= 0) {
+      alert("This interview has already passed.");
+      return;
+    }
+
+    // 3. Set a real browser reminder
+    const reminderTime = diffMs - (15 * 60 * 1000); // 15 minutes before
+    
+    if (reminderTime > 0) {
+      setTimeout(() => {
+        // Play a sound or show a browser notification
+        if (Notification.permission === "granted") {
+          new Notification("AIHIRE Interview Reminder", {
+            body: `You have an interview with ${interview.candidateName} in 15 minutes!`,
+            icon: "/favicon.ico"
+          });
+        } else {
+          alert(`🔔 Reminder: Interview with ${interview.candidateName} in 15 minutes!`);
+        }
+      }, reminderTime);
+      
+      alert(`✅ Reminder set! You will be notified 15 minutes before the interview with ${interview.candidateName}.`);
+    } else {
+      alert("Interview is less than 15 minutes away. No reminder needed.");
     }
   };
 
@@ -407,7 +486,7 @@ const saveInterview = async () => {
 
   const { daysInMonth, startingDay } = getDaysInMonth(currentDate);
 
-  // --- SCHEDULE PAGE (Unchanged) ---
+  // --- SCHEDULE PAGE ---
   if (showSchedulePage) {
     return (
       <DashboardLayout customTitle="Schedule Interview" customSubtitle="Interview Calendar > Schedule Interview">
@@ -521,7 +600,7 @@ const saveInterview = async () => {
   return (
     <DashboardLayout>
       <div className="interviews-page-final">
-        {/* STATS & CALENDAR (Unchanged) */}
+        {/* STATS & CALENDAR */}
         <div className="interviews-stats-row">
           <div className="interviews-stat-card"><div className="interviews-stat-icon blue"><FaCalendar /></div><div><div className="interviews-stat-value">{interviews.length}</div><div className="interviews-stat-label">Total Interviews</div></div></div>
           <div className="interviews-stat-card"><div className="interviews-stat-icon green"><FaCheckCircle /></div><div><div className="interviews-stat-value">{interviews.filter(i => i.status === "Completed").length}</div><div className="interviews-stat-label">Completed</div></div></div>
