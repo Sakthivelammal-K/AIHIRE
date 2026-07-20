@@ -32,7 +32,13 @@ jobs:
 
       - name: Create .env file for backend
         run: |
-          echo "MONGO_URL=${{ secrets.MONGO_URL }}" > backend/.env
+          cat << 'EOF' > backend/.env
+          MONGO_URL=${{ secrets.MONGO_URL }}
+          MONGO_URI=${{ secrets.MONGO_URI }}
+          AZURE_STORAGE_CONNECTION_STRING=${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+          AZURE_STORAGE_CONTAINER=${{ secrets.AZURE_STORAGE_CONTAINER }}
+          AZURE_CDN_URL=${{ secrets.AZURE_CDN_URL }}
+          EOF
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3

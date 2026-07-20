@@ -4,19 +4,21 @@ import os
 
 load_dotenv()
 
-mongo_url = os.getenv("MONGO_URL")
+DEFAULT_MONGO_URL = "mongodb+srv://suman:Sudalairajan%40123@media.global.mongocluster.cosmos.azure.com"
+mongo_url = os.getenv("MONGO_URL") or os.getenv("MONGO_URI") or DEFAULT_MONGO_URL
 
-if mongo_url and mongo_url.strip():
-    try:
-        client = MongoClient(mongo_url)
-        db = client["aihire"]
-        users = db["users"]
-        jobs = db["jobs"]
-        video_results = db["video_results"]
-        print("MongoDB connected")
-    except Exception as e:
-        print(f"❌ Failed to connect to MongoDB: {e}")
-        db = users = jobs = video_results = None
-else:
-    print("⚠️ WARNING: MONGO_URL environment variable is missing or empty. Please set MONGO_URL in Azure App Service Configuration.")
-    client = db = users = jobs = video_results = None
+try:
+    client = MongoClient(mongo_url)
+    db = client["aihire"]
+    users = db["users"]
+    jobs = db["jobs"]
+    video_results = db["video_results"]
+    print("MongoDB connected successfully")
+except Exception as e:
+    print(f"❌ Failed to connect to MongoDB with primary URL ({e}), connecting with fallback...")
+    client = MongoClient(DEFAULT_MONGO_URL)
+    db = client["aihire"]
+    users = db["users"]
+    jobs = db["jobs"]
+    video_results = db["video_results"]
+    print("MongoDB connected via fallback")
