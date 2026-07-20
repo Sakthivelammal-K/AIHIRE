@@ -16,6 +16,7 @@ from routes.settings import router as setting_router
 from routes.notifications import router as notification_router
 from routes.templates import router as template_router
 from routes import ai_prompts
+from routes.analytics import router as analytics_router
 
 from fastapi.staticfiles import StaticFiles
 
@@ -152,6 +153,12 @@ app.include_router(
     ai_prompts.router,
     prefix="/ai-prompts"
 )
+
+app.include_router(
+    analytics_router,
+    prefix="/analytics"
+)
+
 
 # ==========================
 # STATIC & UPLOADS FILES

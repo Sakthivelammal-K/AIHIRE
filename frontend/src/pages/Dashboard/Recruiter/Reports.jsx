@@ -1,486 +1,316 @@
 import DashboardLayout from "../../../components/dashboard/DashboardLayout";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import API from "../../../api/api";
 
 import {
-  FaChartLine,
-  FaUsers,
-  FaUserCheck,
-  FaClock,
-  FaBriefcase,
-  FaCalendarAlt,
-  FaSearch,
-  FaDownload,
-  FaBrain,
-  FaComments,
-  FaSignal,
-  FaSpinner,
-  FaBuilding,
-  FaUser,
-  FaFileAlt,
-  FaTrophy,
-  FaMedal
+  FaChartLine, FaUsers, FaUserCheck, FaClock, FaBriefcase, FaCalendarAlt,
+  FaSpinner, FaTrophy, FaArrowUp, FaArrowDown, FaDownload, FaInfoCircle,
+  FaArrowRight, FaCheckCircle, FaUserTie, FaStar, FaFilter, FaCode,
+  FaFileAlt, FaUser, FaVideo, FaThumbsUp, FaTimesCircle, FaRobot, FaEnvelope
 } from "react-icons/fa";
 
-// 🟢 Import Recharts components
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  AreaChart,
-  Area
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  AreaChart, Area, Cell, PieChart, Pie
 } from "recharts";
 
+// 🟢 Helper: Status Icon Matcher
+const getActivityIcon = (type) => {
+  const map = {
+    'Hired': <FaCheckCircle />, 'Selected': <FaCheckCircle />,
+    'Shortlisted': <FaUserCheck />,
+    'Interview': <FaVideo />, 'Scheduled': <FaVideo />,
+    'Applied': <FaFileAlt />,
+    'Offer': <FaTrophy />,
+    'Rejected': <FaTimesCircle />
+  };
+  return map[type] || <FaEnvelope />;
+};
+
+const getActivityColor = (type) => {
+  const map = {
+    'Hired': '#10b981', 'Selected': '#10b981',
+    'Shortlisted': '#3b82f6',
+    'Interview': '#8b5cf6', 'Scheduled': '#8b5cf6',
+    'Applied': '#f59e0b',
+    'Offer': '#eab308',
+    'Rejected': '#ef4444'
+  };
+  return map[type] || '#6b7280';
+};
+
+// 🟢 Custom Gradient for Trend Chart
+const trendGradient = (
+  <defs>
+    <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stopColor="#f97316" stopOpacity={0.15}/>
+      <stop offset="100%" stopColor="#f97316" stopOpacity={0}/>
+    </linearGradient>
+  </defs>
+);
+
+// 🟢 COLORS
+const FUNNEL_COLORS = ['#f97316', '#f59e0b', '#eab308', '#8b5cf6', '#3b82f6', '#10b981'];
+
 function Reports() {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  
-  // --- Data States ---
-  const [allApplications, setAllApplications] = useState([]);
-  const [allJobs, setAllJobs] = useState([]);
-  const [allInterviewResults, setAllInterviewResults] = useState([]);
-  
-  // --- UI States ---
-  const [activeTab, setActiveTab] = useState("Overview");
-  const [search, setSearch] = useState("");
-  const [selectedJob, setSelectedJob] = useState(null);
-  const [selectedCandidate, setSelectedCandidate] = useState(null);
-  const [selectedInterview, setSelectedInterview] = useState(null);
+  const [data, setData] = useState({
+    stats: { totalApplications: 0, shortlisted: 0, interviewsConducted: 0, hired: 0, avgTimeToHire: 0, offerAcceptanceRate: 0 },
+    funnel: { applications: 0, screening: 0, shortlisted: 0, interviewed: 0, offered: 0, hired: 0 },
+    topJobs: [],
+    trend: [],
+    recentActivity: [],
+    insights: []
+  });
 
-  useEffect(() => {
-    loadAllData();
-  }, []);
+  const [days, setDays] = useState(30);
 
-  const loadAllData = async () => {
+  useEffect(() => { loadData(); }, [days]);
+
+  const loadData = async () => {
     setLoading(true);
     try {
-      // 1. Fetch Applications (For Candidates)
-      const appRes = await API.get("/applications/");
-      const apps = Array.isArray(appRes.data) ? appRes.data : [];
-      setAllApplications(apps);
-
-      // 2. Fetch Jobs
-      const jobRes = await API.get("/jobs/");
-      const jobs = Array.isArray(jobRes.data) ? jobRes.data : [];
-      setAllJobs(jobs);
-
-      // 3. Fetch AI Interview Results
-      const res = await API.get("/interviews/results");
-      const interviews = Array.isArray(res.data) ? res.data : [];
-      setAllInterviewResults(interviews);
-
-      // Default selections
-      if (jobs.length > 0) setSelectedJob(jobs[0]);
-      if (apps.length > 0) setSelectedCandidate(apps[0]);
-      if (interviews.length > 0) setSelectedInterview(interviews[0]);
-      
-    } catch (err) {
-      console.log("Error loading reports data:", err);
-    } finally {
-      setLoading(false);
-    }
+      const res = await API.get(`/analytics/dashboard?days=${days}`);
+      if (res.data) setData(res.data);
+    } catch (err) { console.log("Error loading reports:", err); }
+    finally { setLoading(false); }
   };
 
-  // --- SMART FILTERING PER TAB ---
-  const getFilteredJobs = () => {
-    const searchLower = search.toLowerCase();
-    return allJobs.filter(job => 
-      (job.title || "").toLowerCase().includes(searchLower)
-    );
-  };
-  const filteredJobs = getFilteredJobs();
-
-  const getFilteredCandidates = () => {
-    const searchLower = search.toLowerCase();
-    return allApplications.filter(app => 
-      (app.candidateName || "").toLowerCase().includes(searchLower) ||
-      (app.jobTitle || "").toLowerCase().includes(searchLower)
-    );
-  };
-  const filteredCandidates = getFilteredCandidates();
-
-  const getFilteredInterviews = () => {
-    const searchLower = search.toLowerCase();
-    return allInterviewResults.filter(item => 
-      (item.candidateName || "").toLowerCase().includes(searchLower) ||
-      (item.jobTitle || "").toLowerCase().includes(searchLower)
-    );
-  };
-  const filteredInterviews = getFilteredInterviews();
-
-  // --- GLOBAL STATS ---
-  const stats = {
-    activeJobs: allJobs.filter(j => j.status === 'Active').length,
-    totalCandidates: allApplications.length,
-    hired: allApplications.filter(a => a.status === 'Hired' || a.status === 'Selected').length,
-    upcomingInterviews: allApplications.filter(a => a.status === 'Interview' || a.status === 'Scheduled').length
+  const formatNumber = (num) => {
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+    return num;
   };
 
-  // --- CHART DATA GENERATORS ---
-
-  // 1. Funnel Data (Pipeline)
-  const funnelData = [
-    { name: 'Applied', value: allApplications.length, fill: '#f97316' },
-    { name: 'Interviewing', value: allApplications.filter(a => a.status === 'Interview').length, fill: '#8b5cf6' },
-    { name: 'Shortlisted', value: allApplications.filter(a => a.status === 'Shortlisted').length, fill: '#3b82f6' },
-    { name: 'Hired', value: stats.hired, fill: '#10b981' }
+  const funnelChartData = [
+    { name: 'Applications', value: data.funnel.applications, color: '#f97316' },
+    { name: 'Screening', value: data.funnel.screening, color: '#f59e0b' },
+    { name: 'Shortlisted', value: data.funnel.shortlisted, color: '#eab308' },
+    { name: 'Interviewed', value: data.funnel.interviewed, color: '#8b5cf6' },
+    { name: 'Offered', value: data.funnel.offered, color: '#3b82f6' },
+    { name: 'Hired', value: data.funnel.hired, color: '#10b981' }
   ];
 
-  // 2. Trend Data (Last 7 days - Simulated since we don't have a daily analytics API yet)
-  const getLast7Days = () => {
-    const dates = [];
-    const today = new Date();
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(d.getDate() - i);
-      // Filter applications for that day
-      const dayApps = allApplications.filter(app => {
-        if (!app.createdAt) return false;
-        const appDate = new Date(app.createdAt);
-        return appDate.toDateString() === d.toDateString();
-      });
-      dates.push({
-        date: d.toLocaleDateString('en-US', { weekday: 'short' }),
-        applications: dayApps.length
-      });
-    }
-    return dates;
-  };
-  const trendData = getLast7Days();
-
-  // --- HELPERS ---
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "N/A";
-    return new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-  };
-
-  const getDecisionClass = (decision) => {
-    if (!decision) return 'pending';
-    return decision.toLowerCase();
-  };
-
-  // ==========================================
-  // RENDER HELPERS
-  // ==========================================
-
-  const renderOverview = () => (
-    <div className="reports-detail-view">
-      <div className="report-detail-header">
-        <div>
-          <h3>Recruiter Overview</h3>
-          <div className="report-detail-meta">
-            <span><FaCalendarAlt /> {new Date().toLocaleDateString()}</span>
-          </div>
-        </div>
+  if (loading) return (
+    <DashboardLayout>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+        <FaSpinner className="spin" style={{ fontSize: '40px', color: '#f97316' }} />
       </div>
-
-      {/* 🟢 Visual Charts Grid */}
-      <div className="reports-chart-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
-        
-        {/* 1. Pipeline Funnel (Horizontal Bar Chart) */}
-        <div className="reports-chart-box">
-          <h4><FaUsers /> Pipeline Funnel</h4>
-          <div style={{ height: '220px', width: '100%' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                layout="vertical"
-                data={funnelData}
-                margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-                <XAxis type="number" />
-                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} />
-                <Tooltip />
-                <Bar dataKey="value" radius={[0, 8, 8, 0]} barSize={28} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* 2. Weekly Trend (Area Chart) */}
-        <div className="reports-chart-box">
-          <h4><FaChartLine /> Weekly Trend</h4>
-          <div style={{ height: '220px', width: '100%' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={trendData}>
-                <defs>
-                  <linearGradient id="colorApps" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f97316" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" axisLine={false} tickLine={false} />
-                <YAxis axisLine={false} tickLine={false} />
-                <Tooltip />
-                <Area type="monotone" dataKey="applications" stroke="#f97316" fillOpacity={1} fill="url(#colorApps)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-    </div>
+    </DashboardLayout>
   );
-
-  // 2. RENDER JOBS TAB
-  const renderJobsTab = () => (
-    <div className="reports-main-layout">
-      <div className="reports-list-sidebar">
-        <div className="reports-list-search">
-          <div className="search-wrapper">
-            <FaSearch className="search-icon" />
-            <input type="text" placeholder="Search jobs..." value={search} onChange={(e) => setSearch(e.target.value)} />
-          </div>
-        </div>
-        <div className="reports-list-items">
-          {filteredJobs.length > 0 ? (
-            filteredJobs.map(job => (
-              <div key={job._id} className={`report-list-item ${selectedJob?._id === job._id ? "active" : ""}`} onClick={() => setSelectedJob(job)}>
-                <div className="report-list-avatar"><FaBriefcase /></div>
-                <div className="report-list-info">
-                  <h4>{job.title}</h4>
-                  <p>{job.department} • {job.applicationsCount || 0} Applicants</p>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="empty-state-small">No jobs found.</div>
-          )}
-        </div>
-      </div>
-
-      <div className="reports-detail-view">
-        {selectedJob ? (
-          <div className="reports-chart-box" style={{ padding: '30px' }}>
-            <h3 style={{ margin: '0 0 10px 0', fontSize: '22px' }}>{selectedJob.title}</h3>
-            <p style={{ color: '#6b7280', marginBottom: '20px' }}>{selectedJob.department} • {selectedJob.location}</p>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '20px' }}>
-              <div className="data-summary-item"><span>Status</span><span>{selectedJob.status}</span></div>
-              <div className="data-summary-item"><span>Applications</span><span>{selectedJob.applicationsCount || 0}</span></div>
-              <div className="data-summary-item"><span>Employment Type</span><span>{selectedJob.employmentType}</span></div>
-              <div className="data-summary-item"><span>Work Mode</span><span>{selectedJob.workMode}</span></div>
-            </div>
-          </div>
-        ) : (
-          <div className="empty-state"><FaBuilding className="empty-state-icon" /><span>Select a job to view details</span></div>
-        )}
-      </div>
-    </div>
-  );
-
-  // 3. RENDER CANDIDATES TAB
-  const renderCandidatesTab = () => (
-    <div className="reports-main-layout">
-      <div className="reports-list-sidebar">
-        <div className="reports-list-search">
-          <div className="search-wrapper">
-            <FaSearch className="search-icon" />
-            <input type="text" placeholder="Search candidates..." value={search} onChange={(e) => setSearch(e.target.value)} />
-          </div>
-        </div>
-        <div className="reports-list-items">
-          {filteredCandidates.length > 0 ? (
-            filteredCandidates.map(cand => (
-              <div key={cand._id} className={`report-list-item ${selectedCandidate?._id === cand._id ? "active" : ""}`} onClick={() => setSelectedCandidate(cand)}>
-                <div className="report-list-avatar">{(cand.candidateName || "U").charAt(0)}</div>
-                <div className="report-list-info">
-                  <h4>{cand.candidateName}</h4>
-                  <p>{cand.jobTitle} • {cand.status}</p>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="empty-state-small">No candidates found.</div>
-          )}
-        </div>
-      </div>
-
-      <div className="reports-detail-view">
-        {selectedCandidate ? (
-          <div className="reports-chart-box" style={{ padding: '30px' }}>
-            <h3 style={{ margin: '0 0 10px 0', fontSize: '22px' }}>{selectedCandidate.candidateName}</h3>
-            <p style={{ color: '#6b7280', marginBottom: '20px' }}>{selectedCandidate.jobTitle}</p>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '20px' }}>
-              <div className="data-summary-item"><span>Email</span><span>{selectedCandidate.email}</span></div>
-              <div className="data-summary-item"><span>Status</span><span>{selectedCandidate.status}</span></div>
-              <div className="data-summary-item"><span>Applied On</span><span>{formatDate(selectedCandidate.createdAt)}</span></div>
-              <div className="data-summary-item"><span>ATS Score</span><span>N/A</span></div>
-            </div>
-          </div>
-        ) : (
-          <div className="empty-state"><FaUser className="empty-state-icon" /><span>Select a candidate to view details</span></div>
-        )}
-      </div>
-    </div>
-  );
-
-  // 4. RENDER INTERVIEWS TAB
-  const renderInterviewsTab = () => (
-    <div className="reports-main-layout">
-      <div className="reports-list-sidebar">
-        <div className="reports-list-search">
-          <div className="search-wrapper">
-            <FaSearch className="search-icon" />
-            <input type="text" placeholder="Search interview reports..." value={search} onChange={(e) => setSearch(e.target.value)} />
-          </div>
-        </div>
-        <div className="reports-list-items">
-          {filteredInterviews.length > 0 ? (
-            filteredInterviews.map(item => (
-              <div key={item._id} className={`report-list-item ${selectedInterview?._id === item._id ? "active" : ""}`} onClick={() => setSelectedInterview(item)}>
-                <div className="report-list-avatar">{(item.candidateName || "U").charAt(0)}</div>
-                <div className="report-list-info">
-                  <h4>{item.candidateName}</h4>
-                  <p>{item.jobTitle} • Score {item.overall || item.score || 0}%</p>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="empty-state-small">No interview results found.</div>
-          )}
-        </div>
-      </div>
-
-      <div className="reports-detail-view">
-        {selectedInterview ? (
-          <>
-            <div className="report-detail-header">
-              <div>
-                <h3>{selectedInterview.candidateName}</h3>
-                <div className="report-detail-meta">
-                  <span><FaBriefcase /> {selectedInterview.jobTitle}</span>
-                  <span>•</span>
-                  <span><FaCalendarAlt /> {formatDate(selectedInterview.date || selectedInterview.createdAt)}</span>
-                </div>
-              </div>
-              <button className="report-detail-print"><FaDownload /> Download Report</button>
-            </div>
-
-            <div className="reports-chart-grid">
-              <div className="reports-chart-box">
-                <h4>AI Performance Metrics</h4>
-                <div className="metric-bar-group">
-                  {[
-                    { label: 'Technical', icon: <FaBrain />, value: selectedInterview.technical || 0 },
-                    { label: 'Communication', icon: <FaComments />, value: selectedInterview.communication || 0 },
-                    { label: 'Confidence', icon: <FaSignal />, value: selectedInterview.confidence || 0 }
-                  ].map((metric, idx) => (
-                    <div className="metric-bar-item" key={idx}>
-                      <div className="metric-bar-header">
-                        <span>{metric.icon} {metric.label}</span>
-                        <span>{metric.value}%</span>
-                      </div>
-                      <div className="metric-bar-track">
-                        <div className="metric-bar-fill" style={{ width: `${metric.value}%` }}></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="reports-chart-box">
-                <h4>Decision Summary</h4>
-                <div className="data-summary-list">
-                  <div className="data-summary-item"><span>Overall Score</span><span>{selectedInterview.overall || selectedInterview.score || 0}%</span></div>
-                  <div className="data-summary-item"><span>AI Verdict</span><span>{selectedInterview.verdict || "Pending"}</span></div>
-                  <div className="data-summary-item"><span>Recruiter Decision</span><span className={`decision-badge ${getDecisionClass(selectedInterview.finalDecision)}`}>{selectedInterview.finalDecision || "Pending"}</span></div>
-                  <div className="data-summary-item"><span>Recruiter Rating</span><span>{selectedInterview.recruiterRating || 0} / 5</span></div>
-                </div>
-              </div>
-            </div>
-
-            <div className="reports-bottom-grid">
-              <div className="reports-chart-box">
-                <h4>Qualitative Feedback</h4>
-                <div className="feedback-section">
-                  <h5 className="strength-title">Strengths</h5>
-                  <div className="chip-container">
-                    {selectedInterview.strengths?.length > 0 ? selectedInterview.strengths.map((s, i) => <span key={i} className="chip strength">{s}</span>) : <span className="empty-text">No strengths listed</span>}
-                  </div>
-                </div>
-                <div className="feedback-section">
-                  <h5 className="weakness-title">Improvement Areas</h5>
-                  <div className="chip-container">
-                    {selectedInterview.improvements?.length > 0 ? selectedInterview.improvements.map((s, i) => <span key={i} className="chip weakness">{s}</span>) : <span className="empty-text">No improvement areas listed</span>}
-                  </div>
-                </div>
-              </div>
-
-              <div className="reports-chart-box">
-                <h4>AI Summary</h4>
-                <div className="ai-summary-box">
-                  <p>{selectedInterview.aiSummary || `The AI evaluated the candidate based on the interview responses. Technical score was ${selectedInterview.technical || 0}% and communication was ${selectedInterview.communication || 0}%.`}</p>
-                </div>
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="empty-state"><FaFileAlt className="empty-state-icon" /><span>Select an interview report to view details</span></div>
-        )}
-      </div>
-    </div>
-  );
-
-  if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="reports-page">
-          <div className="empty-state"><FaSpinner className="spin" /><p>Loading reports...</p></div>
-        </div>
-      </DashboardLayout>
-    );
-  }
 
   return (
     <DashboardLayout>
       <div className="reports-page">
         
-        {/* TABS */}
-        <div className="reports-tabs">
-          {['Overview', 'Jobs', 'Candidates', 'Interviews'].map(tab => (
-            <span 
-              key={tab}
-              className={activeTab === tab ? "active" : ""} 
-              onClick={() => { setActiveTab(tab); setSearch(""); }}
-            >
-              {tab}
-            </span>
+        {/* 1. HEADER */}
+        <div className="reports-header">
+          <div className="reports-header-left">
+            <h1>Reports & Analytics</h1>
+            <p>Track hiring performance and make smarter recruitment decisions.</p>
+          </div>
+          <div>
+            <button style={{ padding:'8px 16px', background:'#f97316', color:'white', border:'none', borderRadius:'6px', fontWeight:'600', fontSize:'14px', display:'flex', alignItems:'center', gap:'6px', cursor:'pointer' }}>
+              <FaDownload /> Export Report
+            </button>
+          </div>
+        </div>
+
+        {/* 2. FILTERS BAR */}
+        <div className="reports-filter-bar">
+          <div className="reports-filter-group">
+            <span className="reports-filter-label">Date Range</span>
+            <select className="reports-filter-select" value={days} onChange={(e) => setDays(Number(e.target.value))}>
+              <option value={7}>Last 7 days</option>
+              <option value={30}>Last 30 days</option>
+              <option value={90}>Last 90 days</option>
+            </select>
+          </div>
+          <div className="reports-filter-group">
+            <span className="reports-filter-label">Job</span>
+            <select className="reports-filter-select"><option>All Jobs</option></select>
+          </div>
+          <div className="reports-filter-group">
+            <span className="reports-filter-label">Department</span>
+            <select className="reports-filter-select"><option>All Departments</option></select>
+          </div>
+          <button className="reports-apply-btn"><FaFilter /> Apply Filters</button>
+        </div>
+
+        {/* 3. STATS ROW */}
+        <div className="reports-stats-row">
+          {[
+            { label: 'Total Applications', value: data.stats.totalApplications, icon: <FaUsers />, bg: '#fff7ed', color: '#f97316', trend: '18.6% last 30 days' },
+            { label: 'Candidates Shortlisted', value: data.stats.shortlisted, icon: <FaUserCheck />, bg: '#ecfdf5', color: '#10b981', trend: '12.4% last 30 days' },
+            { label: 'Interviews Conducted', value: data.stats.interviewsConducted, icon: <FaVideo />, bg: '#f5f3ff', color: '#8b5cf6', trend: '14.7% last 30 days' },
+            { label: 'Candidates Hired', value: data.stats.hired, icon: <FaTrophy />, bg: '#fef2f2', color: '#ef4444', trend: '19.2% last 30 days' },
+            { label: 'Avg. Time to Hire', value: `${data.stats.avgTimeToHire} Days`, icon: <FaClock />, bg: '#eff6ff', color: '#3b82f6', trend: '8.3% last 30 days' },
+            { label: 'Offer Acceptance Rate', value: `${data.stats.offerAcceptanceRate || 0}%`, icon: <FaThumbsUp />, bg: '#fefce8', color: '#eab308', trend: '7.6% last 30 days' }
+          ].map((stat, i) => (
+            <div key={i} className="reports-stat-card">
+              <div className="reports-stat-icon-box" style={{ background: stat.bg, color: stat.color }}>{stat.icon}</div>
+              <div className="reports-stat-number">{formatNumber(stat.value)}</div>
+              <div className="reports-stat-label">{stat.label}</div>
+              <div className="reports-stat-trend"><FaArrowUp /> {stat.trend}</div>
+            </div>
           ))}
         </div>
 
-        {/* STATS ROW */}
-        <div className="reports-stats-row">
-          <div className="stat-card">
-            <div className="stat-icon-wrapper orange"><FaBriefcase /></div>
-            <div className="stat-info"><div className="stat-number">{stats.activeJobs}</div><div className="stat-title">Active Jobs</div></div>
+        {/* 4. MAIN GRID */}
+        <div className="reports-main-grid">
+
+          {/* --- COLUMN 1: Funnel & Top Jobs --- */}
+          <div className="reports-col">
+            
+            {/* Recruitment Funnel */}
+            <div className="reports-card">
+              <h3 className="reports-card-title">Recruitment Funnel</h3>
+              <div className="reports-funnel-chart">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart layout="vertical" data={funnelChartData} margin={{ top: 10, right: 30, left: 20, bottom: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+                    <XAxis type="number" axisLine={false} tickLine={false} />
+                    <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} width={120} />
+                    <Tooltip />
+                    <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={20}>
+                      {funnelChartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Top Performing Jobs */}
+            <div className="reports-card">
+              <div className="reports-card-header">
+                <h3 className="reports-card-title">Top Performing Jobs</h3>
+                <button className="reports-card-link" onClick={() => navigate('/recruiter/jobs')}>View All <FaArrowRight /></button>
+              </div>
+              {data.topJobs.length > 0 ? (
+                <table className="reports-jobs-table">
+                  <thead>
+                    <tr><th>Job Title</th><th style={{textAlign:'center'}}>Apps</th><th style={{textAlign:'center'}}>Int.</th><th style={{textAlign:'center'}}>Hired</th><th style={{textAlign:'right'}}>Rate</th></tr>
+                  </thead>
+                  <tbody>
+                    {data.topJobs.map((job, i) => (
+                      <tr key={i}>
+                        <td><strong>{job.title}</strong></td>
+                        <td style={{textAlign:'center'}}>{job.applications}</td>
+                        <td style={{textAlign:'center'}}>{job.interviews}</td>
+                        <td style={{textAlign:'center'}}>{job.hired}</td>
+                        <td style={{textAlign:'right', color:'#10b981', fontWeight:600}}>{job.rate}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>No job data available yet.</div>
+              )}
+            </div>
+
           </div>
-          <div className="stat-card">
-            <div className="stat-icon-wrapper green"><FaUsers /></div>
-            <div className="stat-info"><div className="stat-number">{stats.totalCandidates}</div><div className="stat-title">Total Candidates</div></div>
+
+          {/* --- COLUMN 2: Trend Chart & Activity --- */}
+          <div className="reports-col">
+
+            {/* Application Trend */}
+            <div className="reports-card">
+              <div className="reports-card-header">
+                <h3 className="reports-card-title">Application Trend</h3>
+                <select style={{ border:'1px solid #e5e7eb', borderRadius:'4px', fontSize:'12px', padding:'4px 8px', outline:'none' }}>
+                  <option>Daily</option>
+                  <option>Weekly</option>
+                </select>
+              </div>
+              <div style={{ height: '200px' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={data.trend}>
+                    {trendGradient}
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fontSize:11}} />
+                    <YAxis axisLine={false} tickLine={false} tick={{fontSize:11}} />
+                    <Tooltip />
+                    <Area type="monotone" dataKey="applications" stroke="#f97316" strokeWidth={2} fill="url(#trendGradient)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Recent Hiring Activity */}
+            <div className="reports-card">
+              <div className="reports-card-header">
+                <h3 className="reports-card-title">Recent Hiring Activity</h3>
+                <button className="reports-card-link" onClick={() => navigate('/recruiter/activity')}>View All <FaArrowRight /></button>
+              </div>
+              {data.recentActivity.length > 0 ? (
+                data.recentActivity.map((act, i) => (
+                  <div key={i} className="reports-activity-item">
+                    <div className="reports-activity-icon" style={{ 
+                      background: getActivityColor(act.type) + '15', 
+                      color: getActivityColor(act.type)
+                    }}>
+                      {getActivityIcon(act.type)}
+                    </div>
+                    <div>
+                      <div className="reports-activity-title">{act.details}</div>
+                      <div className="reports-activity-sub">{act.candidate} • {act.job} • {act.time}</div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>No recent activity.</div>
+              )}
+            </div>
+
           </div>
-          <div className="stat-card">
-            <div className="stat-icon-wrapper purple"><FaUserCheck /></div>
-            <div className="stat-info"><div className="stat-number">{stats.hired}</div><div className="stat-title">Hired</div></div>
+
+          {/* --- COLUMN 3: Insights & Reports --- */}
+          <div className="reports-col">
+
+            {/* Hiring Insights */}
+            <div className="reports-card">
+              <div className="reports-card-header">
+                <h3 className="reports-card-title">AI Hiring Insights</h3>
+                <button className="reports-card-link">View All <FaArrowRight /></button>
+              </div>
+              {data.insights.length > 0 ? (
+                data.insights.map((insight, i) => (
+                  <div key={i} className="reports-activity-item">
+                    <div className="reports-activity-icon" style={{ background: '#ecfdf5', color: '#10b981' }}>
+                      {insight.icon === 'ArrowUp' ? <FaArrowUp /> : <FaTrophy />}
+                    </div>
+                    <div>
+                      <div className="reports-activity-title">{insight.title}</div>
+                      <div className="reports-activity-sub">{insight.desc}</div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div style={{ padding: '20px', textAlign: 'center', color: '#6b7280' }}>No insights available yet.</div>
+              )}
+            </div>
+
+            {/* Export Reports */}
+           {/*<div className="reports-card">
+              <div className="reports-card-header">
+                <h3 className="reports-card-title">Export Reports</h3>
+              </div>
+              <div className="reports-activity-item">
+                <div className="reports-activity-icon" style={{ background: '#fee2e2', color: '#ef4444' }}><FaFileAlt /></div>
+                <div><div className="reports-activity-title">Download PDF</div><div className="reports-activity-sub">High-quality PDF report</div></div>
+              </div>
+              <div className="reports-activity-item">
+                <div className="reports-activity-icon" style={{ background: '#ecfdf5', color: '#10b981' }}><FaFileAlt /></div>
+                <div><div className="reports-activity-title">Download Excel</div><div className="reports-activity-sub">CSV data file for analysis</div></div>
+              </div>
+            </div>*/}
+
           </div>
-          <div className="stat-card">
-            <div className="stat-icon-wrapper blue"><FaClock /></div>
-            <div className="stat-info"><div className="stat-number">{stats.upcomingInterviews}</div><div className="stat-title">Upcoming Interviews</div></div>
-          </div>
+
         </div>
-
-        {/* DYNAMIC TAB CONTENT */}
-        {activeTab === "Overview" && renderOverview()}
-        {activeTab === "Jobs" && renderJobsTab()}
-        {activeTab === "Candidates" && renderCandidatesTab()}
-        {activeTab === "Interviews" && renderInterviewsTab()}
-
       </div>
     </DashboardLayout>
   );

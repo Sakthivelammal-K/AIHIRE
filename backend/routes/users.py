@@ -155,43 +155,24 @@ def update_preferences(data: dict):
 
 @router.put("/profile")
 def update_profile(data: dict):
-
     email = data.get("email")
-
     update_data = {}
 
     fields = [
-        "name",
-        "skills",
-        "experience",
-        "location",
-        "github",
-        "linkedin",
-        "portfolio",
-        "about",
-        "education",
-        "headline",
-        "phone",
-        "firstName",
-        "lastName"
+        "name", "skills", "experience", "location", "github", "linkedin", 
+        "portfolio", "about", "education", "headline", "phone", "firstName", 
+        "lastName", "company", "industry", "department", "role", "website",
+        "emailNotifications", "twoFactorAuth", "theme", "language", 
+        "jobAlertFrequency", "profileVisibility", "timezone", "profileImage"
     ]
 
     for field in fields:
         value = data.get(field)
-
         if value is not None and value != "":
             update_data[field] = value
 
-    users.update_one(
-        {"email": email},
-        {"$set": update_data}
-    )
-
-    return {
-        "message": "Profile updated successfully"
-    }
-
-
+    users.update_one({"email": email}, {"$set": update_data})
+    return {"message": "Profile updated successfully"}
 
 # ==========================
 # ADMIN DELETE USER
