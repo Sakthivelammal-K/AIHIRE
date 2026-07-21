@@ -24,3 +24,4 @@ gunicorn==22.0.0
 python-jose
 email-validator
 pypdf
+azure-storage-blob

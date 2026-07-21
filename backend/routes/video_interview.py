@@ -5,6 +5,7 @@ import shutil
 import os
 
 from database import db
+from azure_storage import upload_file_to_azure
 
 
 router = APIRouter(
@@ -159,69 +160,34 @@ async def save_answer(
 
 @router.post("/{interview_id}/upload")
 async def upload_video(
-
-    interview_id:str,
-
-    video:UploadFile=File(...)
-
+    interview_id: str,
+    video: UploadFile = File(...)
 ):
+    video_bytes = await video.read()
+    filename = f"{interview_id}.webm"
+    content_type = video.content_type or "video/webm"
 
-
-    os.makedirs(
-        "uploads/videos",
-        exist_ok=True
+    video_url = upload_file_to_azure(
+        file_bytes=video_bytes,
+        filename=filename,
+        content_type=content_type,
+        folder="videos"
     )
-
-
-    filename=f"{interview_id}.webm"
-
-
-    filepath=os.path.join(
-
-        "uploads/videos",
-
-        filename
-
-    )
-
-
-
-    with open(filepath,"wb") as buffer:
-
-
-        shutil.copyfileobj(
-            video.file,
-            buffer
-        )
-
-
-
 
     db.video_interviews.update_one(
-
+        {"_id": ObjectId(interview_id)},
         {
-        "_id":ObjectId(interview_id)
-        },
-
-        {
-
-        "$set":{
-
-            "videoPath":filepath
-
+            "$set": {
+                "videoPath": video_url,
+                "videoUrl": video_url
+            }
         }
-
-        }
-
     )
 
-
     return {
-
-        "message":"Video uploaded",
-
-        "videoPath":filepath
-
+        "message": "Video uploaded successfully to Azure Storage",
+        "videoPath": video_url,
+        "videoUrl": video_url
     }
 
 

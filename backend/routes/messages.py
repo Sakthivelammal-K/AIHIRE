@@ -1,6 +1,7 @@
 from fastapi import APIRouter, UploadFile, File, Form
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from database import db
+from azure_storage import upload_file_to_azure
 from datetime import datetime, timezone
 import os
 import shutil
@@ -20,7 +21,6 @@ router = APIRouter()
 
 messages = db["messages"]
 
-# Create an 'uploads' folder if it doesn't exist
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 
@@ -42,14 +42,12 @@ def send_message(data: dict):
     msg_text = data.get("message", "")
     
     if receiver and sender:
-        # 🟢 This will send a notification to BOTH Recruiters and Candidates
         create_notification(
             recipient_email=receiver,
             title="New Message",
             message=f"You have a new message from {sender}: \"{msg_text[:50]}{'...' if len(msg_text) > 50 else ''}\"",
             type="message",
             metadata={"sender": sender},
-            # 🟢 IMPORTANT: Use generic /messages so frontend adds /recruiter or /candidate automatically
             action_link="/messages", 
             priority="medium",
             icon="FaEnvelope",
@@ -59,7 +57,7 @@ def send_message(data: dict):
     return {"message": "Message sent successfully"}
 
 # ==========================================
-# UPLOAD FILE
+# UPLOAD FILE (AZURE BLOB STORAGE)
 # ==========================================
 @router.post("/upload")
 async def upload_file(
@@ -68,20 +66,20 @@ async def upload_file(
     receiver: str = Form(...)
 ):
     try:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        safe_filename = f"{timestamp}_{file.filename}"
-        file_path = UPLOAD_DIR / safe_filename
-
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-
-        base_url = "http://localhost:8000" 
-        file_url = f"{base_url}/uploads/{safe_filename}"
+        file_bytes = await file.read()
+        content_type = file.content_type or "application/octet-stream"
+        
+        file_url = upload_file_to_azure(
+            file_bytes=file_bytes,
+            filename=file.filename,
+            content_type=content_type,
+            folder="attachments"
+        )
 
         return {
-            "message": "File uploaded successfully",
+            "message": "File uploaded successfully to Azure Storage",
             "fileUrl": file_url,
-            "fileName": safe_filename,
+            "fileName": file.filename,
             "originalName": file.filename
         }
     except Exception as e:
