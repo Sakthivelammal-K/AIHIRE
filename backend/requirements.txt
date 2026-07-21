@@ -25,3 +25,4 @@ python-jose
 email-validator
 pypdf
 azure-storage-blob
+a2wsgi
